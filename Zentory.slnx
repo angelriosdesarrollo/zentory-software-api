@@ -1,0 +1,11 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Zentory.API/Zentory.API.csproj" />
+    <Project Path="src/Zentory.Application/Zentory.Application.csproj" />
+    <Project Path="src/Zentory.Domain/Zentory.Domain.csproj" />
+    <Project Path="src/Zentory.Infrastructure/Zentory.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Zentory.Tests/Zentory.Tests.csproj" />
+  </Folder>
+</Solution>

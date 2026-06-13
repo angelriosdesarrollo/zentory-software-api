@@ -1,0 +1,53 @@
+# Build outputs
+bin/
+obj/
+out/
+
+# NuGet
+*.nupkg
+*.snupkg
+.nuget/
+packages/
+project.lock.json
+project.assets.json
+*.nuget.dgspec.json
+
+# Visual Studio
+.vs/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+*.rsuser
+
+# Rider
+.idea/
+
+# Publish
+publish/
+**/publish/
+
+# Logs
+*.log
+logs/
+
+# Secrets & config local (valores reales inyectados por CI/CD o por el dev)
+appsettings.Local.json
+appsettings.Development.json
+appsettings.*.local.json
+*.pfx
+*.p12
+secrets.json
+
+# Entity Framework migrations (keep folder, ignore snapshots if not desired — remove if you want them tracked)
+# src/Zentory.Infrastructure/Migrations/
+
+# OS
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Temp
+*.tmp
+*.temp
+~$*
