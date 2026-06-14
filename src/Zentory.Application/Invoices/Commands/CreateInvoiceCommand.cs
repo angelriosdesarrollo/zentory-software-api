@@ -47,21 +47,24 @@ public sealed class CreateInvoiceCommandValidator : AbstractValidator<CreateInvo
 
 public sealed class CreateInvoiceCommandHandler : IRequestHandler<CreateInvoiceCommand, Guid>
 {
-    private readonly IInvoiceRepository _invoices;
-    private readonly IClientRepository  _clients;
-    private readonly IUnitOfWork        _uow;
-    private readonly ITenantContext     _tenant;
+    private readonly IInvoiceRepository  _invoices;
+    private readonly IClientRepository   _clients;
+    private readonly IUnitOfWork         _uow;
+    private readonly ITenantContext      _tenant;
+    private readonly IActivityLogService _activityLog;
 
     public CreateInvoiceCommandHandler(
-        IInvoiceRepository invoices,
-        IClientRepository  clients,
-        IUnitOfWork        uow,
-        ITenantContext     tenant)
+        IInvoiceRepository  invoices,
+        IClientRepository   clients,
+        IUnitOfWork         uow,
+        ITenantContext      tenant,
+        IActivityLogService activityLog)
     {
-        _invoices = invoices;
-        _clients  = clients;
-        _uow      = uow;
-        _tenant   = tenant;
+        _invoices    = invoices;
+        _clients     = clients;
+        _uow         = uow;
+        _tenant      = tenant;
+        _activityLog = activityLog;
     }
 
     public async Task<Guid> Handle(CreateInvoiceCommand request, CancellationToken cancellationToken)
@@ -99,6 +102,14 @@ public sealed class CreateInvoiceCommandHandler : IRequestHandler<CreateInvoiceC
         }
 
         await _invoices.AddAsync(invoice, cancellationToken);
+
+        await _activityLog.LogAsync(
+            "Invoice",
+            invoice.Id,
+            $"Creó la factura {invoice.InvoiceNumber} por {invoice.Total:N0} {invoice.Currency}",
+            invoice.InvoiceNumber,
+            ct: cancellationToken);
+
         await _uow.SaveChangesAsync(cancellationToken);
 
         return invoice.Id;

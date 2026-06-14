@@ -3,7 +3,6 @@ using Microsoft.EntityFrameworkCore;
 using Zentory.Application.Common.Interfaces;
 using Zentory.Application.Exceptions;
 using Zentory.Application.Organization.DTOs;
-using Zentory.Infrastructure.Persistence;
 
 namespace Zentory.Application.Organization.Queries;
 
@@ -12,10 +11,10 @@ public record GetOrganizationProfileQuery : IRequest<OrganizationProfileDto>;
 public sealed class GetOrganizationProfileQueryHandler
     : IRequestHandler<GetOrganizationProfileQuery, OrganizationProfileDto>
 {
-    private readonly ZentoryDbContext _db;
-    private readonly ITenantContext   _tenant;
+    private readonly IZentoryDbContext _db;
+    private readonly ITenantContext    _tenant;
 
-    public GetOrganizationProfileQueryHandler(ZentoryDbContext db, ITenantContext tenant)
+    public GetOrganizationProfileQueryHandler(IZentoryDbContext db, ITenantContext tenant)
     {
         _db     = db;
         _tenant = tenant;

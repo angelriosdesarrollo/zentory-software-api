@@ -117,5 +117,30 @@ public class Proposal : TenantEntity
         UpdatedAt            = DateTime.UtcNow;
     }
 
+    public void SetSections(IEnumerable<ProposalSection> sections)
+    {
+        _sections.Clear();
+        _sections.AddRange(sections);
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    public void SetItems(IEnumerable<ProposalItem> items)
+    {
+        _items.Clear();
+        _items.AddRange(items);
+        RecalculateTotal();
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    public void ForceStatus(string newStatus)
+    {
+        Status    = newStatus;
+        UpdatedAt = DateTime.UtcNow;
+
+        if (newStatus == "sent"     && SentAt     is null) SentAt     = DateTime.UtcNow;
+        if (newStatus == "accepted" && AcceptedAt is null) AcceptedAt = DateTime.UtcNow;
+        if (newStatus == "rejected" && RejectedAt is null) RejectedAt = DateTime.UtcNow;
+    }
+
     public void SoftDelete() { DeletedAt = DateTime.UtcNow; UpdatedAt = DateTime.UtcNow; }
 }

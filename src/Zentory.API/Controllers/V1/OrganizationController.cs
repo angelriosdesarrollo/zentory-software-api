@@ -58,4 +58,20 @@ public sealed class OrganizationController : ControllerBase
         var result = await _mediator.Send(new GetOrganizationMembersQuery(), ct);
         return Ok(result);
     }
+
+    /// <summary>GET /api/v1/organization/plan — plan activo y fecha de renovación</summary>
+    [HttpGet("plan")]
+    public async Task<IActionResult> GetPlan(CancellationToken ct = default)
+    {
+        var result = await _mediator.Send(new GetOrgPlanQuery(), ct);
+        return Ok(result);
+    }
+
+    /// <summary>GET /api/v1/organization/billing-history — historial de pagos de la suscripción</summary>
+    [HttpGet("billing-history")]
+    public async Task<IActionResult> GetBillingHistory(CancellationToken ct = default)
+    {
+        var result = await _mediator.Send(new GetBillingHistoryQuery(), ct);
+        return Ok(result);
+    }
 }

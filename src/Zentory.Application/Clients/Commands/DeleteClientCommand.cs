@@ -9,18 +9,21 @@ public record DeleteClientCommand(Guid Id) : IRequest;
 
 public sealed class DeleteClientCommandHandler : IRequestHandler<DeleteClientCommand>
 {
-    private readonly IClientRepository _clients;
-    private readonly IUnitOfWork       _uow;
-    private readonly ITenantContext    _tenant;
+    private readonly IClientRepository   _clients;
+    private readonly IUnitOfWork         _uow;
+    private readonly ITenantContext      _tenant;
+    private readonly IActivityLogService _activityLog;
 
     public DeleteClientCommandHandler(
-        IClientRepository clients,
-        IUnitOfWork       uow,
-        ITenantContext    tenant)
+        IClientRepository   clients,
+        IUnitOfWork         uow,
+        ITenantContext      tenant,
+        IActivityLogService activityLog)
     {
-        _clients = clients;
-        _uow     = uow;
-        _tenant  = tenant;
+        _clients     = clients;
+        _uow         = uow;
+        _tenant      = tenant;
+        _activityLog = activityLog;
     }
 
     public async Task Handle(DeleteClientCommand request, CancellationToken cancellationToken)
@@ -39,6 +42,14 @@ public sealed class DeleteClientCommandHandler : IRequestHandler<DeleteClientCom
         client.SoftDelete();
 
         await _clients.UpdateAsync(client, cancellationToken);
+
+        await _activityLog.LogAsync(
+            "Client",
+            client.Id,
+            $"Eliminó el cliente",
+            client.Name,
+            ct: cancellationToken);
+
         await _uow.SaveChangesAsync(cancellationToken);
     }
 }

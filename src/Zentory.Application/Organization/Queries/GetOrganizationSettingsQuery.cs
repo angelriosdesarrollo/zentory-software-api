@@ -2,7 +2,6 @@ using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Zentory.Application.Common.Interfaces;
 using Zentory.Application.Organization.DTOs;
-using Zentory.Infrastructure.Persistence;
 
 namespace Zentory.Application.Organization.Queries;
 
@@ -11,10 +10,10 @@ public record GetOrganizationSettingsQuery : IRequest<OrganizationSettingsDto>;
 public sealed class GetOrganizationSettingsQueryHandler
     : IRequestHandler<GetOrganizationSettingsQuery, OrganizationSettingsDto>
 {
-    private readonly ZentoryDbContext _db;
-    private readonly ITenantContext   _tenant;
+    private readonly IZentoryDbContext _db;
+    private readonly ITenantContext    _tenant;
 
-    public GetOrganizationSettingsQueryHandler(ZentoryDbContext db, ITenantContext tenant)
+    public GetOrganizationSettingsQueryHandler(IZentoryDbContext db, ITenantContext tenant)
     {
         _db     = db;
         _tenant = tenant;

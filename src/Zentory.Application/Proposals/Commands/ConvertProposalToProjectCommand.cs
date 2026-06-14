@@ -36,17 +36,20 @@ public sealed class ConvertProposalToProjectCommandHandler : IRequestHandler<Con
     private readonly IProjectRepository  _projects;
     private readonly IUnitOfWork         _uow;
     private readonly ITenantContext      _tenant;
+    private readonly IActivityLogService _activityLog;
 
     public ConvertProposalToProjectCommandHandler(
         IProposalRepository proposals,
         IProjectRepository  projects,
         IUnitOfWork         uow,
-        ITenantContext      tenant)
+        ITenantContext      tenant,
+        IActivityLogService activityLog)
     {
-        _proposals = proposals;
-        _projects  = projects;
-        _uow       = uow;
-        _tenant    = tenant;
+        _proposals   = proposals;
+        _projects    = projects;
+        _uow         = uow;
+        _tenant      = tenant;
+        _activityLog = activityLog;
     }
 
     public async Task<Guid> Handle(ConvertProposalToProjectCommand request, CancellationToken cancellationToken)
@@ -81,6 +84,12 @@ public sealed class ConvertProposalToProjectCommandHandler : IRequestHandler<Con
 
         await _projects.AddAsync(project, cancellationToken);
         await _proposals.UpdateAsync(proposal, cancellationToken);
+        await _activityLog.LogAsync(
+            entityType: "Proposal",
+            entityId:   proposal.Id,
+            action:     $"Convirtió la propuesta en proyecto \"{request.Name}\"",
+            entityCode: proposal.Title,
+            ct:         cancellationToken);
         await _uow.SaveChangesAsync(cancellationToken);
 
         return project.Id;

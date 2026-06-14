@@ -4,6 +4,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Zentory.Application.Common.Interfaces;
 using Zentory.Domain.Repositories;
 using Zentory.Infrastructure.Persistence;
+using Zentory.Infrastructure.Persistence.Interceptors;
 using Zentory.Infrastructure.Persistence.Repositories;
 using Zentory.Infrastructure.Services;
 
@@ -15,19 +16,24 @@ public static class ServiceCollectionExtensions
         this IServiceCollection services,
         IConfiguration configuration)
     {
+        services.AddScoped<AuditInterceptor>();
+
         if (string.Equals(configuration["Database:UseInMemory"], "true", StringComparison.OrdinalIgnoreCase))
         {
-            services.AddDbContext<ZentoryDbContext>(options =>
-                options.UseInMemoryDatabase("ZentoryDev"));
+            services.AddDbContext<ZentoryDbContext>((sp, options) =>
+                options.UseInMemoryDatabase("ZentoryDev")
+                       .AddInterceptors(sp.GetRequiredService<AuditInterceptor>()));
         }
         else
         {
-            services.AddDbContext<ZentoryDbContext>(options =>
+            services.AddDbContext<ZentoryDbContext>((sp, options) =>
                 options.UseNpgsql(
                     configuration.GetConnectionString("DefaultConnection"),
-                    npgsql => npgsql.MigrationsAssembly(typeof(ZentoryDbContext).Assembly.FullName)));
+                    npgsql => npgsql.MigrationsAssembly(typeof(ZentoryDbContext).Assembly.FullName))
+                       .AddInterceptors(sp.GetRequiredService<AuditInterceptor>()));
         }
 
+        services.AddScoped<IZentoryDbContext>(sp => sp.GetRequiredService<ZentoryDbContext>());
         services.AddScoped<IUnitOfWork, UnitOfWork>();
 
         // Auth / Organization
@@ -35,6 +41,9 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IUserRepository, UserRepository>();
         services.AddScoped<IOrganizationRepository, OrganizationRepository>();
         services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
+
+        // Integrations
+        services.AddScoped<IOrganizationIntegrationRepository, OrganizationIntegrationRepository>();
 
         // Core domains
         services.AddScoped<IProjectRepository, ProjectRepository>();
@@ -46,6 +55,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IProjectTaskRepository, ProjectTaskRepository>();
 
         services.AddScoped<IJwtService, JwtService>();
+        services.AddScoped<IActivityLogService, ActivityLogService>();
         services.AddScoped<DevDataSeeder>();
 
         return services;

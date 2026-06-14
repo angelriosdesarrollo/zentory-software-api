@@ -2,7 +2,6 @@ using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Zentory.Application.Common.Interfaces;
 using Zentory.Application.Organization.DTOs;
-using Zentory.Infrastructure.Persistence;
 
 namespace Zentory.Application.Organization.Queries;
 
@@ -11,10 +10,10 @@ public record GetOrganizationMembersQuery : IRequest<IReadOnlyList<OrganizationM
 public sealed class GetOrganizationMembersQueryHandler
     : IRequestHandler<GetOrganizationMembersQuery, IReadOnlyList<OrganizationMemberDto>>
 {
-    private readonly ZentoryDbContext _db;
-    private readonly ITenantContext   _tenant;
+    private readonly IZentoryDbContext _db;
+    private readonly ITenantContext    _tenant;
 
-    public GetOrganizationMembersQueryHandler(ZentoryDbContext db, ITenantContext tenant)
+    public GetOrganizationMembersQueryHandler(IZentoryDbContext db, ITenantContext tenant)
     {
         _db     = db;
         _tenant = tenant;

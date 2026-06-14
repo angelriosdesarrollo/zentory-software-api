@@ -3,9 +3,9 @@ using Microsoft.EntityFrameworkCore;
 using Zentory.Application.Common.Interfaces;
 using Zentory.Application.Exceptions;
 using Zentory.Application.Organization.DTOs;
+using Zentory.Application.Organization.Queries;
 using Zentory.Domain.Entities;
 using Zentory.Domain.Repositories;
-using Zentory.Infrastructure.Persistence;
 
 namespace Zentory.Application.Organization.Commands;
 
@@ -26,12 +26,12 @@ public record UpdateOrganizationProfileCommand(
 public sealed class UpdateOrganizationProfileCommandHandler
     : IRequestHandler<UpdateOrganizationProfileCommand, OrganizationProfileDto>
 {
-    private readonly ZentoryDbContext     _db;
+    private readonly IZentoryDbContext    _db;
     private readonly IUnitOfWork          _uow;
     private readonly ITenantContext       _tenant;
 
     public UpdateOrganizationProfileCommandHandler(
-        ZentoryDbContext     db,
+        IZentoryDbContext    db,
         IUnitOfWork          uow,
         ITenantContext       tenant)
     {

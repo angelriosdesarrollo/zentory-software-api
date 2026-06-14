@@ -18,15 +18,21 @@ public sealed class RecordPaymentCommandValidator : AbstractValidator<RecordPaym
 
 public sealed class RecordPaymentCommandHandler : IRequestHandler<RecordPaymentCommand>
 {
-    private readonly IInvoiceRepository _invoices;
-    private readonly IUnitOfWork        _uow;
-    private readonly ITenantContext     _tenant;
+    private readonly IInvoiceRepository  _invoices;
+    private readonly IUnitOfWork         _uow;
+    private readonly ITenantContext      _tenant;
+    private readonly IActivityLogService _activityLog;
 
-    public RecordPaymentCommandHandler(IInvoiceRepository invoices, IUnitOfWork uow, ITenantContext tenant)
+    public RecordPaymentCommandHandler(
+        IInvoiceRepository  invoices,
+        IUnitOfWork         uow,
+        ITenantContext      tenant,
+        IActivityLogService activityLog)
     {
-        _invoices = invoices;
-        _uow      = uow;
-        _tenant   = tenant;
+        _invoices    = invoices;
+        _uow         = uow;
+        _tenant      = tenant;
+        _activityLog = activityLog;
     }
 
     public async Task Handle(RecordPaymentCommand request, CancellationToken cancellationToken)
@@ -41,6 +47,14 @@ public sealed class RecordPaymentCommandHandler : IRequestHandler<RecordPaymentC
         invoice.RecordPayment(request.Amount);
 
         await _invoices.UpdateAsync(invoice, cancellationToken);
+
+        await _activityLog.LogAsync(
+            "Invoice",
+            invoice.Id,
+            $"Registró pago de la factura {invoice.InvoiceNumber}",
+            invoice.InvoiceNumber,
+            ct: cancellationToken);
+
         await _uow.SaveChangesAsync(cancellationToken);
     }
 }

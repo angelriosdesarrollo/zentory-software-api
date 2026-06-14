@@ -32,18 +32,21 @@ public sealed class CreateClientCommandHandler : IRequestHandler<CreateClientCom
 {
     private const int FreeClientLimit = 2;
 
-    private readonly IClientRepository _clients;
-    private readonly IUnitOfWork       _uow;
-    private readonly ITenantContext    _tenant;
+    private readonly IClientRepository   _clients;
+    private readonly IUnitOfWork         _uow;
+    private readonly ITenantContext      _tenant;
+    private readonly IActivityLogService _activityLog;
 
     public CreateClientCommandHandler(
-        IClientRepository clients,
-        IUnitOfWork       uow,
-        ITenantContext    tenant)
+        IClientRepository   clients,
+        IUnitOfWork         uow,
+        ITenantContext      tenant,
+        IActivityLogService activityLog)
     {
-        _clients = clients;
-        _uow     = uow;
-        _tenant  = tenant;
+        _clients     = clients;
+        _uow         = uow;
+        _tenant      = tenant;
+        _activityLog = activityLog;
     }
 
     public async Task<Guid> Handle(CreateClientCommand request, CancellationToken cancellationToken)
@@ -72,6 +75,14 @@ public sealed class CreateClientCommandHandler : IRequestHandler<CreateClientCom
             request.Notes);
 
         await _clients.AddAsync(client, cancellationToken);
+
+        await _activityLog.LogAsync(
+            "Client",
+            client.Id,
+            $"Creó el cliente",
+            client.Name,
+            ct: cancellationToken);
+
         await _uow.SaveChangesAsync(cancellationToken);
 
         return client.Id;

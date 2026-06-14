@@ -6,6 +6,9 @@ public class NotFoundException : Exception
     public NotFoundException(string resourceType, Guid id)
         : base($"{resourceType} with id '{id}' was not found.")
         => ResourceType = resourceType;
+    public NotFoundException(string resourceType, string id)
+        : base($"{resourceType} with id '{id}' was not found.")
+        => ResourceType = resourceType;
 }
 
 public enum ForbiddenReason { PlanRequired, AccountTypeRequired, TenantMismatch }

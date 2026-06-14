@@ -1,7 +1,7 @@
 using MediatR;
 using Microsoft.EntityFrameworkCore;
+using Zentory.Application.Common.Interfaces;
 using Zentory.Application.Master.DTOs;
-using Zentory.Infrastructure.Persistence;
 
 namespace Zentory.Application.Master.Queries;
 
@@ -11,9 +11,9 @@ public record GetSsRulesQuery(string CountryCode = "CO", short? Year = null)
 public sealed class GetSsRulesQueryHandler
     : IRequestHandler<GetSsRulesQuery, IReadOnlyList<SsRuleDto>>
 {
-    private readonly ZentoryDbContext _db;
+    private readonly IZentoryDbContext _db;
 
-    public GetSsRulesQueryHandler(ZentoryDbContext db) => _db = db;
+    public GetSsRulesQueryHandler(IZentoryDbContext db) => _db = db;
 
     public async Task<IReadOnlyList<SsRuleDto>> Handle(
         GetSsRulesQuery   request,

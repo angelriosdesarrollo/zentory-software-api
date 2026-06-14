@@ -13,17 +13,19 @@ public class ProposalSection : BaseEntity
     public string? Content        { get; private set; }  // markdown
     public short   SortOrder      { get; private set; }
     public bool    IsVisible      { get; private set; } = true;
+    public bool    IsEncrypted    { get; private set; }
 
     private ProposalSection() { }
 
     public static ProposalSection Create(
-        Guid   organizationId,
-        Guid   proposalId,
-        string sectionType,
-        short  sortOrder   = 0,
-        string? title      = null,
-        string? content    = null,
-        bool   isVisible   = true)
+        Guid    organizationId,
+        Guid    proposalId,
+        string  sectionType,
+        short   sortOrder    = 0,
+        string? title        = null,
+        string? content      = null,
+        bool    isVisible    = true,
+        bool    isEncrypted  = false)
     {
         return new ProposalSection
         {
@@ -33,16 +35,18 @@ public class ProposalSection : BaseEntity
             Title          = title,
             Content        = content,
             SortOrder      = sortOrder,
-            IsVisible      = isVisible
+            IsVisible      = isVisible,
+            IsEncrypted    = isEncrypted,
         };
     }
 
-    public void Update(string? title, string? content, bool isVisible, short sortOrder)
+    public void Update(string? title, string? content, bool isVisible, short sortOrder, bool isEncrypted)
     {
-        Title     = title;
-        Content   = content;
-        IsVisible = isVisible;
-        SortOrder = sortOrder;
+        Title       = title;
+        Content     = content;
+        IsVisible   = isVisible;
+        SortOrder   = sortOrder;
+        IsEncrypted = isEncrypted;
         Touch();
     }
 }

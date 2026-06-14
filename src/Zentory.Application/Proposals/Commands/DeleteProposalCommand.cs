@@ -12,12 +12,18 @@ public sealed class DeleteProposalCommandHandler : IRequestHandler<DeleteProposa
     private readonly IProposalRepository _proposals;
     private readonly IUnitOfWork         _uow;
     private readonly ITenantContext      _tenant;
+    private readonly IActivityLogService _activityLog;
 
-    public DeleteProposalCommandHandler(IProposalRepository proposals, IUnitOfWork uow, ITenantContext tenant)
+    public DeleteProposalCommandHandler(
+        IProposalRepository proposals,
+        IUnitOfWork         uow,
+        ITenantContext      tenant,
+        IActivityLogService activityLog)
     {
-        _proposals = proposals;
-        _uow       = uow;
-        _tenant    = tenant;
+        _proposals   = proposals;
+        _uow         = uow;
+        _tenant      = tenant;
+        _activityLog = activityLog;
     }
 
     public async Task Handle(DeleteProposalCommand request, CancellationToken cancellationToken)
@@ -32,6 +38,12 @@ public sealed class DeleteProposalCommandHandler : IRequestHandler<DeleteProposa
         proposal.SoftDelete();
 
         await _proposals.UpdateAsync(proposal, cancellationToken);
+        await _activityLog.LogAsync(
+            entityType: "Proposal",
+            entityId:   proposal.Id,
+            action:     "Eliminó la propuesta",
+            entityCode: proposal.Title,
+            ct:         cancellationToken);
         await _uow.SaveChangesAsync(cancellationToken);
     }
 }

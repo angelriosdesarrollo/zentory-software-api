@@ -38,6 +38,7 @@ public sealed class TenantContext : ITenantContext
         }
     }
 
+    public string UserInitials => _user?.FindFirstValue("initials")     ?? "??";
     public string Plan        => _user?.FindFirstValue("plan")         ?? "free";
     public string AccountType => _user?.FindFirstValue("account_type") ?? "freelance";
 }

@@ -51,11 +51,35 @@ public sealed class ProposalsController : ControllerBase
         return Ok(result);
     }
 
+    /// <summary>PUT /api/v1/proposals/{id}/sections — reemplaza todas las secciones</summary>
+    [HttpPut("{id:guid}/sections")]
+    public async Task<IActionResult> SaveSections(Guid id, [FromBody] SaveProposalSectionsCommand command, CancellationToken ct = default)
+    {
+        await _mediator.Send(command with { Id = id }, ct);
+        return NoContent();
+    }
+
+    /// <summary>PUT /api/v1/proposals/{id}/items — reemplaza todos los ítems de precio</summary>
+    [HttpPut("{id:guid}/items")]
+    public async Task<IActionResult> SaveItems(Guid id, [FromBody] SaveProposalItemsCommand command, CancellationToken ct = default)
+    {
+        await _mediator.Send(command with { Id = id }, ct);
+        return NoContent();
+    }
+
     /// <summary>POST /api/v1/proposals/{id}/send — marcar como enviada</summary>
     [HttpPost("{id:guid}/send")]
     public async Task<IActionResult> Send(Guid id, CancellationToken ct = default)
     {
         await _mediator.Send(new SendProposalCommand(id), ct);
+        return NoContent();
+    }
+
+    /// <summary>PATCH /api/v1/proposals/{id}/status — cambiar estado (override administrativo)</summary>
+    [HttpPatch("{id:guid}/status")]
+    public async Task<IActionResult> ChangeStatus(Guid id, [FromBody] ChangeProposalStatusCommand command, CancellationToken ct = default)
+    {
+        await _mediator.Send(command with { Id = id }, ct);
         return NoContent();
     }
 

@@ -19,6 +19,7 @@ public class ProposalSectionConfiguration : IEntityTypeConfiguration<ProposalSec
         builder.Property(s => s.Content).HasColumnName("content");
         builder.Property(s => s.SortOrder).HasColumnName("sort_order").HasDefaultValue((short)0);
         builder.Property(s => s.IsVisible).HasColumnName("is_visible").HasDefaultValue(true);
+        builder.Property(s => s.IsEncrypted).HasColumnName("is_encrypted").HasDefaultValue(false);
         builder.Property(s => s.CreatedAt).HasColumnName("created_at");
         builder.Property(s => s.UpdatedAt).HasColumnName("updated_at");
 

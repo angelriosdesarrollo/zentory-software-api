@@ -1,7 +1,7 @@
 using MediatR;
 using Microsoft.EntityFrameworkCore;
+using Zentory.Application.Common.Interfaces;
 using Zentory.Application.Master.DTOs;
-using Zentory.Infrastructure.Persistence;
 
 namespace Zentory.Application.Master.Queries;
 
@@ -11,9 +11,9 @@ public record GetExpenseCategoriesQuery(string? Type = null)
 public sealed class GetExpenseCategoriesQueryHandler
     : IRequestHandler<GetExpenseCategoriesQuery, IReadOnlyList<ExpenseCategoryDto>>
 {
-    private readonly ZentoryDbContext _db;
+    private readonly IZentoryDbContext _db;
 
-    public GetExpenseCategoriesQueryHandler(ZentoryDbContext db) => _db = db;
+    public GetExpenseCategoriesQueryHandler(IZentoryDbContext db) => _db = db;
 
     public async Task<IReadOnlyList<ExpenseCategoryDto>> Handle(
         GetExpenseCategoriesQuery request,

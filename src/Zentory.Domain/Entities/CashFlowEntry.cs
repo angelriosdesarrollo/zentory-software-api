@@ -84,5 +84,25 @@ public class CashFlowEntry : TenantEntity
         };
     }
 
+    public void Update(
+        string   description,
+        decimal  amount,
+        string   currency,
+        decimal  exchangeRate,
+        DateOnly transactionDate,
+        short?   categoryId,
+        Guid?    projectId)
+    {
+        Description     = description;
+        Amount          = amount;
+        Currency        = currency;
+        ExchangeRate    = exchangeRate;
+        AmountBase      = amount * exchangeRate;
+        TransactionDate = transactionDate;
+        CategoryId      = categoryId;
+        ProjectId       = projectId;
+        UpdatedAt       = DateTime.UtcNow;
+    }
+
     public void SoftDelete() { DeletedAt = DateTime.UtcNow; UpdatedAt = DateTime.UtcNow; }
 }

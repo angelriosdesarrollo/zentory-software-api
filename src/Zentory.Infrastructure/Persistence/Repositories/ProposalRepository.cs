@@ -19,6 +19,30 @@ public sealed class ProposalRepository : IProposalRepository
             .Include(p => p.Items)
             .FirstOrDefaultAsync(p => p.Id == id, ct);
 
+    public async Task ReplaceSectionsAsync(
+        Guid proposalId,
+        IReadOnlyList<ProposalSection> sections,
+        CancellationToken ct = default)
+    {
+        var existing = await _db.ProposalSections
+            .Where(s => s.ProposalId == proposalId)
+            .ToListAsync(ct);
+        _db.ProposalSections.RemoveRange(existing);
+        await _db.ProposalSections.AddRangeAsync(sections, ct);
+    }
+
+    public async Task ReplaceItemsAsync(
+        Guid proposalId,
+        IReadOnlyList<ProposalItem> items,
+        CancellationToken ct = default)
+    {
+        var existing = await _db.ProposalItems
+            .Where(i => i.ProposalId == proposalId)
+            .ToListAsync(ct);
+        _db.ProposalItems.RemoveRange(existing);
+        await _db.ProposalItems.AddRangeAsync(items, ct);
+    }
+
     public async Task<IReadOnlyList<Proposal>> ListAsync(
         Guid    organizationId,
         string? status   = null,

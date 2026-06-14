@@ -32,21 +32,27 @@ public sealed class GetProjectByIdQueryHandler : IRequestHandler<GetProjectByIdQ
 
         var client = await _clients.GetByIdAsync(project.ClientId, cancellationToken);
 
+        var (progress, healthScore, healthStatus) = ProjectHealthHelper.Compute(project.HoursUsed, project.HoursTotal);
+
         return new ProjectDto(
-            project.Id,
-            project.Name,
-            project.ClientId,
-            client?.Name ?? string.Empty,
-            project.Status.ToString(),
-            project.BillingType.ToString(),
-            project.ContractValue,
-            project.Currency,
-            project.HoursTotal,
-            project.HoursUsed,
-            project.StartDate,
-            project.EndDate,
-            project.ProposalId,
-            project.CreatedAt,
-            project.UpdatedAt);
+            Id:            project.Id,
+            Code:          $"PRJ-{project.Id.ToString("N")[..8].ToUpperInvariant()}",
+            Name:          project.Name,
+            ClientId:      project.ClientId,
+            ClientName:    client?.Name ?? string.Empty,
+            Status:        project.Status.ToString(),
+            BillingType:   project.BillingType.ToString(),
+            ContractValue: project.ContractValue,
+            Currency:      project.Currency,
+            HoursTotal:    project.HoursTotal,
+            HoursUsed:     project.HoursUsed,
+            Progress:      progress,
+            HealthScore:   healthScore,
+            HealthStatus:  healthStatus,
+            StartDate:     project.StartDate,
+            EndDate:       project.EndDate,
+            ProposalId:    project.ProposalId,
+            CreatedAt:     project.CreatedAt,
+            UpdatedAt:     project.UpdatedAt);
     }
 }

@@ -26,6 +26,8 @@ public sealed class JwtService : IJwtService
 
     public string GenerateAccessToken(User user, Organization org)
     {
+        var initials = $"{user.FirstName[0]}{user.LastName[0]}".ToUpperInvariant();
+
         var claims = new[]
         {
             new Claim(JwtRegisteredClaimNames.Sub,  user.UserId.ToString()),
@@ -33,7 +35,8 @@ public sealed class JwtService : IJwtService
             new Claim("organization_id", org.OrganizationId.ToString()),
             new Claim("plan",            org.Plan),
             new Claim("account_type",    org.AccountType),
-            new Claim("role",            user.Role)
+            new Claim("role",            user.Role),
+            new Claim("initials",        initials)
         };
 
         var key         = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_key));

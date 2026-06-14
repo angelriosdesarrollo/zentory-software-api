@@ -21,10 +21,12 @@ public class User
         string  firstName,
         string  lastName,
         string  role,
-        string? passwordHash = null)
+        string? passwordHash = null,
+        Guid?   id           = null)
     {
         return new User
         {
+            UserId         = id ?? Guid.NewGuid(),
             OrganizationId = organizationId,
             Email          = email,
             FirstName      = firstName,

@@ -41,18 +41,26 @@ public sealed class GetProjectsQueryHandler
         var clientList = await _clients.ListAsync(_tenant.OrganizationId, ct: cancellationToken);
         var clientMap  = clientList.ToDictionary(c => c.Id, c => c.Name);
 
-        return list.Select(p => new ProjectSummaryDto(
-            p.Id,
-            p.Name,
-            p.ClientId,
-            clientMap.GetValueOrDefault(p.ClientId, string.Empty),
-            p.Status.ToString(),
-            p.BillingType.ToString(),
-            p.ContractValue,
-            p.Currency,
-            p.HoursTotal,
-            p.HoursUsed,
-            p.StartDate,
-            p.EndDate)).ToList();
+        return list.Select(p =>
+        {
+            var (progress, healthScore, healthStatus) = ProjectHealthHelper.Compute(p.HoursUsed, p.HoursTotal);
+            return new ProjectSummaryDto(
+                Id:           p.Id,
+                Code:         $"PRJ-{p.Id.ToString("N")[..8].ToUpperInvariant()}",
+                Name:         p.Name,
+                ClientId:     p.ClientId,
+                ClientName:   clientMap.GetValueOrDefault(p.ClientId, string.Empty),
+                Status:       p.Status.ToString(),
+                BillingType:  p.BillingType.ToString(),
+                ContractValue: p.ContractValue,
+                Currency:     p.Currency,
+                HoursTotal:   p.HoursTotal,
+                HoursUsed:    p.HoursUsed,
+                Progress:     progress,
+                HealthScore:  healthScore,
+                HealthStatus: healthStatus,
+                StartDate:    p.StartDate,
+                EndDate:      p.EndDate);
+        }).ToList();
     }
 }

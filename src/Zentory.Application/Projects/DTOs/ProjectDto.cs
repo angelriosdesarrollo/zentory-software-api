@@ -2,6 +2,7 @@ namespace Zentory.Application.Projects.DTOs;
 
 public record ProjectSummaryDto(
     Guid      Id,
+    string    Code,
     string    Name,
     Guid      ClientId,
     string    ClientName,
@@ -11,11 +12,15 @@ public record ProjectSummaryDto(
     string    Currency,
     int       HoursTotal,
     int       HoursUsed,
+    int       Progress,
+    int       HealthScore,
+    string    HealthStatus,
     DateTime? StartDate,
     DateTime? EndDate);
 
 public record ProjectDto(
     Guid      Id,
+    string    Code,
     string    Name,
     Guid      ClientId,
     string    ClientName,
@@ -25,6 +30,9 @@ public record ProjectDto(
     string    Currency,
     int       HoursTotal,
     int       HoursUsed,
+    int       Progress,
+    int       HealthScore,
+    string    HealthStatus,
     DateTime? StartDate,
     DateTime? EndDate,
     Guid?     ProposalId,

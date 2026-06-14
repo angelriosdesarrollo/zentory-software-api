@@ -45,17 +45,20 @@ public sealed class CreateProposalCommandHandler : IRequestHandler<CreateProposa
     private readonly IClientRepository   _clients;
     private readonly IUnitOfWork         _uow;
     private readonly ITenantContext      _tenant;
+    private readonly IActivityLogService _activityLog;
 
     public CreateProposalCommandHandler(
         IProposalRepository proposals,
         IClientRepository   clients,
         IUnitOfWork         uow,
-        ITenantContext      tenant)
+        ITenantContext      tenant,
+        IActivityLogService activityLog)
     {
-        _proposals = proposals;
-        _clients   = clients;
-        _uow       = uow;
-        _tenant    = tenant;
+        _proposals   = proposals;
+        _clients     = clients;
+        _uow         = uow;
+        _tenant      = tenant;
+        _activityLog = activityLog;
     }
 
     public async Task<Guid> Handle(CreateProposalCommand request, CancellationToken cancellationToken)
@@ -91,6 +94,12 @@ public sealed class CreateProposalCommandHandler : IRequestHandler<CreateProposa
         }
 
         await _proposals.AddAsync(proposal, cancellationToken);
+        await _activityLog.LogAsync(
+            entityType: "Proposal",
+            entityId:   proposal.Id,
+            action:     "Creó la propuesta",
+            entityCode: proposal.Title,
+            ct:         cancellationToken);
         await _uow.SaveChangesAsync(cancellationToken);
 
         return proposal.Id;

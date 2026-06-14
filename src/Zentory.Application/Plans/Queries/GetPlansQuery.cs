@@ -1,8 +1,8 @@
 using MediatR;
 using Microsoft.EntityFrameworkCore;
+using Zentory.Application.Common.Interfaces;
 using Zentory.Application.Plans.DTOs;
 using Zentory.Domain.Constants;
-using Zentory.Infrastructure.Persistence;
 
 namespace Zentory.Application.Plans.Queries;
 
@@ -10,9 +10,9 @@ public record GetPlansQuery : IRequest<PlansPageDto>;
 
 public sealed class GetPlansQueryHandler : IRequestHandler<GetPlansQuery, PlansPageDto>
 {
-    private readonly ZentoryDbContext _db;
+    private readonly IZentoryDbContext _db;
 
-    public GetPlansQueryHandler(ZentoryDbContext db) => _db = db;
+    public GetPlansQueryHandler(IZentoryDbContext db) => _db = db;
 
     public async Task<PlansPageDto> Handle(
         GetPlansQuery     request,

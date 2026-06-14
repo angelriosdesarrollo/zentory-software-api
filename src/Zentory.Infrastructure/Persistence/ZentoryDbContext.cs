@@ -7,7 +7,7 @@ using Zentory.Domain.Entities.Master;
 
 namespace Zentory.Infrastructure.Persistence;
 
-public class ZentoryDbContext : DbContext
+public class ZentoryDbContext : DbContext, IZentoryDbContext
 {
     private readonly ITenantContext? _tenant;
 
@@ -31,6 +31,10 @@ public class ZentoryDbContext : DbContext
     public DbSet<OrganizationBankAccount>    OrganizationBankAccounts    { get; set; } = default!;
     public DbSet<OrganizationInvoiceSequence> OrganizationInvoiceSequences { get; set; } = default!;
 
+    // ── Integrations ─────────────────────────────────────────────────────────────
+    public DbSet<IntegrationCatalog>         IntegrationCatalog          { get; set; } = default!;
+    public DbSet<OrganizationIntegration>    OrganizationIntegrations    { get; set; } = default!;
+
     // ── CRM ──────────────────────────────────────────────────────────────────────
     public DbSet<Client>                     Clients                     { get; set; } = default!;
     public DbSet<ClientContact>              ClientContacts              { get; set; } = default!;
@@ -40,6 +44,11 @@ public class ZentoryDbContext : DbContext
     public DbSet<ProjectCollaborator>        ProjectCollaborators        { get; set; } = default!;
     public DbSet<ProjectFinancials>          ProjectFinancials           { get; set; } = default!;
     public DbSet<ProjectTask>                ProjectTasks                { get; set; } = default!;
+    public DbSet<ProjectMilestone>           ProjectMilestones           { get; set; } = default!;
+    public DbSet<ProjectDeliverable>         ProjectDeliverables         { get; set; } = default!;
+    public DbSet<ProjectBillingEntry>        ProjectBillingEntries       { get; set; } = default!;
+    public DbSet<ProjectFile>                ProjectFiles                { get; set; } = default!;
+    public DbSet<ProjectActivityLog>         ProjectActivityLogs         { get; set; } = default!;
 
     // ── Catalog ──────────────────────────────────────────────────────────────────
     public DbSet<ServiceCatalog>             ServiceCatalog              { get; set; } = default!;
@@ -65,6 +74,7 @@ public class ZentoryDbContext : DbContext
     public DbSet<CashFlowEntry>              CashFlowEntries             { get; set; } = default!;
 
     // ── Observability ────────────────────────────────────────────────────────────
+    public DbSet<ActivityLog>                ActivityLogs                { get; set; } = default!;
     public DbSet<AuditLog>                   AuditLogs                   { get; set; } = default!;
     public DbSet<SystemEvent>                SystemEvents                { get; set; } = default!;
     public DbSet<Notification>               Notifications               { get; set; } = default!;
@@ -156,6 +166,9 @@ public class ZentoryDbContext : DbContext
         modelBuilder.Entity<OrganizationBankAccount>().HasQueryFilter(b =>
             b.DeletedAt == null &&
             (!tenantActive || b.OrganizationId == _tenant!.OrganizationId));
+
+        modelBuilder.Entity<OrganizationIntegration>().HasQueryFilter(oi =>
+            (!tenantActive || oi.OrganizationId == _tenant!.OrganizationId));
 
         modelBuilder.Entity<ServiceCatalog>().HasQueryFilter(s =>
             s.DeletedAt == null &&

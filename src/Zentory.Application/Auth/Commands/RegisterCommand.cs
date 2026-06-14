@@ -47,7 +47,7 @@ public sealed class RegisterCommandHandler : IRequestHandler<RegisterCommand, Au
         if (existing is not null)
             throw new ConflictException("EMAIL_ALREADY_EXISTS", "El correo electrónico ya está registrado.");
 
-        var org = Organization.Create(request.OrgName, request.AccountType, request.Country);
+        var org = global::Zentory.Domain.Entities.Organization.Create(request.OrgName, request.AccountType, request.Country);
         await _organizations.AddAsync(org, cancellationToken);
 
         var passwordHash = BCrypt.Net.BCrypt.HashPassword(request.Password);

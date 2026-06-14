@@ -30,9 +30,11 @@ public sealed class GetProposalByIdQueryHandler : IRequestHandler<GetProposalByI
         if (proposal is null || proposal.OrganizationId != _tenant.OrganizationId || proposal.DeletedAt.HasValue)
             throw new NotFoundException("Proposal", request.Id);
 
-        var client = await _clients.GetByIdAsync(proposal.ClientId, cancellationToken);
-        var items  = proposal.Items.Select(i => new ProposalItemDto(
+        var client   = await _clients.GetByIdAsync(proposal.ClientId, cancellationToken);
+        var items    = proposal.Items.Select(i => new ProposalItemDto(
             i.Id, i.Description, i.Quantity, i.UnitPrice, i.DiscountPct, i.Total, i.SortOrder)).ToList();
+        var sections = proposal.Sections.OrderBy(s => s.SortOrder).Select(s => new ProposalSectionDto(
+            s.Id, s.SectionType, s.Title, s.Content, s.SortOrder, s.IsVisible, s.IsEncrypted, s.CreatedAt, s.UpdatedAt)).ToList();
 
         return new ProposalDto(
             proposal.Id,
@@ -50,6 +52,7 @@ public sealed class GetProposalByIdQueryHandler : IRequestHandler<GetProposalByI
             proposal.ViewCount,
             proposal.ConvertedToProjectId,
             items,
+            sections,
             proposal.CreatedAt,
             proposal.UpdatedAt);
     }

@@ -11,13 +11,14 @@ public class Organization
 
     private Organization() { }
 
-    public static Organization Create(string name, string accountType, string country = "CO")
+    public static Organization Create(string name, string accountType, string country = "CO", Guid? id = null)
     {
         return new Organization
         {
-            Name        = name,
-            AccountType = accountType,
-            Country     = country
+            OrganizationId = id ?? Guid.NewGuid(),
+            Name           = name,
+            AccountType    = accountType,
+            Country        = country
         };
     }
 

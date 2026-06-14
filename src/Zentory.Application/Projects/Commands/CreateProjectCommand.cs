@@ -43,17 +43,20 @@ public sealed class CreateProjectCommandHandler : IRequestHandler<CreateProjectC
     private readonly IClientRepository  _clients;
     private readonly IUnitOfWork        _uow;
     private readonly ITenantContext     _tenant;
+    private readonly IActivityLogService _activityLog;
 
     public CreateProjectCommandHandler(
-        IProjectRepository projects,
-        IClientRepository  clients,
-        IUnitOfWork        uow,
-        ITenantContext     tenant)
+        IProjectRepository  projects,
+        IClientRepository   clients,
+        IUnitOfWork         uow,
+        ITenantContext      tenant,
+        IActivityLogService activityLog)
     {
-        _projects = projects;
-        _clients  = clients;
-        _uow      = uow;
-        _tenant   = tenant;
+        _projects    = projects;
+        _clients     = clients;
+        _uow         = uow;
+        _tenant      = tenant;
+        _activityLog = activityLog;
     }
 
     public async Task<Guid> Handle(CreateProjectCommand request, CancellationToken cancellationToken)
@@ -88,6 +91,12 @@ public sealed class CreateProjectCommandHandler : IRequestHandler<CreateProjectC
             request.ProposalId);
 
         await _projects.AddAsync(project, cancellationToken);
+        await _activityLog.LogAsync(
+            entityType: "Project",
+            entityId:   project.Id,
+            action:     "Creó el proyecto",
+            entityCode: project.Name,
+            ct:         cancellationToken);
         await _uow.SaveChangesAsync(cancellationToken);
 
         return project.Id;

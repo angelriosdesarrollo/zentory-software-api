@@ -57,4 +57,10 @@ public class BillingInvoice : BaseEntity
         InvoicePdf       = pdfUrl;
         UpdatedAt        = DateTime.UtcNow;
     }
+
+    public void SetInvoiceNumber(string invoiceNumber)
+    {
+        InvoiceNumber = invoiceNumber;
+        UpdatedAt     = DateTime.UtcNow;
+    }
 }
