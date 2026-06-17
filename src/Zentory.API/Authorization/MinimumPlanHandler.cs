@@ -1,5 +1,4 @@
 using Microsoft.AspNetCore.Authorization;
-using Zentory.Application.Common.Authorization;
 using Zentory.Domain.Constants;
 
 namespace Zentory.API.Authorization;

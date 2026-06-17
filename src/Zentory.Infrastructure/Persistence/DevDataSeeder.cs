@@ -3,6 +3,7 @@ using Zentory.Domain.Constants;
 using Zentory.Domain.Entities;
 using Zentory.Domain.Entities.Billing;
 using Zentory.Domain.Entities.Master;
+using static Zentory.Domain.Constants.PlanLimits;
 
 namespace Zentory.Infrastructure.Persistence;
 
@@ -95,42 +96,41 @@ public sealed class DevDataSeeder
         );
 
         // ── Plan Limits ──────────────────────────────────────────────────────
-        var fk = PlanLimits.FeatureKeys;
         _db.PlanLimits.AddRange(
             // Freelance Free
-            PlanLimit.Create(free.Id,   AccountType.Freelance, fk.MaxClients,        2),
-            PlanLimit.Create(free.Id,   AccountType.Freelance, fk.MaxInvoicesMonth,  3),
-            PlanLimit.Create(free.Id,   AccountType.Freelance, fk.MaxProjects,       5),
-            PlanLimit.Create(free.Id,   AccountType.Freelance, fk.MaxCollaborators,  0),
-            PlanLimit.Create(free.Id,   AccountType.Freelance, fk.MaxOrgMembers,     1),
+            PlanLimit.Create(free.Id,   AccountType.Freelance, FeatureKeys.MaxClients,        2),
+            PlanLimit.Create(free.Id,   AccountType.Freelance, FeatureKeys.MaxInvoicesMonth,  3),
+            PlanLimit.Create(free.Id,   AccountType.Freelance, FeatureKeys.MaxProjects,       5),
+            PlanLimit.Create(free.Id,   AccountType.Freelance, FeatureKeys.MaxCollaborators,  0),
+            PlanLimit.Create(free.Id,   AccountType.Freelance, FeatureKeys.MaxOrgMembers,     1),
             // Freelance Pro / Studio — sin límite (null)
-            PlanLimit.Create(pro.Id,    AccountType.Freelance, fk.MaxClients,        null),
-            PlanLimit.Create(pro.Id,    AccountType.Freelance, fk.MaxInvoicesMonth,  null),
-            PlanLimit.Create(pro.Id,    AccountType.Freelance, fk.MaxProjects,       null),
-            PlanLimit.Create(pro.Id,    AccountType.Freelance, fk.MaxCollaborators,  0),
-            PlanLimit.Create(pro.Id,    AccountType.Freelance, fk.MaxOrgMembers,     1),
-            PlanLimit.Create(studio.Id, AccountType.Freelance, fk.MaxClients,        null),
-            PlanLimit.Create(studio.Id, AccountType.Freelance, fk.MaxInvoicesMonth,  null),
-            PlanLimit.Create(studio.Id, AccountType.Freelance, fk.MaxProjects,       null),
-            PlanLimit.Create(studio.Id, AccountType.Freelance, fk.MaxCollaborators,  null),
-            PlanLimit.Create(studio.Id, AccountType.Freelance, fk.MaxOrgMembers,     1),
+            PlanLimit.Create(pro.Id,    AccountType.Freelance, FeatureKeys.MaxClients,        null),
+            PlanLimit.Create(pro.Id,    AccountType.Freelance, FeatureKeys.MaxInvoicesMonth,  null),
+            PlanLimit.Create(pro.Id,    AccountType.Freelance, FeatureKeys.MaxProjects,       null),
+            PlanLimit.Create(pro.Id,    AccountType.Freelance, FeatureKeys.MaxCollaborators,  0),
+            PlanLimit.Create(pro.Id,    AccountType.Freelance, FeatureKeys.MaxOrgMembers,     1),
+            PlanLimit.Create(studio.Id, AccountType.Freelance, FeatureKeys.MaxClients,        null),
+            PlanLimit.Create(studio.Id, AccountType.Freelance, FeatureKeys.MaxInvoicesMonth,  null),
+            PlanLimit.Create(studio.Id, AccountType.Freelance, FeatureKeys.MaxProjects,       null),
+            PlanLimit.Create(studio.Id, AccountType.Freelance, FeatureKeys.MaxCollaborators,  null),
+            PlanLimit.Create(studio.Id, AccountType.Freelance, FeatureKeys.MaxOrgMembers,     1),
             // Empresa Free
-            PlanLimit.Create(free.Id,   AccountType.Empresa,   fk.MaxClients,        2),
-            PlanLimit.Create(free.Id,   AccountType.Empresa,   fk.MaxInvoicesMonth,  3),
-            PlanLimit.Create(free.Id,   AccountType.Empresa,   fk.MaxProjects,       5),
-            PlanLimit.Create(free.Id,   AccountType.Empresa,   fk.MaxCollaborators,  0),
-            PlanLimit.Create(free.Id,   AccountType.Empresa,   fk.MaxOrgMembers,     1),
+            PlanLimit.Create(free.Id,   AccountType.Empresa,   FeatureKeys.MaxClients,        2),
+            PlanLimit.Create(free.Id,   AccountType.Empresa,   FeatureKeys.MaxInvoicesMonth,  3),
+            PlanLimit.Create(free.Id,   AccountType.Empresa,   FeatureKeys.MaxProjects,       5),
+            PlanLimit.Create(free.Id,   AccountType.Empresa,   FeatureKeys.MaxCollaborators,  0),
+            PlanLimit.Create(free.Id,   AccountType.Empresa,   FeatureKeys.MaxOrgMembers,     1),
             // Empresa Pro / Studio
-            PlanLimit.Create(pro.Id,    AccountType.Empresa,   fk.MaxClients,        null),
-            PlanLimit.Create(pro.Id,    AccountType.Empresa,   fk.MaxInvoicesMonth,  null),
-            PlanLimit.Create(pro.Id,    AccountType.Empresa,   fk.MaxProjects,       null),
-            PlanLimit.Create(pro.Id,    AccountType.Empresa,   fk.MaxCollaborators,  10),
-            PlanLimit.Create(pro.Id,    AccountType.Empresa,   fk.MaxOrgMembers,     5),
-            PlanLimit.Create(studio.Id, AccountType.Empresa,   fk.MaxClients,        null),
-            PlanLimit.Create(studio.Id, AccountType.Empresa,   fk.MaxInvoicesMonth,  null),
-            PlanLimit.Create(studio.Id, AccountType.Empresa,   fk.MaxProjects,       null),
-            PlanLimit.Create(studio.Id, AccountType.Empresa,   fk.MaxCollaborators,  null),
-            PlanLimit.Create(studio.Id, AccountType.Empresa,   fk.MaxOrgMembers,     null)
+            PlanLimit.Create(pro.Id,    AccountType.Empresa,   FeatureKeys.MaxClients,        null),
+            PlanLimit.Create(pro.Id,    AccountType.Empresa,   FeatureKeys.MaxInvoicesMonth,  null),
+            PlanLimit.Create(pro.Id,    AccountType.Empresa,   FeatureKeys.MaxProjects,       null),
+            PlanLimit.Create(pro.Id,    AccountType.Empresa,   FeatureKeys.MaxCollaborators,  10),
+            PlanLimit.Create(pro.Id,    AccountType.Empresa,   FeatureKeys.MaxOrgMembers,     5),
+            PlanLimit.Create(studio.Id, AccountType.Empresa,   FeatureKeys.MaxClients,        null),
+            PlanLimit.Create(studio.Id, AccountType.Empresa,   FeatureKeys.MaxInvoicesMonth,  null),
+            PlanLimit.Create(studio.Id, AccountType.Empresa,   FeatureKeys.MaxProjects,       null),
+            PlanLimit.Create(studio.Id, AccountType.Empresa,   FeatureKeys.MaxCollaborators,  null),
+            PlanLimit.Create(studio.Id, AccountType.Empresa,   FeatureKeys.MaxOrgMembers,     null)
         );
 
         // ── Plan Compare Items ───────────────────────────────────────────────

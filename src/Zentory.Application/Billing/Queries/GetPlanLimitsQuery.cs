@@ -1,6 +1,7 @@
 using MediatR;
 using Zentory.Application.Common.Interfaces;
 using Zentory.Domain.Constants;
+using static Zentory.Domain.Constants.PlanLimits;
 
 namespace Zentory.Application.Billing.Queries;
 
@@ -28,13 +29,12 @@ public sealed class GetPlanLimitsQueryHandler : IRequestHandler<GetPlanLimitsQue
     {
         var plan        = _tenant.Plan;
         var accountType = _tenant.AccountType;
-        var fk          = PlanLimits.FeatureKeys;
 
-        var t0 = _limits.GetLimitAsync(plan, accountType, fk.MaxClients,       ct);
-        var t1 = _limits.GetLimitAsync(plan, accountType, fk.MaxInvoicesMonth, ct);
-        var t2 = _limits.GetLimitAsync(plan, accountType, fk.MaxOrgMembers,    ct);
-        var t3 = _limits.GetLimitAsync(plan, accountType, fk.MaxProjects,      ct);
-        var t4 = _limits.GetLimitAsync(plan, accountType, fk.MaxCollaborators, ct);
+        var t0 = _limits.GetLimitAsync(plan, accountType, FeatureKeys.MaxClients,       ct);
+        var t1 = _limits.GetLimitAsync(plan, accountType, FeatureKeys.MaxInvoicesMonth, ct);
+        var t2 = _limits.GetLimitAsync(plan, accountType, FeatureKeys.MaxOrgMembers,    ct);
+        var t3 = _limits.GetLimitAsync(plan, accountType, FeatureKeys.MaxProjects,      ct);
+        var t4 = _limits.GetLimitAsync(plan, accountType, FeatureKeys.MaxCollaborators, ct);
 
         await Task.WhenAll(t0, t1, t2, t3, t4);
 

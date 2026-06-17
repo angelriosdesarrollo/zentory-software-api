@@ -1,4 +1,5 @@
 using Zentory.Application.Common.Interfaces;
+using Zentory.Domain.Constants;
 using Zentory.Domain.Entities;
 
 namespace Zentory.Infrastructure.Services;
@@ -24,7 +25,7 @@ public sealed class ActivityLogService : IActivityLogService
     {
         // ActivityLog is only for Empresa accounts; Freelance accounts are skipped.
         if (!_tenant.IsAuthenticated ||
-            !string.Equals(_tenant.AccountType, "empresa", StringComparison.OrdinalIgnoreCase))
+            !string.Equals(_tenant.AccountType, AccountType.Empresa, StringComparison.OrdinalIgnoreCase))
             return;
 
         var entry = ActivityLog.Create(

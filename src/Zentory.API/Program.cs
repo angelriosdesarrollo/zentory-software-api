@@ -3,7 +3,6 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using Zentory.API.Authorization;
-using Zentory.Application.Common.Authorization;
 using Zentory.Application.Common.Interfaces;
 using Zentory.Application.Extensions;
 using Zentory.API.Middleware;
