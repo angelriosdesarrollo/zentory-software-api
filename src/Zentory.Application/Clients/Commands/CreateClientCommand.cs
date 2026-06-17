@@ -1,8 +1,7 @@
 using FluentValidation;
 using MediatR;
 using Zentory.Application.Common.Interfaces;
-using DomainValidationException = Zentory.Application.Exceptions.ValidationException;
-using DomainValidationError     = Zentory.Application.Exceptions.ValidationError;
+using Zentory.Application.Exceptions;
 using Zentory.Domain.Constants;
 using Zentory.Domain.Entities;
 using Zentory.Domain.Repositories;
@@ -30,38 +29,42 @@ public sealed class CreateClientCommandValidator : AbstractValidator<CreateClien
 
 public sealed class CreateClientCommandHandler : IRequestHandler<CreateClientCommand, Guid>
 {
-    private const int FreeClientLimit = 2;
-
     private readonly IClientRepository   _clients;
     private readonly IUnitOfWork         _uow;
     private readonly ITenantContext      _tenant;
     private readonly IActivityLogService _activityLog;
+    private readonly IPlanLimitService   _planLimits;
 
     public CreateClientCommandHandler(
         IClientRepository   clients,
         IUnitOfWork         uow,
         ITenantContext      tenant,
-        IActivityLogService activityLog)
+        IActivityLogService activityLog,
+        IPlanLimitService   planLimits)
     {
         _clients     = clients;
         _uow         = uow;
         _tenant      = tenant;
         _activityLog = activityLog;
+        _planLimits  = planLimits;
     }
 
     public async Task<Guid> Handle(CreateClientCommand request, CancellationToken cancellationToken)
     {
-        if (_tenant.Plan == Plan.Free)
+        var limit = await _planLimits.GetLimitAsync(
+            _tenant.Plan,
+            _tenant.AccountType,
+            PlanLimits.FeatureKeys.MaxClients,
+            cancellationToken);
+
+        if (limit.HasValue)
         {
             var count = await _clients.CountAsync(_tenant.OrganizationId, cancellationToken);
-            if (count >= FreeClientLimit)
-            {
-                throw new DomainValidationException([
-                    new DomainValidationError(
-                        "plan",
-                        $"El plan Free permite máximo {FreeClientLimit} clientes. Actualiza a Pro para tener clientes ilimitados.")
-                ]);
-            }
+            if (count >= limit.Value)
+                throw new QuotaExceededException(
+                    PlanLimits.FeatureKeys.MaxClients,
+                    limit.Value,
+                    count);
         }
 
         var client = Client.Create(

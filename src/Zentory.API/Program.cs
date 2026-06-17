@@ -1,9 +1,13 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
+using Zentory.API.Authorization;
+using Zentory.Application.Common.Authorization;
 using Zentory.Application.Common.Interfaces;
 using Zentory.Application.Extensions;
 using Zentory.API.Middleware;
+using Zentory.Domain.Constants;
 using Zentory.Infrastructure.Extensions;
 using Zentory.Infrastructure.Persistence;
 
@@ -36,7 +40,34 @@ builder.Services
         };
     });
 
-builder.Services.AddAuthorization();
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy("EmpresaOnly", policy =>
+        policy.RequireClaim("account_type", AccountType.Empresa));
+
+    options.AddPolicy("RequiresPro", policy =>
+        policy.Requirements.Add(new MinimumPlanRequirement(Plan.Pro)));
+
+    options.AddPolicy("RequiresStudio", policy =>
+        policy.Requirements.Add(new MinimumPlanRequirement(Plan.Studio)));
+
+    options.AddPolicy("EmpresaPro", policy =>
+    {
+        policy.RequireClaim("account_type", AccountType.Empresa);
+        policy.Requirements.Add(new MinimumPlanRequirement(Plan.Pro));
+    });
+
+    options.AddPolicy("EmpresaStudio", policy =>
+    {
+        policy.RequireClaim("account_type", AccountType.Empresa);
+        policy.Requirements.Add(new MinimumPlanRequirement(Plan.Studio));
+    });
+});
+
+builder.Services.AddSingleton<IAuthorizationHandler, MinimumPlanHandler>();
+
+// IMemoryCache — used by PlanLimitService to cache plan limits (10-min TTL)
+builder.Services.AddMemoryCache();
 
 // ── Tenant context — scoped per request ────────────────────────────────────
 builder.Services.AddHttpContextAccessor();

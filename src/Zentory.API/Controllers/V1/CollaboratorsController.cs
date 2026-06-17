@@ -7,7 +7,7 @@ using Zentory.Application.Collaborators.Queries;
 namespace Zentory.API.Controllers.V1;
 
 [ApiController]
-[Authorize]
+[Authorize(Policy = "EmpresaStudio")]
 [Route("api/v1/collaborators")]
 public sealed class CollaboratorsController : ControllerBase
 {

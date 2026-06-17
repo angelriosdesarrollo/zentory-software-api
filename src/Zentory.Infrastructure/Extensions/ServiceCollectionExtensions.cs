@@ -56,6 +56,7 @@ public static class ServiceCollectionExtensions
 
         services.AddScoped<IJwtService, JwtService>();
         services.AddScoped<IActivityLogService, ActivityLogService>();
+        services.AddScoped<IPlanLimitService, PlanLimitService>();
         services.AddScoped<DevDataSeeder>();
 
         return services;

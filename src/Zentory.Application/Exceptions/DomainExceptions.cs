@@ -63,11 +63,12 @@ public class ServiceUnavailableException : Exception
 
 public class QuotaExceededException : Exception
 {
-    public string   FeatureKey  { get; }
-    public int      Limit       { get; }
-    public int      Used        { get; }
-    public DateTime NextResetAt { get; }
-    public QuotaExceededException(string featureKey, int limit, int used, DateTime nextResetAt)
+    public string    FeatureKey  { get; }
+    public int       Limit       { get; }
+    public int       Used        { get; }
+    public DateTime? NextResetAt { get; }
+
+    public QuotaExceededException(string featureKey, int limit, int used, DateTime? nextResetAt = null)
         : base($"Quota exceeded for feature '{featureKey}'.")
     {
         FeatureKey  = featureKey;

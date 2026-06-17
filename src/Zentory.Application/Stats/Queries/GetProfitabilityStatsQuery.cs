@@ -1,7 +1,9 @@
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Zentory.Application.Common.Interfaces;
+using Zentory.Application.Exceptions;
 using Zentory.Application.Projects;
+using Zentory.Domain.Constants;
 using Zentory.Domain.Entities;
 
 namespace Zentory.Application.Stats.Queries;
@@ -56,6 +58,11 @@ public sealed class GetProfitabilityStatsQueryHandler
         GetProfitabilityStatsQuery request,
         CancellationToken          ct)
     {
+        if (_tenant.AccountType != AccountType.Empresa)
+            throw new ForbiddenException(ForbiddenReason.AccountTypeRequired);
+        if (_tenant.Plan != Plan.Studio)
+            throw new ForbiddenException(ForbiddenReason.PlanRequired, Plan.Studio);
+
         var oid = _tenant.OrganizationId;
 
         // ── Proyectos activos con cliente ─────────────────────────────────────

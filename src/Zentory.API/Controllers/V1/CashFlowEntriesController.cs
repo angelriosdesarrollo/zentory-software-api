@@ -7,7 +7,7 @@ using Zentory.Application.CashFlow.Queries;
 namespace Zentory.API.Controllers.V1;
 
 [ApiController]
-[Authorize]
+[Authorize(Policy = "EmpresaOnly")]
 [Route("api/v1/cash-flow-entries")]
 public sealed class CashFlowEntriesController : ControllerBase
 {

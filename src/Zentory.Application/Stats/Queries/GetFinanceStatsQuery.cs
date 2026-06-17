@@ -1,6 +1,8 @@
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Zentory.Application.Common.Interfaces;
+using Zentory.Application.Exceptions;
+using Zentory.Domain.Constants;
 
 namespace Zentory.Application.Stats.Queries;
 
@@ -49,6 +51,9 @@ public sealed class GetFinanceStatsQueryHandler
         GetFinanceStatsQuery  request,
         CancellationToken     ct)
     {
+        if (_tenant.AccountType != AccountType.Empresa)
+            throw new ForbiddenException(ForbiddenReason.AccountTypeRequired);
+
         var oid = _tenant.OrganizationId;
 
         // Todas las entradas del año hasta el mes consultado (inclusive)

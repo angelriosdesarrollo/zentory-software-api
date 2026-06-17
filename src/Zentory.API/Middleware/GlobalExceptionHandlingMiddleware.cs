@@ -44,9 +44,14 @@ public sealed class GlobalExceptionHandlingMiddleware
 
             ForbiddenException e => (
                 HttpStatusCode.Forbidden,
-                Error("forbidden", e.Message,
-                    e.Reason == ForbiddenReason.PlanRequired ? "PLAN_REQUIRED" : "ACCESS_DENIED",
-                    null)),
+                (object)new
+                {
+                    error        = "forbidden",
+                    message      = e.Message,
+                    code         = e.Reason == ForbiddenReason.PlanRequired ? "PLAN_REQUIRED" : "ACCESS_DENIED",
+                    requiredPlan = e.RequiredPlan,
+                    details      = (object[]?)null
+                }),
 
             ValidationException e => (
                 HttpStatusCode.UnprocessableEntity,
@@ -63,8 +68,14 @@ public sealed class GlobalExceptionHandlingMiddleware
 
             QuotaExceededException e => (
                 HttpStatusCode.UnprocessableEntity,
-                Error("quota_exceeded", e.Message, "AI_QUOTA_EXCEEDED",
-                    new object[] { new { limit = e.Limit, used = e.Used, resetAt = e.NextResetAt } })),
+                (object)new
+                {
+                    error      = "quota_exceeded",
+                    message    = e.Message,
+                    code       = "QUOTA_EXCEEDED",
+                    featureKey = e.FeatureKey,
+                    details    = new object[] { new { limit = e.Limit, used = e.Used, resetAt = e.NextResetAt } }
+                }),
 
             _ => (
                 HttpStatusCode.InternalServerError,

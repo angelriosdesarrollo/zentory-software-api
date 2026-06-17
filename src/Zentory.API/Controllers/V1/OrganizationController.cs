@@ -1,6 +1,7 @@
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Zentory.Application.Billing.Queries;
 using Zentory.Application.Organization.Commands;
 using Zentory.Application.Organization.Queries;
 
@@ -72,6 +73,14 @@ public sealed class OrganizationController : ControllerBase
     public async Task<IActionResult> GetBillingHistory(CancellationToken ct = default)
     {
         var result = await _mediator.Send(new GetBillingHistoryQuery(), ct);
+        return Ok(result);
+    }
+
+    /// <summary>GET /api/v1/organization/plan-limits — límites cuantitativos del plan actual</summary>
+    [HttpGet("plan-limits")]
+    public async Task<IActionResult> GetPlanLimits(CancellationToken ct = default)
+    {
+        var result = await _mediator.Send(new GetPlanLimitsQuery(), ct);
         return Ok(result);
     }
 }

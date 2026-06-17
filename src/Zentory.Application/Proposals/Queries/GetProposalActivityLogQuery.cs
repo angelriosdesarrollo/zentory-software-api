@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Zentory.Application.ActivityLogs;
 using Zentory.Application.Common.Interfaces;
 using Zentory.Application.Exceptions;
+using Zentory.Domain.Constants;
 
 namespace Zentory.Application.Proposals.Queries;
 
@@ -24,9 +25,8 @@ public sealed class GetProposalActivityLogQueryHandler
         GetProposalActivityLogQuery request,
         CancellationToken           cancellationToken)
     {
-        if (!string.Equals(_tenant.AccountType, "empresa", StringComparison.OrdinalIgnoreCase) ||
-            string.Equals(_tenant.Plan, "free", StringComparison.OrdinalIgnoreCase))
-            throw new ForbiddenException(ForbiddenReason.PlanRequired, "pro");
+        if (_tenant.AccountType != AccountType.Empresa || _tenant.Plan == Plan.Free)
+            throw new ForbiddenException(ForbiddenReason.PlanRequired, Plan.Pro);
 
         return await _db.ActivityLogs
             .Where(l => l.EntityType     == "Proposal"

@@ -2,6 +2,7 @@ using FluentValidation;
 using MediatR;
 using Zentory.Application.Common.Interfaces;
 using Zentory.Application.Exceptions;
+using Zentory.Domain.Constants;
 using Zentory.Domain.Entities;
 using Zentory.Domain.Repositories;
 
@@ -52,19 +53,22 @@ public sealed class CreateInvoiceCommandHandler : IRequestHandler<CreateInvoiceC
     private readonly IUnitOfWork         _uow;
     private readonly ITenantContext      _tenant;
     private readonly IActivityLogService _activityLog;
+    private readonly IPlanLimitService   _planLimits;
 
     public CreateInvoiceCommandHandler(
         IInvoiceRepository  invoices,
         IClientRepository   clients,
         IUnitOfWork         uow,
         ITenantContext      tenant,
-        IActivityLogService activityLog)
+        IActivityLogService activityLog,
+        IPlanLimitService   planLimits)
     {
         _invoices    = invoices;
         _clients     = clients;
         _uow         = uow;
         _tenant      = tenant;
         _activityLog = activityLog;
+        _planLimits  = planLimits;
     }
 
     public async Task<Guid> Handle(CreateInvoiceCommand request, CancellationToken cancellationToken)
@@ -74,7 +78,25 @@ public sealed class CreateInvoiceCommandHandler : IRequestHandler<CreateInvoiceC
             throw new NotFoundException("Client", request.ClientId);
 
         var countThisMonth = await _invoices.CountThisMonthAsync(_tenant.OrganizationId, cancellationToken);
-        var invoiceNumber  = $"INV-{DateTime.UtcNow:yyyyMM}-{countThisMonth + 1:D3}";
+
+        var limit = await _planLimits.GetLimitAsync(
+            _tenant.Plan,
+            _tenant.AccountType,
+            PlanLimits.FeatureKeys.MaxInvoicesMonth,
+            cancellationToken);
+
+        if (limit.HasValue && countThisMonth >= limit.Value)
+        {
+            var now       = DateTime.UtcNow;
+            var nextReset = new DateTime(now.Year, now.Month, 1, 0, 0, 0, DateTimeKind.Utc).AddMonths(1);
+            throw new QuotaExceededException(
+                PlanLimits.FeatureKeys.MaxInvoicesMonth,
+                limit.Value,
+                countThisMonth,
+                nextReset);
+        }
+
+        var invoiceNumber = $"INV-{DateTime.UtcNow:yyyyMM}-{countThisMonth + 1:D3}";
 
         var invoice = Invoice.Create(
             _tenant.OrganizationId,
