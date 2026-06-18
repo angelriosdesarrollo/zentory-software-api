@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Resend;
 using Zentory.Application.Common.Interfaces;
 using Zentory.Domain.Repositories;
 using Zentory.Infrastructure.Persistence;
@@ -58,6 +59,16 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IActivityLogService, ActivityLogService>();
         services.AddScoped<IPlanLimitService, PlanLimitService>();
         services.AddScoped<DevDataSeeder>();
+
+        services.AddOptions();
+        services.AddHttpClient<ResendClient>();
+        services.Configure<ResendClientOptions>(o =>
+        {
+            o.ApiToken = configuration["Resend:ApiKey"] ?? string.Empty;
+        });
+        services.AddTransient<IResend, ResendClient>();
+        services.AddScoped<IEmailService, ResendEmailService>();
+        services.AddSingleton<IApplicationSettings, ApplicationSettings>();
 
         return services;
     }

@@ -35,6 +35,7 @@ public record ProposalSummaryDto(
 
 public record ProposalDto(
     Guid                           Id,
+    Guid                           PublicToken,
     string                         Title,
     Guid                           ClientId,
     string                         ClientName,

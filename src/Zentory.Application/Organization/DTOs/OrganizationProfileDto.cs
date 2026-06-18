@@ -7,6 +7,7 @@ public record OrganizationProfileDto(
     string  AccountType,
     string  Country,
     string? LegalName,
+    string? LogoUrl,
     string? Nit,
     string? CompanyType,
     string? LegalRep,

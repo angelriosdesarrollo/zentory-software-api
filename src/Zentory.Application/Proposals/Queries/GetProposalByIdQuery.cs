@@ -38,6 +38,7 @@ public sealed class GetProposalByIdQueryHandler : IRequestHandler<GetProposalByI
 
         return new ProposalDto(
             proposal.Id,
+            proposal.PublicToken,
             proposal.Title,
             proposal.ClientId,
             client?.Name ?? string.Empty,

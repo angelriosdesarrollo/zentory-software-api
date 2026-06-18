@@ -67,11 +67,13 @@ public sealed class ProposalsController : ControllerBase
         return NoContent();
     }
 
-    /// <summary>POST /api/v1/proposals/{id}/send — marcar como enviada</summary>
+    public record SendProposalBody(string? EmailTo, string? Message);
+
+    /// <summary>POST /api/v1/proposals/{id}/send — marcar como enviada y enviar email opcional</summary>
     [HttpPost("{id:guid}/send")]
-    public async Task<IActionResult> Send(Guid id, CancellationToken ct = default)
+    public async Task<IActionResult> Send(Guid id, [FromBody] SendProposalBody? body = null, CancellationToken ct = default)
     {
-        await _mediator.Send(new SendProposalCommand(id), ct);
+        await _mediator.Send(new SendProposalCommand(id, body?.EmailTo, body?.Message), ct);
         return NoContent();
     }
 

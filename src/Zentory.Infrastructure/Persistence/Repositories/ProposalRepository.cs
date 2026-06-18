@@ -19,6 +19,12 @@ public sealed class ProposalRepository : IProposalRepository
             .Include(p => p.Items)
             .FirstOrDefaultAsync(p => p.Id == id, ct);
 
+    public async Task<Proposal?> GetByPublicTokenAsync(Guid publicToken, CancellationToken ct = default)
+        => await _db.Proposals
+            .Include(p => p.Sections)
+            .Include(p => p.Items)
+            .FirstOrDefaultAsync(p => p.PublicToken == publicToken && p.DeletedAt == null, ct);
+
     public async Task ReplaceSectionsAsync(
         Guid proposalId,
         IReadOnlyList<ProposalSection> sections,

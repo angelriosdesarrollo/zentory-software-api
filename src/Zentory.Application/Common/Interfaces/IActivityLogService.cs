@@ -9,4 +9,15 @@ public interface IActivityLogService
         string?   entityCode = null,
         string?   metadata   = null,
         CancellationToken ct = default);
+
+    // For unauthenticated/public events where tenant context is unavailable.
+    Task LogPublicAsync(
+        Guid      organizationId,
+        string    entityType,
+        Guid      entityId,
+        string    userInitials,
+        string    action,
+        string?   entityCode = null,
+        string?   metadata   = null,
+        CancellationToken ct = default);
 }

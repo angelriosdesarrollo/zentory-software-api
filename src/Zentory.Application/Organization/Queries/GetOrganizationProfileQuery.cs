@@ -44,6 +44,7 @@ public sealed class GetOrganizationProfileQueryHandler
             AccountType: org.AccountType,
             Country:     org.Country,
             LegalName:   s.GetValueOrDefault("profile.legal_name"),
+            LogoUrl:     s.GetValueOrDefault("profile.logo_url"),
             Nit:         s.GetValueOrDefault("profile.nit"),
             CompanyType: s.GetValueOrDefault("profile.company_type"),
             LegalRep:    s.GetValueOrDefault("profile.legal_rep"),

@@ -40,4 +40,26 @@ public sealed class ActivityLogService : IActivityLogService
 
         await _db.ActivityLogs.AddAsync(entry, ct);
     }
+
+    public async Task LogPublicAsync(
+        Guid      organizationId,
+        string    entityType,
+        Guid      entityId,
+        string    userInitials,
+        string    action,
+        string?   entityCode = null,
+        string?   metadata   = null,
+        CancellationToken ct = default)
+    {
+        var entry = ActivityLog.Create(
+            organizationId: organizationId,
+            entityType:     entityType,
+            entityId:       entityId,
+            userInitials:   userInitials,
+            action:         action,
+            entityCode:     entityCode,
+            metadata:       metadata);
+
+        await _db.ActivityLogs.AddAsync(entry, ct);
+    }
 }

@@ -78,6 +78,7 @@ public sealed class UpdateProposalCommandHandler : IRequestHandler<UpdateProposa
 
         return new ProposalDto(
             proposal.Id,
+            proposal.PublicToken,
             proposal.Title,
             proposal.ClientId,
             client?.Name ?? string.Empty,

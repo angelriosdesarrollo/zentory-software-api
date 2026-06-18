@@ -11,6 +11,7 @@ namespace Zentory.Application.Organization.Commands;
 
 public record UpdateOrganizationProfileCommand(
     string? LegalName,
+    string? LogoUrl,
     string? Nit,
     string? CompanyType,
     string? LegalRep,
@@ -55,6 +56,7 @@ public sealed class UpdateOrganizationProfileCommandHandler
         var profileFields = new Dictionary<string, string?>
         {
             ["profile.legal_name"]  = command.LegalName,
+            ["profile.logo_url"]    = command.LogoUrl,
             ["profile.nit"]         = command.Nit,
             ["profile.company_type"]= command.CompanyType,
             ["profile.legal_rep"]   = command.LegalRep,
