@@ -36,6 +36,7 @@ public interface IZentoryDbContext
     DbSet<ProjectFinancials>           ProjectFinancials           { get; }
     DbSet<ProjectTask>                 ProjectTasks                { get; }
     DbSet<ProjectMilestone>            ProjectMilestones           { get; }
+    DbSet<ProjectShare>                ProjectShares               { get; }
     DbSet<ProjectDeliverable>          ProjectDeliverables         { get; }
     DbSet<ProjectBillingEntry>         ProjectBillingEntries       { get; }
     DbSet<ProjectFile>                 ProjectFiles                { get; }

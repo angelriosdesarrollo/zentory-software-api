@@ -15,17 +15,27 @@ public class ProjectTask : TenantEntity
     public DateOnly? DueDate    { get; private set; }
     public DateTime? DeletedAt  { get; private set; }
 
+    // ── Gantt fields ──────────────────────────────────────────────────────────
+    public Guid?     MilestoneId  { get; private set; }
+    public DateOnly? StartDate    { get; private set; }
+    public int       Hours        { get; private set; }
+    public string[]  Dependencies { get; private set; } = [];
+
     private ProjectTask() { }
 
     public static ProjectTask Create(
         Guid     organizationId,
         Guid     projectId,
         string   title,
-        string   status    = "todo",
-        string   priority  = "medium",
+        string   status      = "todo",
+        string   priority    = "medium",
         string?  description = null,
         Guid?    assigneeId  = null,
-        DateOnly? dueDate    = null)
+        DateOnly? dueDate    = null,
+        Guid?    milestoneId = null,
+        DateOnly? startDate  = null,
+        int      hours       = 0,
+        string[]? dependencies = null)
     {
         return new ProjectTask
         {
@@ -37,6 +47,10 @@ public class ProjectTask : TenantEntity
             Description    = description,
             AssigneeId     = assigneeId,
             DueDate        = dueDate,
+            MilestoneId    = milestoneId,
+            StartDate      = startDate,
+            Hours          = hours,
+            Dependencies   = dependencies ?? [],
         };
     }
 
@@ -53,6 +67,16 @@ public class ProjectTask : TenantEntity
         Description = description;
         DueDate     = dueDate;
         UpdatedAt   = DateTime.UtcNow;
+    }
+
+    public void UpdateGantt(Guid? milestoneId, DateOnly? startDate, DateOnly? dueDate, int hours, string[] dependencies)
+    {
+        MilestoneId  = milestoneId;
+        StartDate    = startDate;
+        DueDate      = dueDate;
+        Hours        = hours;
+        Dependencies = dependencies;
+        UpdatedAt    = DateTime.UtcNow;
     }
 
     public void SoftDelete() { DeletedAt = DateTime.UtcNow; UpdatedAt = DateTime.UtcNow; }

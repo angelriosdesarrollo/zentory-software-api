@@ -2,6 +2,7 @@ using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using Zentory.Application.Master.Queries;
 using Zentory.Application.Plans.Queries;
+using Zentory.Application.ProjectShares.Queries;
 
 namespace Zentory.API.Controllers.V1;
 
@@ -16,6 +17,14 @@ public sealed class PublicController : ControllerBase
     private readonly IMediator _mediator;
 
     public PublicController(IMediator mediator) => _mediator = mediator;
+
+    /// <summary>GET /api/v1/public/share/{token} — vista pública de avances para el cliente</summary>
+    [HttpGet("share/{token}")]
+    public async Task<IActionResult> GetProjectShare(string token, CancellationToken ct = default)
+    {
+        var result = await _mediator.Send(new GetProjectSharePublicQuery(token), ct);
+        return Ok(result);
+    }
 
     /// <summary>GET /api/v1/public/plans — planes de precios con features, límites y marketing copy</summary>
     [HttpGet("plans")]

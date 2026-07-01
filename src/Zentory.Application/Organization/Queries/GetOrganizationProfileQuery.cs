@@ -11,13 +11,16 @@ public record GetOrganizationProfileQuery : IRequest<OrganizationProfileDto>;
 public sealed class GetOrganizationProfileQueryHandler
     : IRequestHandler<GetOrganizationProfileQuery, OrganizationProfileDto>
 {
-    private readonly IZentoryDbContext _db;
-    private readonly ITenantContext    _tenant;
+    private readonly IZentoryDbContext      _db;
+    private readonly ITenantContext         _tenant;
+    private readonly IPlanResolutionService _plans;
 
-    public GetOrganizationProfileQueryHandler(IZentoryDbContext db, ITenantContext tenant)
+    public GetOrganizationProfileQueryHandler(
+        IZentoryDbContext db, ITenantContext tenant, IPlanResolutionService plans)
     {
         _db     = db;
         _tenant = tenant;
+        _plans  = plans;
     }
 
     public async Task<OrganizationProfileDto> Handle(
@@ -35,12 +38,13 @@ public sealed class GetOrganizationProfileQueryHandler
             .Where(s => s.OrganizationId == _tenant.OrganizationId)
             .ToListAsync(cancellationToken);
 
-        var s = settings.ToDictionary(x => x.Key, x => x.Value);
+        var s    = settings.ToDictionary(x => x.Key, x => x.Value);
+        var plan = await _plans.ResolveForOwnerAsync(org.OwnerId, cancellationToken);
 
         return new OrganizationProfileDto(
             Id:          org.OrganizationId,
             Name:        org.Name,
-            Plan:        org.Plan,
+            Plan:        plan,
             AccountType: org.AccountType,
             Country:     org.Country,
             LegalName:   s.GetValueOrDefault("profile.legal_name"),

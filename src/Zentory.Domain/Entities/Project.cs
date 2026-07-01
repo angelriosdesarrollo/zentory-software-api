@@ -32,10 +32,12 @@ public class Project : TenantEntity
         int          hoursTotal   = 0,
         DateTime?    startDate    = null,
         DateTime?    endDate      = null,
-        Guid?        proposalId   = null)
+        Guid?        proposalId   = null,
+        Guid?        id           = null)
     {
         return new Project
         {
+            Id             = id ?? Guid.NewGuid(),
             OrganizationId = organizationId,
             ClientId       = clientId,
             Name           = name,

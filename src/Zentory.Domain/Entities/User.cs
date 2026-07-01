@@ -3,7 +3,7 @@
 public class User
 {
     public Guid      UserId         { get; private set; } = Guid.NewGuid();
-    public Guid      OrganizationId { get; private set; }
+    public Guid?     OrganizationId { get; private set; }
     public string    Email          { get; private set; } = default!;
     public string?   PasswordHash   { get; private set; }
     public string    FirstName      { get; private set; } = default!;
@@ -16,13 +16,13 @@ public class User
     private User() { }
 
     public static User Create(
-        Guid    organizationId,
         string  email,
         string  firstName,
         string  lastName,
         string  role,
-        string? passwordHash = null,
-        Guid?   id           = null)
+        string? passwordHash   = null,
+        Guid?   id             = null,
+        Guid?   organizationId = null)
     {
         return new User
         {

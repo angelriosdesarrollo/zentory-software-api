@@ -22,8 +22,8 @@ public sealed class TenantContext : ITenantContext
     {
         get
         {
-            var value = _user?.FindFirstValue("organization_id")
-                ?? throw new InvalidOperationException("Missing organization_id claim — endpoint requires authentication.");
+            var value = _user?.FindFirstValue("active_org_id")
+                ?? throw new InvalidOperationException("Missing active_org_id claim — endpoint requires authentication.");
             return Guid.Parse(value);
         }
     }
@@ -38,7 +38,9 @@ public sealed class TenantContext : ITenantContext
         }
     }
 
-    public string UserInitials => _user?.FindFirstValue("initials")     ?? "??";
-    public string Plan        => _user?.FindFirstValue("plan")         ?? "free";
-    public string AccountType => _user?.FindFirstValue("account_type") ?? "freelance";
+    public string UserInitials  => _user?.FindFirstValue("initials")        ?? "??";
+    public string Plan          => _user?.FindFirstValue("plan")            ?? "free";
+    public string AccountType   => _user?.FindFirstValue("account_type")    ?? "freelance";
+    public string ActiveOrgRole => _user?.FindFirstValue("active_org_role") ?? "member";
+    public bool   IsOwner       => ActiveOrgRole == "owner";
 }

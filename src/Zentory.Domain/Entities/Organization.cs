@@ -3,8 +3,8 @@ namespace Zentory.Domain.Entities;
 public class Organization
 {
     public Guid   OrganizationId { get; private set; } = Guid.NewGuid();
+    public Guid?  OwnerId        { get; private set; }
     public string Name           { get; private set; } = default!;
-    public string Plan           { get; private set; } = Zentory.Domain.Constants.Plan.Free;
     public string AccountType    { get; private set; } = default!;
     public string Country        { get; private set; } = "CO";
     public bool   IsActive       { get; private set; } = true;
@@ -22,5 +22,5 @@ public class Organization
         };
     }
 
-    public void SetPlan(string plan) { Plan = plan; }
+    public void SetOwner(Guid userId)      { OwnerId = userId; }
 }

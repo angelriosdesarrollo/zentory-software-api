@@ -1,4 +1,5 @@
 using MediatR;
+using Microsoft.EntityFrameworkCore;
 using Zentory.Application.Auth.DTOs;
 using Zentory.Application.Common.Interfaces;
 using Zentory.Application.Exceptions;
@@ -21,19 +22,25 @@ public sealed class LoginCommandHandler : IRequestHandler<LoginCommand, AuthToke
     private readonly IRefreshTokenRepository _refreshTokens;
     private readonly IJwtService             _jwt;
     private readonly IUnitOfWork             _uow;
+    private readonly IZentoryDbContext       _db;
+    private readonly IPlanResolutionService  _plans;
 
     public LoginCommandHandler(
         IUserRepository         users,
         IOrganizationRepository organizations,
         IRefreshTokenRepository refreshTokens,
         IJwtService             jwt,
-        IUnitOfWork             uow)
+        IUnitOfWork             uow,
+        IZentoryDbContext       db,
+        IPlanResolutionService  plans)
     {
         _users         = users;
         _organizations = organizations;
         _refreshTokens = refreshTokens;
         _jwt           = jwt;
         _uow           = uow;
+        _db            = db;
+        _plans         = plans;
     }
 
     public async Task<AuthTokenDto> Handle(LoginCommand request, CancellationToken cancellationToken)
@@ -49,10 +56,22 @@ public sealed class LoginCommandHandler : IRequestHandler<LoginCommand, AuthToke
         if (user.PasswordHash is null || !BCrypt.Net.BCrypt.Verify(request.Password, user.PasswordHash))
             throw InvalidCredentials();
 
-        var org = await _organizations.GetByIdAsync(user.OrganizationId, cancellationToken)
+        // Resolve active org via OrganizationMember (first owned org, then any membership)
+        var activeMembership = await _db.OrganizationMembers
+            .Where(m => m.UserId == user.UserId && m.DeletedAt == null)
+            .OrderBy(m => m.Role == "owner" ? 0 : 1)
+            .ThenBy(m => m.JoinedAt)
+            .FirstOrDefaultAsync(cancellationToken);
+        if (activeMembership is null)
+            throw InvalidCredentials();
+
+        var org = await _organizations.GetByIdAsync(activeMembership.OrganizationId, cancellationToken)
             ?? throw InvalidCredentials();
 
-        var accessToken  = _jwt.GenerateAccessToken(user, org);
+        var memberships = await BuildMembershipsAsync(user.UserId, cancellationToken);
+        var activePlan  = await _plans.ResolveForOwnerAsync(org.OwnerId, cancellationToken);
+
+        var accessToken  = _jwt.GenerateAccessToken(user, org, activeMembership.Role, activePlan);
         var refreshToken = _jwt.GenerateRefreshToken();
 
         var rt = RefreshToken.Create(user.UserId, refreshToken, DateTime.UtcNow.Add(RefreshTokenLifetime));
@@ -63,6 +82,36 @@ public sealed class LoginCommandHandler : IRequestHandler<LoginCommand, AuthToke
             accessToken,
             refreshToken,
             AccessTokenExpiresInSeconds,
-            new UserProfileDto(user.UserId, user.FirstName, user.LastName, user.Email, org.Plan, org.AccountType, user.Role, org.Name));
+            new UserProfileDto(
+                user.UserId, user.FirstName, user.LastName, user.Email,
+                activePlan, org.AccountType, user.Role,
+                ActiveOrgId:   org.OrganizationId.ToString(),
+                ActiveOrgName: org.Name,
+                ActiveOrgRole: activeMembership.Role),
+            memberships);
+    }
+
+    private async Task<IReadOnlyList<OrgMembershipDto>> BuildMembershipsAsync(Guid userId, CancellationToken ct)
+    {
+        var rows = await _db.OrganizationMembers
+            .Where(m => m.UserId == userId && m.DeletedAt == null)
+            .Join(_db.Organizations,
+                m => m.OrganizationId,
+                o => o.OrganizationId,
+                (m, o) => new { o.OrganizationId, o.Name, o.AccountType, o.OwnerId, m.Role, m.JoinedAt })
+            .ToListAsync(ct);
+
+        var plansByOwner = await _plans.ResolveForOwnersAsync(
+            rows.Where(r => r.OwnerId.HasValue).Select(r => r.OwnerId!.Value), ct);
+
+        return rows
+            .Select(r => new OrgMembershipDto(
+                r.OrganizationId.ToString(),
+                r.Name,
+                r.AccountType,
+                r.OwnerId.HasValue ? plansByOwner.GetValueOrDefault(r.OwnerId.Value, Zentory.Domain.Constants.Plan.Free) : Zentory.Domain.Constants.Plan.Free,
+                r.Role,
+                r.JoinedAt.ToString("O")))
+            .ToList();
     }
 }

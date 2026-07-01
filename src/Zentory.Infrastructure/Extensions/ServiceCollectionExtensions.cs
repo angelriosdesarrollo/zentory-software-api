@@ -54,10 +54,12 @@ public static class ServiceCollectionExtensions
         services.AddScoped<ITimeEntryRepository, TimeEntryRepository>();
         services.AddScoped<ICashFlowEntryRepository, CashFlowEntryRepository>();
         services.AddScoped<IProjectTaskRepository, ProjectTaskRepository>();
+        services.AddScoped<IProjectShareRepository, ProjectShareRepository>();
 
         services.AddScoped<IJwtService, JwtService>();
         services.AddScoped<IActivityLogService, ActivityLogService>();
         services.AddScoped<IPlanLimitService, PlanLimitService>();
+        services.AddScoped<IPlanResolutionService, PlanResolutionService>();
         services.AddScoped<DevDataSeeder>();
 
         services.AddOptions();

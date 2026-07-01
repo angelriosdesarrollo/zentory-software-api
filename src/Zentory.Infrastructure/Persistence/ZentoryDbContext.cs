@@ -45,6 +45,7 @@ public class ZentoryDbContext : DbContext, IZentoryDbContext
     public DbSet<ProjectFinancials>          ProjectFinancials           { get; set; } = default!;
     public DbSet<ProjectTask>                ProjectTasks                { get; set; } = default!;
     public DbSet<ProjectMilestone>           ProjectMilestones           { get; set; } = default!;
+    public DbSet<ProjectShare>               ProjectShares               { get; set; } = default!;
     public DbSet<ProjectDeliverable>         ProjectDeliverables         { get; set; } = default!;
     public DbSet<ProjectBillingEntry>        ProjectBillingEntries       { get; set; } = default!;
     public DbSet<ProjectFile>                ProjectFiles                { get; set; } = default!;
@@ -154,6 +155,10 @@ public class ZentoryDbContext : DbContext, IZentoryDbContext
         modelBuilder.Entity<ProjectTask>().HasQueryFilter(t =>
             t.DeletedAt == null &&
             (!tenantActive || t.OrganizationId == _tenant!.OrganizationId));
+
+        modelBuilder.Entity<ProjectShare>().HasQueryFilter(s =>
+            s.DeletedAt == null &&
+            (!tenantActive || s.OrganizationId == _tenant!.OrganizationId));
 
         modelBuilder.Entity<CashFlowEntry>().HasQueryFilter(c =>
             c.DeletedAt == null &&

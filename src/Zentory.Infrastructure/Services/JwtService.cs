@@ -24,7 +24,7 @@ public sealed class JwtService : IJwtService
         _audience = configuration["Jwt:Audience"] ?? throw new InvalidOperationException("Jwt:Audience is required.");
     }
 
-    public string GenerateAccessToken(User user, Organization org)
+    public string GenerateAccessToken(User user, Organization org, string activeOrgRole, string plan)
     {
         var initials = $"{user.FirstName[0]}{user.LastName[0]}".ToUpperInvariant();
 
@@ -32,8 +32,9 @@ public sealed class JwtService : IJwtService
         {
             new Claim(JwtRegisteredClaimNames.Sub,  user.UserId.ToString()),
             new Claim(JwtRegisteredClaimNames.Email, user.Email),
-            new Claim("organization_id", org.OrganizationId.ToString()),
-            new Claim("plan",            org.Plan),
+            new Claim("active_org_id",   org.OrganizationId.ToString()),
+            new Claim("active_org_role", activeOrgRole),
+            new Claim("plan",            plan),
             new Claim("account_type",    org.AccountType),
             new Claim("role",            user.Role),
             new Claim("initials",        initials)

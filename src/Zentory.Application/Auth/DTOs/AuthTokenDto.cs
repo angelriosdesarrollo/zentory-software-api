@@ -1,10 +1,17 @@
 namespace Zentory.Application.Auth.DTOs;
 
 public record AuthTokenDto(
-    string         AccessToken,
-    string         RefreshToken,
-    int            ExpiresIn,
-    UserProfileDto User);
+    string                          AccessToken,
+    string                          RefreshToken,
+    int                             ExpiresIn,
+    UserProfileDto                  User,
+    IReadOnlyList<OrgMembershipDto> Memberships);
+
+public record SwitchOrgResponseDto(
+    string                          AccessToken,
+    int                             ExpiresIn,
+    UserProfileDto                  User,
+    IReadOnlyList<OrgMembershipDto> Memberships);
 
 public record UserProfileDto(
     Guid   Id,
@@ -14,4 +21,14 @@ public record UserProfileDto(
     string Plan,
     string AccountType,
     string Role,
-    string OrganizationName);
+    string ActiveOrgId,
+    string ActiveOrgName,
+    string ActiveOrgRole);
+
+public record OrgMembershipDto(
+    string OrgId,
+    string OrgName,
+    string AccountType,
+    string Plan,
+    string Role,
+    string JoinedAt);

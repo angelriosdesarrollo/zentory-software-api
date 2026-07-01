@@ -13,15 +13,18 @@ public sealed class GetProfileQueryHandler : IRequestHandler<GetProfileQuery, Us
     private readonly IUserRepository         _users;
     private readonly IOrganizationRepository _organizations;
     private readonly ITenantContext          _tenant;
+    private readonly IPlanResolutionService  _plans;
 
     public GetProfileQueryHandler(
         IUserRepository         users,
         IOrganizationRepository organizations,
-        ITenantContext          tenant)
+        ITenantContext          tenant,
+        IPlanResolutionService  plans)
     {
         _users         = users;
         _organizations = organizations;
         _tenant        = tenant;
+        _plans         = plans;
     }
 
     public async Task<UserProfileDto> Handle(GetProfileQuery request, CancellationToken cancellationToken)
@@ -34,14 +37,18 @@ public sealed class GetProfileQueryHandler : IRequestHandler<GetProfileQuery, Us
         if (org is null)
             throw new NotFoundException("Organization", _tenant.OrganizationId);
 
+        var plan = await _plans.ResolveForOwnerAsync(org.OwnerId, cancellationToken);
+
         return new UserProfileDto(
             user.UserId,
             user.FirstName,
             user.LastName,
             user.Email,
-            org.Plan,
+            plan,
             org.AccountType,
             user.Role,
-            org.Name);
+            ActiveOrgId:   _tenant.OrganizationId.ToString(),
+            ActiveOrgName: org.Name,
+            ActiveOrgRole: _tenant.ActiveOrgRole);
     }
 }

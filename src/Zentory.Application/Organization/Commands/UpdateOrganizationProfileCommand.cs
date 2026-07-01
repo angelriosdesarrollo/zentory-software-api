@@ -27,17 +27,20 @@ public record UpdateOrganizationProfileCommand(
 public sealed class UpdateOrganizationProfileCommandHandler
     : IRequestHandler<UpdateOrganizationProfileCommand, OrganizationProfileDto>
 {
-    private readonly IZentoryDbContext    _db;
-    private readonly IUnitOfWork          _uow;
-    private readonly ITenantContext       _tenant;
+    private readonly IZentoryDbContext      _db;
+    private readonly IUnitOfWork            _uow;
+    private readonly ITenantContext         _tenant;
+    private readonly IPlanResolutionService _plans;
 
     public UpdateOrganizationProfileCommandHandler(
-        IZentoryDbContext    db,
-        IUnitOfWork          uow,
-        ITenantContext       tenant)
+        IZentoryDbContext      db,
+        IUnitOfWork            uow,
+        ITenantContext         tenant,
+        IPlanResolutionService plans)
     {
         _db     = db;
         _uow    = uow;
+        _plans  = plans;
         _tenant = tenant;
     }
 
@@ -86,7 +89,7 @@ public sealed class UpdateOrganizationProfileCommandHandler
         await _uow.SaveChangesAsync(cancellationToken);
 
         // Re-read to return current state
-        return await new GetOrganizationProfileQueryHandler(_db, _tenant)
+        return await new GetOrganizationProfileQueryHandler(_db, _tenant, _plans)
             .Handle(new GetOrganizationProfileQuery(), cancellationToken);
     }
 }

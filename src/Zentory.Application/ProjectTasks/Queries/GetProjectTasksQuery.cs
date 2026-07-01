@@ -45,6 +45,10 @@ public sealed class GetProjectTasksQueryHandler
             t.AssigneeId.HasValue ? collabMap.GetValueOrDefault(t.AssigneeId.Value) : null,
             t.DueDate?.ToString("yyyy-MM-dd"),
             t.CreatedAt,
-            t.UpdatedAt)).ToList();
+            t.UpdatedAt,
+            t.MilestoneId,
+            t.StartDate?.ToString("yyyy-MM-dd"),
+            t.Hours,
+            t.Dependencies)).ToList();
     }
 }

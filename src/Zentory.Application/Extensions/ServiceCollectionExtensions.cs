@@ -17,6 +17,9 @@ public static class ServiceCollectionExtensions
         services.AddTransient(typeof(IPipelineBehavior<,>), typeof(LoggingBehavior<,>));
         services.AddTransient(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
 
+        // Provisional singleton stores — replace each with a real EF repository when the domain entity exists.
+        services.AddSingleton<Projects.ProjectExpenseStore>();
+
         return services;
     }
 }

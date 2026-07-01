@@ -11,7 +11,7 @@ public class SubscriptionConfiguration : IEntityTypeConfiguration<Subscription>
         builder.ToTable("subscriptions", "billing");
         builder.HasKey(s => s.Id);
         builder.Property(s => s.Id).HasColumnName("id");
-        builder.Property(s => s.OrganizationId).HasColumnName("organization_id").IsRequired();
+        builder.Property(s => s.UserId).HasColumnName("user_id").IsRequired();
         builder.Property(s => s.CustomerId).HasColumnName("customer_id").IsRequired();
         builder.Property(s => s.PlanId).HasColumnName("plan_id").IsRequired();
         builder.Property(s => s.GatewaySubscriptionId).HasColumnName("gateway_subscription_id").HasMaxLength(100);
@@ -31,6 +31,6 @@ public class SubscriptionConfiguration : IEntityTypeConfiguration<Subscription>
         builder.Property(s => s.NextDunningAt).HasColumnName("next_dunning_at");
         builder.Property(s => s.CreatedAt).HasColumnName("created_at");
         builder.Property(s => s.UpdatedAt).HasColumnName("updated_at");
-        builder.HasIndex(s => s.OrganizationId).IsUnique().HasDatabaseName("ix_subscriptions_org_id");
+        builder.HasIndex(s => s.UserId).IsUnique().HasDatabaseName("ix_subscriptions_user_id");
     }
 }

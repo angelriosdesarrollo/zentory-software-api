@@ -1,6 +1,7 @@
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Zentory.Application.Auth.Commands;
 using Zentory.Application.Billing.Queries;
 using Zentory.Application.Organization.Commands;
 using Zentory.Application.Organization.Queries;
@@ -83,4 +84,14 @@ public sealed class OrganizationController : ControllerBase
         var result = await _mediator.Send(new GetPlanLimitsQuery(), ct);
         return Ok(result);
     }
+
+    /// <summary>POST /api/v1/organization/switch — cambiar organización activa; devuelve nuevo access token</summary>
+    [HttpPost("switch")]
+    public async Task<IActionResult> Switch([FromBody] SwitchRequest body, CancellationToken ct = default)
+    {
+        var result = await _mediator.Send(new SwitchActiveOrganizationCommand(body.OrgId), ct);
+        return Ok(result);
+    }
+
+    public record SwitchRequest(Guid OrgId);
 }

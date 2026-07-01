@@ -4,7 +4,7 @@ namespace Zentory.Domain.Entities.Billing;
 
 public class Subscription : BaseEntity
 {
-    public Guid     OrganizationId         { get; private set; }
+    public Guid     UserId                 { get; private set; }
     public Guid     CustomerId             { get; private set; }
     public Guid     PlanId                 { get; private set; }
 
@@ -35,7 +35,7 @@ public class Subscription : BaseEntity
     private Subscription() { }
 
     public static Subscription Create(
-        Guid   organizationId,
+        Guid   userId,
         Guid   customerId,
         Guid   planId,
         string billingPeriod = "monthly",
@@ -43,11 +43,11 @@ public class Subscription : BaseEntity
     {
         return new Subscription
         {
-            OrganizationId = organizationId,
-            CustomerId     = customerId,
-            PlanId         = planId,
-            BillingPeriod  = billingPeriod,
-            TrialEndsAt    = trialEndsAt
+            UserId        = userId,
+            CustomerId    = customerId,
+            PlanId        = planId,
+            BillingPeriod = billingPeriod,
+            TrialEndsAt   = trialEndsAt
         };
     }
 

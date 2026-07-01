@@ -11,4 +11,9 @@ public record ProjectTaskDto(
     string?   AssigneeName,
     string?   DueDate,
     DateTime  CreatedAt,
-    DateTime  UpdatedAt);
+    DateTime  UpdatedAt,
+    // Gantt fields
+    Guid?     MilestoneId,
+    string?   StartDate,
+    int       Hours,
+    string[]  Dependencies);

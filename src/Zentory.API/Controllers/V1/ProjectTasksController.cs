@@ -46,6 +46,24 @@ public sealed class ProjectTasksController : ControllerBase
         return NoContent();
     }
 
+    /// <summary>PATCH /api/v1/projects/{projectId}/tasks/{taskId}/gantt</summary>
+    [HttpPatch("{taskId:guid}/gantt")]
+    public async Task<IActionResult> UpdateGantt(
+        Guid projectId,
+        Guid taskId,
+        [FromBody] GanttRequest body,
+        CancellationToken ct = default)
+    {
+        await _mediator.Send(new UpdateProjectTaskGanttCommand(
+            taskId,
+            body.MilestoneId,
+            body.StartDate,
+            body.DueDate,
+            body.Hours,
+            body.Dependencies ?? []), ct);
+        return NoContent();
+    }
+
     /// <summary>DELETE /api/v1/projects/{projectId}/tasks/{taskId}</summary>
     [HttpDelete("{taskId:guid}")]
     public async Task<IActionResult> Delete(Guid projectId, Guid taskId, CancellationToken ct = default)
@@ -55,4 +73,5 @@ public sealed class ProjectTasksController : ControllerBase
     }
 
     public record MoveRequest(string Status);
+    public record GanttRequest(Guid? MilestoneId, string? StartDate, string? DueDate, int Hours, string[]? Dependencies);
 }
