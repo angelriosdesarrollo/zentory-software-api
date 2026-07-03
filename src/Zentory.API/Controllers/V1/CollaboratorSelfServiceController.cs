@@ -111,6 +111,16 @@ public sealed class CollaboratorSelfServiceController : ControllerBase
         await _mediator.Send(new SignOwnPayoutInvoiceCommand(id, body.SignedByName), ct);
         return NoContent();
     }
+
+    /// <summary>POST /api/v1/collaborator-portal/payout-invoices/{id}/dispute — el colaborador rechaza una cuenta de cobro generada por la empresa</summary>
+    [HttpPost("payout-invoices/{id:guid}/dispute")]
+    public async Task<IActionResult> DisputePayoutInvoice(
+        Guid id, [FromBody] DisputePayoutInvoiceRequest body, CancellationToken ct = default)
+    {
+        await _mediator.Send(new DisputeOwnPayoutInvoiceCommand(id, body.Notes), ct);
+        return NoContent();
+    }
 }
 
 public sealed record SignPayoutInvoiceRequest(string SignedByName);
+public sealed record DisputePayoutInvoiceRequest(string Notes);

@@ -52,4 +52,22 @@ public interface IEmailService
         string    magicLinkUrl,
         DateTime  expiresAt,
         CancellationToken ct = default);
+
+    Task SendPilaRejectedEmailAsync(
+        string    toEmail,
+        string    collaboratorName,
+        string    companyName,
+        string    period,
+        string    notes,
+        string    portalUrl,
+        CancellationToken ct = default);
+
+    Task SendPayoutInvoiceRejectedEmailAsync(
+        string    toEmail,
+        string    collaboratorName,
+        string    companyName,
+        string    period,
+        string    notes,
+        string    portalUrl,
+        CancellationToken ct = default);
 }

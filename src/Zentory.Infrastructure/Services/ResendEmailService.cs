@@ -466,4 +466,166 @@ public sealed class ResendEmailService : IEmailService
         };
         await SendAsync(email, toEmail, ct);
     }
+
+    public async Task SendPilaRejectedEmailAsync(
+        string    toEmail,
+        string    collaboratorName,
+        string    companyName,
+        string    period,
+        string    notes,
+        string    portalUrl,
+        CancellationToken ct = default)
+    {
+        var name    = System.Web.HttpUtility.HtmlEncode(collaboratorName);
+        var company = System.Web.HttpUtility.HtmlEncode(companyName);
+        var reason  = System.Web.HttpUtility.HtmlEncode(notes);
+
+        var html = $"""
+            <!DOCTYPE html>
+            <html lang="es">
+            <head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/></head>
+            <body style="margin:0;padding:0;background:#f4f5f7;font-family:'Helvetica Neue',Arial,sans-serif;">
+              <table width="100%" cellpadding="0" cellspacing="0" style="background:#f4f5f7;padding:40px 0;">
+                <tr><td align="center">
+                  <table width="560" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.08);">
+                    <tr>
+                      <td style="background:#0f172a;padding:24px 32px;">
+                        <span style="color:#fff;font-size:20px;font-weight:700;letter-spacing:-0.5px;">Zentory</span>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td style="padding:32px 32px 24px;">
+                        <p style="margin:0 0 16px;font-size:15px;color:#374151;line-height:1.6;">Hola <strong>{name}</strong>,</p>
+                        <p style="margin:0 0 16px;font-size:15px;color:#374151;line-height:1.6;">
+                          <strong>{company}</strong> rechazó tu comprobante de pago de planilla (PILA) correspondiente a <strong>{period}</strong>.
+                        </p>
+                        <table cellpadding="0" cellspacing="0" width="100%" style="margin:0 0 20px;background:#fef2f2;border:1px solid #fecaca;border-radius:8px;">
+                          <tr>
+                            <td style="padding:12px 16px;">
+                              <p style="margin:0;font-size:13px;color:#b91c1c;"><strong>Motivo:</strong> {reason}</p>
+                            </td>
+                          </tr>
+                        </table>
+                        <p style="margin:0 0 16px;font-size:15px;color:#374151;line-height:1.6;">
+                          Ingresa a tu portal para subir el comprobante correcto.
+                        </p>
+                        <table cellpadding="0" cellspacing="0" style="margin:24px 0;">
+                          <tr>
+                            <td style="background:#2563eb;border-radius:8px;">
+                              <a href="{portalUrl}" target="_blank"
+                                 style="display:inline-block;padding:12px 28px;color:#fff;font-size:14px;font-weight:600;text-decoration:none;">
+                                Ir al portal →
+                              </a>
+                            </td>
+                          </tr>
+                        </table>
+                        <p style="margin:0;font-size:13px;color:#9ca3af;">
+                          O copia este enlace en tu navegador:<br/>
+                          <a href="{portalUrl}" style="color:#2563eb;word-break:break-all;">{portalUrl}</a>
+                        </p>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td style="padding:16px 32px;border-top:1px solid #f3f4f6;background:#fafafa;">
+                        <p style="margin:0;font-size:12px;color:#9ca3af;text-align:center;">
+                          Equipo de {company}, vía Zentory · Plataforma para software factories
+                        </p>
+                      </td>
+                    </tr>
+                  </table>
+                </td></tr>
+              </table>
+            </body>
+            </html>
+            """;
+
+        var email = new EmailMessage
+        {
+            From     = $"{_fromName} <{_fromEmail}>",
+            Subject  = $"{companyName} rechazó tu planilla de {period}",
+            HtmlBody = html,
+        };
+        await SendAsync(email, toEmail, ct);
+    }
+
+    public async Task SendPayoutInvoiceRejectedEmailAsync(
+        string    toEmail,
+        string    collaboratorName,
+        string    companyName,
+        string    period,
+        string    notes,
+        string    portalUrl,
+        CancellationToken ct = default)
+    {
+        var name    = System.Web.HttpUtility.HtmlEncode(collaboratorName);
+        var company = System.Web.HttpUtility.HtmlEncode(companyName);
+        var reason  = System.Web.HttpUtility.HtmlEncode(notes);
+
+        var html = $"""
+            <!DOCTYPE html>
+            <html lang="es">
+            <head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/></head>
+            <body style="margin:0;padding:0;background:#f4f5f7;font-family:'Helvetica Neue',Arial,sans-serif;">
+              <table width="100%" cellpadding="0" cellspacing="0" style="background:#f4f5f7;padding:40px 0;">
+                <tr><td align="center">
+                  <table width="560" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.08);">
+                    <tr>
+                      <td style="background:#0f172a;padding:24px 32px;">
+                        <span style="color:#fff;font-size:20px;font-weight:700;letter-spacing:-0.5px;">Zentory</span>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td style="padding:32px 32px 24px;">
+                        <p style="margin:0 0 16px;font-size:15px;color:#374151;line-height:1.6;">Hola <strong>{name}</strong>,</p>
+                        <p style="margin:0 0 16px;font-size:15px;color:#374151;line-height:1.6;">
+                          <strong>{company}</strong> rechazó tu cuenta de cobro correspondiente a <strong>{period}</strong>.
+                        </p>
+                        <table cellpadding="0" cellspacing="0" width="100%" style="margin:0 0 20px;background:#fef2f2;border:1px solid #fecaca;border-radius:8px;">
+                          <tr>
+                            <td style="padding:12px 16px;">
+                              <p style="margin:0;font-size:13px;color:#b91c1c;"><strong>Motivo:</strong> {reason}</p>
+                            </td>
+                          </tr>
+                        </table>
+                        <p style="margin:0 0 16px;font-size:15px;color:#374151;line-height:1.6;">
+                          Ingresa a tu portal para subir la cuenta de cobro correcta.
+                        </p>
+                        <table cellpadding="0" cellspacing="0" style="margin:24px 0;">
+                          <tr>
+                            <td style="background:#2563eb;border-radius:8px;">
+                              <a href="{portalUrl}" target="_blank"
+                                 style="display:inline-block;padding:12px 28px;color:#fff;font-size:14px;font-weight:600;text-decoration:none;">
+                                Ir al portal →
+                              </a>
+                            </td>
+                          </tr>
+                        </table>
+                        <p style="margin:0;font-size:13px;color:#9ca3af;">
+                          O copia este enlace en tu navegador:<br/>
+                          <a href="{portalUrl}" style="color:#2563eb;word-break:break-all;">{portalUrl}</a>
+                        </p>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td style="padding:16px 32px;border-top:1px solid #f3f4f6;background:#fafafa;">
+                        <p style="margin:0;font-size:12px;color:#9ca3af;text-align:center;">
+                          Equipo de {company}, vía Zentory · Plataforma para software factories
+                        </p>
+                      </td>
+                    </tr>
+                  </table>
+                </td></tr>
+              </table>
+            </body>
+            </html>
+            """;
+
+        var email = new EmailMessage
+        {
+            From     = $"{_fromName} <{_fromEmail}>",
+            Subject  = $"{companyName} rechazó tu cuenta de cobro de {period}",
+            HtmlBody = html,
+        };
+        await SendAsync(email, toEmail, ct);
+    }
 }

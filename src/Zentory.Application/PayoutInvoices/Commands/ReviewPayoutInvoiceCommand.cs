@@ -30,17 +30,26 @@ public sealed class ReviewPayoutInvoiceCommandHandler : IRequestHandler<ReviewPa
 
     private readonly ICollaboratorPayoutInvoiceRepository _invoices;
     private readonly ICollaboratorRepository               _collaborators;
+    private readonly IOrganizationRepository               _organizations;
+    private readonly IEmailService                         _email;
+    private readonly IApplicationSettings                  _settings;
     private readonly IUnitOfWork                            _uow;
     private readonly ITenantContext                         _tenant;
 
     public ReviewPayoutInvoiceCommandHandler(
         ICollaboratorPayoutInvoiceRepository invoices,
         ICollaboratorRepository               collaborators,
+        IOrganizationRepository               organizations,
+        IEmailService                         email,
+        IApplicationSettings                  settings,
         IUnitOfWork                           uow,
         ITenantContext                        tenant)
     {
         _invoices      = invoices;
         _collaborators = collaborators;
+        _organizations = organizations;
+        _email         = email;
+        _settings      = settings;
         _uow           = uow;
         _tenant        = tenant;
     }
@@ -55,19 +64,44 @@ public sealed class ReviewPayoutInvoiceCommandHandler : IRequestHandler<ReviewPa
             throw new ConflictException("NOT_REVIEWABLE", "Esta cuenta de cobro todavía no tiene documento para revisar.");
 
         if (request.Approved)
-            invoice.Approve();
-        else
-            invoice.Reject(request.Notes!);
-
-        await _invoices.UpdateAsync(invoice, cancellationToken);
-
-        var collaborator = await _collaborators.GetByIdAsync(invoice.CollaboratorId, cancellationToken);
-        if (collaborator is not null)
         {
-            collaborator.UpdatePayoutInvoiceStatus(invoice.Status, invoice.Period);
-            await _collaborators.UpdateAsync(collaborator, cancellationToken);
-        }
+            invoice.Approve();
+            await _invoices.UpdateAsync(invoice, cancellationToken);
 
-        await _uow.SaveChangesAsync(cancellationToken);
+            var collaborator = await _collaborators.GetByIdAsync(invoice.CollaboratorId, cancellationToken);
+            if (collaborator is not null)
+            {
+                collaborator.UpdatePayoutInvoiceStatus(invoice.Status, invoice.Period);
+                await _collaborators.UpdateAsync(collaborator, cancellationToken);
+            }
+
+            await _uow.SaveChangesAsync(cancellationToken);
+        }
+        else
+        {
+            invoice.Reject(request.Notes!);
+            // Mismo motivo que en PILA: token reusable regenerado para que el enlace del
+            // correo de rechazo nunca esté vencido.
+            invoice.RegenerateToken();
+            await _invoices.UpdateAsync(invoice, cancellationToken);
+
+            var collaborator = await _collaborators.GetByIdAsync(invoice.CollaboratorId, cancellationToken);
+            if (collaborator is not null)
+            {
+                collaborator.UpdatePayoutInvoiceStatus(invoice.Status, invoice.Period);
+                await _collaborators.UpdateAsync(collaborator, cancellationToken);
+            }
+
+            await _uow.SaveChangesAsync(cancellationToken);
+
+            if (collaborator is not null && !string.IsNullOrWhiteSpace(collaborator.Email))
+            {
+                var organization = await _organizations.GetByIdAsync(_tenant.OrganizationId, cancellationToken);
+                var portalUrl = $"{_settings.BaseUrl}/portal/entrar?token={invoice.PublicToken}&kind=payout_invoice_request";
+                await _email.SendPayoutInvoiceRejectedEmailAsync(
+                    collaborator.Email!, collaborator.Name, organization?.Name ?? string.Empty,
+                    invoice.Period, request.Notes!, portalUrl, cancellationToken);
+            }
+        }
     }
 }

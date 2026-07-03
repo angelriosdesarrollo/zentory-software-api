@@ -10,7 +10,7 @@ public class CollaboratorPayoutInvoice : TenantEntity
     public decimal  Amount          { get; private set; }
     public string   Currency        { get; private set; } = "COP";
     public string   Status          { get; private set; } = "draft";
-    // 'draft' | 'generated' | 'sent' | 'signed' | 'uploaded_manually' | 'approved' | 'rejected'
+    // 'draft' | 'generated' | 'sent' | 'signed' | 'uploaded_manually' | 'approved' | 'rejected' | 'disputed'
     // 'signed' solo aplica a Source == "generated": el colaborador descargó el borrador
     // generado por la empresa, lo firmó fuera de la plataforma y subió la versión firmada,
     // que reemplaza el documento generado (no se conservan ambos).
@@ -18,6 +18,10 @@ public class CollaboratorPayoutInvoice : TenantEntity
     // que PilaVerification.Status 'verificada'/'rechazada'). Un rechazo exige Notes — el
     // colaborador lo ve en su portal y puede volver a subir, lo que reemplaza el documento
     // y saca a la fila de 'rejected' (vía MarkSigned/MarkUploadedManually otra vez).
+    // 'disputed': dirección opuesta a 'rejected' — el colaborador rechaza una cuenta de
+    // cobro generada por la empresa (Source == "generated") en vez de firmarla. Exige Notes
+    // igual que 'rejected'. No hay acción de "resolver" automática — la empresa ve el motivo
+    // y corrige generando una cuenta de cobro nueva (ya es un caso soportado, no exclusivo).
     public string?  Notes           { get; private set; }
     public string   Source          { get; private set; } = "generated";
     // 'generated' (la empresa generó el PDF) | 'manual_upload' (la empresa le pidió al
@@ -123,6 +127,13 @@ public class CollaboratorPayoutInvoice : TenantEntity
     public void Reject(string notes)
     {
         Status    = "rejected";
+        Notes     = notes;
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    public void Dispute(string notes)
+    {
+        Status    = "disputed";
         Notes     = notes;
         UpdatedAt = DateTime.UtcNow;
     }
