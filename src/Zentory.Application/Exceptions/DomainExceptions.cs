@@ -11,7 +11,7 @@ public class NotFoundException : Exception
         => ResourceType = resourceType;
 }
 
-public enum ForbiddenReason { PlanRequired, AccountTypeRequired, TenantMismatch }
+public enum ForbiddenReason { PlanRequired, LegalTypeRequired, TenantMismatch }
 
 public class ForbiddenException : Exception
 {
@@ -27,7 +27,7 @@ public class ForbiddenException : Exception
         reason switch
         {
             ForbiddenReason.PlanRequired       => $"This feature requires plan '{requiredPlan}'.",
-            ForbiddenReason.AccountTypeRequired => "This feature is not available for your account type.",
+            ForbiddenReason.LegalTypeRequired => "This feature is not available for your account type.",
             ForbiddenReason.TenantMismatch      => "Access denied.",
             _                                   => "Forbidden."
         };

@@ -5,7 +5,7 @@ namespace Zentory.Domain.Entities.Billing;
 public class PlanFeature : BaseEntity
 {
     public Guid    PlanId      { get; private set; }
-    public string  AccountType { get; private set; } = default!;  // 'freelance' | 'empresa'
+    public string  LegalType { get; private set; } = default!;  // 'freelance' | 'empresa'
     public string  Text        { get; private set; } = default!;
     public bool    IsHighlight { get; private set; }
     public string? BadgeText   { get; private set; }
@@ -15,7 +15,7 @@ public class PlanFeature : BaseEntity
 
     public static PlanFeature Create(
         Guid   planId,
-        string accountType,
+        string legalType,
         string text,
         bool   isHighlight = false,
         string? badgeText  = null,
@@ -24,7 +24,7 @@ public class PlanFeature : BaseEntity
         return new PlanFeature
         {
             PlanId      = planId,
-            AccountType = accountType,
+            LegalType = legalType,
             Text        = text,
             IsHighlight = isHighlight,
             BadgeText   = badgeText,

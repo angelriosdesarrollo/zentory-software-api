@@ -58,8 +58,8 @@ public sealed class GetProfitabilityStatsQueryHandler
         GetProfitabilityStatsQuery request,
         CancellationToken          ct)
     {
-        if (_tenant.AccountType != AccountType.Empresa)
-            throw new ForbiddenException(ForbiddenReason.AccountTypeRequired);
+        if (_tenant.LegalType != LegalType.Empresa)
+            throw new ForbiddenException(ForbiddenReason.LegalTypeRequired);
         if (_tenant.Plan != Plan.Studio)
             throw new ForbiddenException(ForbiddenReason.PlanRequired, Plan.Studio);
 

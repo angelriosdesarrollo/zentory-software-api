@@ -81,7 +81,7 @@ public sealed class CreateInvoiceCommandHandler : IRequestHandler<CreateInvoiceC
 
         var limit = await _planLimits.GetLimitAsync(
             _tenant.Plan,
-            _tenant.AccountType,
+            _tenant.LegalType,
             PlanLimits.FeatureKeys.MaxInvoicesMonth,
             cancellationToken);
 

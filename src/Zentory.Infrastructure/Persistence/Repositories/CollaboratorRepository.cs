@@ -36,6 +36,15 @@ public sealed class CollaboratorRepository : ICollaboratorRepository
         return await query.OrderBy(c => c.Name).ToListAsync(ct);
     }
 
+    public async Task<IReadOnlyList<Collaborator>> ListByEmailAsync(string email, CancellationToken ct = default)
+    {
+        var normalized = email.Trim().ToLower();
+        return await _db.Collaborators
+            .Where(c => c.Email != null && c.Email.ToLower() == normalized
+                && c.Status == "active" && c.DeletedAt == null)
+            .ToListAsync(ct);
+    }
+
     public async Task<int> CountActiveAsync(Guid organizationId, CancellationToken ct = default)
         => await _db.Collaborators
             .CountAsync(c => c.OrganizationId == organizationId && c.Status == "active", ct);

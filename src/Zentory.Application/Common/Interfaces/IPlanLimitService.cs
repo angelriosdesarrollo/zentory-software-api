@@ -7,13 +7,13 @@ namespace Zentory.Application.Common.Interfaces;
 public interface IPlanLimitService
 {
     /// <summary>
-    /// Returns the configured limit value for the given plan/accountType/featureKey combination,
+    /// Returns the configured limit value for the given plan/legalType/featureKey combination,
     /// or null when the limit is unlimited for that plan.
     /// Throws <see cref="InvalidOperationException"/> if no configuration row exists.
     /// </summary>
     Task<int?> GetLimitAsync(
         string            plan,
-        string            accountType,
+        string            legalType,
         string            featureKey,
         CancellationToken ct = default);
 }

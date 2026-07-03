@@ -15,7 +15,7 @@ public class GatewayRoutingRuleConfiguration : IEntityTypeConfiguration<GatewayR
         builder.Property(r => r.Priority).HasColumnName("priority").HasDefaultValue((short)0);
         builder.Property(r => r.CountryCode).HasColumnName("country_code").HasMaxLength(2);
         builder.Property(r => r.Currency).HasColumnName("currency").HasMaxLength(3);
-        builder.Property(r => r.AccountType).HasColumnName("account_type").HasMaxLength(20);
+        builder.Property(r => r.LegalType).HasColumnName("legal_type").HasMaxLength(20);
         builder.Property(r => r.IsActive).HasColumnName("is_active").HasDefaultValue(true);
         builder.Property(r => r.ValidFrom).HasColumnName("valid_from");
         builder.Property(r => r.ValidUntil).HasColumnName("valid_until");

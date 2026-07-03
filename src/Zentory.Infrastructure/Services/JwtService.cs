@@ -35,7 +35,7 @@ public sealed class JwtService : IJwtService
             new Claim("active_org_id",   org.OrganizationId.ToString()),
             new Claim("active_org_role", activeOrgRole),
             new Claim("plan",            plan),
-            new Claim("account_type",    org.AccountType),
+            new Claim("legal_type",    org.LegalType),
             new Claim("role",            user.Role),
             new Claim("initials",        initials)
         };

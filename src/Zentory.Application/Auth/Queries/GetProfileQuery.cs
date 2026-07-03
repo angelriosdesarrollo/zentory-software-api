@@ -45,10 +45,12 @@ public sealed class GetProfileQueryHandler : IRequestHandler<GetProfileQuery, Us
             user.LastName,
             user.Email,
             plan,
-            org.AccountType,
+            org.LegalType,
             user.Role,
-            ActiveOrgId:   _tenant.OrganizationId.ToString(),
-            ActiveOrgName: org.Name,
-            ActiveOrgRole: _tenant.ActiveOrgRole);
+            ActiveOrgId:          _tenant.OrganizationId.ToString(),
+            ActiveOrgName:        org.Name,
+            ActiveOrgRole:        _tenant.ActiveOrgRole,
+            TermsAcceptedAt:      user.TermsAcceptedAt,
+            TermsAcceptedVersion: user.TermsAcceptedVersion);
     }
 }

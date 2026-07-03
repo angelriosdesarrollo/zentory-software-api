@@ -16,6 +16,7 @@ public interface IZentoryDbContext
     DbSet<OAuthAccount>                OAuthAccounts               { get; }
     DbSet<PasswordResetToken>          PasswordResetTokens         { get; }
     DbSet<EmailVerificationToken>      EmailVerificationTokens     { get; }
+    DbSet<CollaboratorAccessToken>     CollaboratorAccessTokens    { get; }
 
     // ── Tenant configuration ─────────────────────────────────────────────────────
     DbSet<OrganizationSettings>        OrganizationSettings        { get; }
@@ -75,7 +76,7 @@ public interface IZentoryDbContext
     DbSet<Country>                     Countries                   { get; }
     DbSet<Currency>                    Currencies                  { get; }
     DbSet<Industry>                    Industries                  { get; }
-    DbSet<TaxType>                     TaxTypes                    { get; }
+    DbSet<TaxType>                      TaxTypes                     { get; }
     DbSet<ArlRiskLevel>                ArlRiskLevels               { get; }
     DbSet<ExpenseCategory>             ExpenseCategories           { get; }
     DbSet<UnitOfMeasure>               UnitsOfMeasure              { get; }

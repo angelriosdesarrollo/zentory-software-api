@@ -31,7 +31,7 @@ public sealed class GetActivityLogQueryHandler
         GetActivityLogQuery request,
         CancellationToken   cancellationToken)
     {
-        if (_tenant.AccountType != AccountType.Empresa || _tenant.Plan == Plan.Free)
+        if (_tenant.LegalType != LegalType.Empresa || _tenant.Plan == Plan.Free)
             throw new ForbiddenException(ForbiddenReason.PlanRequired, Plan.Pro);
 
         var query = _db.ActivityLogs

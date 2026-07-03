@@ -7,7 +7,7 @@ public class AiFeatureConfig : BaseEntity
     public Guid     FeatureId         { get; private set; }
     public Guid     ModelId           { get; private set; }
     public string   MinPlan           { get; private set; } = "pro";  // 'free' | 'pro' | 'studio'
-    public string?  AccountType       { get; private set; }  // NULL = ambos | 'freelance' | 'empresa'
+    public string?  LegalType       { get; private set; }  // NULL = ambos | 'freelance' | 'empresa'
     public int      MaxInputTokens    { get; private set; } = 4000;
     public int      MaxOutputTokens   { get; private set; } = 2000;
     public decimal  Temperature       { get; private set; } = 0.70m;
@@ -25,7 +25,7 @@ public class AiFeatureConfig : BaseEntity
         int     maxInputTokens = 4000,
         int     maxOutputTokens= 2000,
         decimal temperature    = 0.70m,
-        string? accountType    = null,
+        string? legalType    = null,
         int?    monthlyReqLimit= null)
     {
         return new AiFeatureConfig
@@ -36,7 +36,7 @@ public class AiFeatureConfig : BaseEntity
             MaxInputTokens  = maxInputTokens,
             MaxOutputTokens = maxOutputTokens,
             Temperature     = temperature,
-            AccountType     = accountType,
+            LegalType     = legalType,
             MonthlyReqLimit = monthlyReqLimit
         };
     }

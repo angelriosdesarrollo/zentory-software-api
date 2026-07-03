@@ -2,7 +2,7 @@ namespace Zentory.Application.Organization.DTOs;
 
 public record OrgPlanDto(
     string   Plan,
-    string   AccountType,
+    string   LegalType,
     string?  RenewsAt,
     bool     CancelAtPeriodEnd,
     decimal? PriceMonthlyUsd,

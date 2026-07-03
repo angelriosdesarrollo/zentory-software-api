@@ -1,3 +1,4 @@
+using FluentValidation;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Zentory.Application.Auth.DTOs;
@@ -11,13 +12,15 @@ using PlanConstants = Zentory.Domain.Constants.Plan;
 namespace Zentory.Application.Auth.Commands;
 
 public record RegisterCommand(
-    string Email,
-    string Password,
-    string FirstName,
-    string LastName,
-    string OrgName,
-    string AccountType,
-    string Country = "CO") : IRequest<AuthTokenDto>;
+    string  Email,
+    string  Password,
+    string  FirstName,
+    string  LastName,
+    string  OrgName,
+    string  LegalType,
+    bool    AcceptedTerms,
+    string  Country     = "CO",
+    string? TermsVersion = null) : IRequest<AuthTokenDto>;
 
 public sealed class RegisterCommandHandler : IRequestHandler<RegisterCommand, AuthTokenDto>
 {
@@ -53,16 +56,20 @@ public sealed class RegisterCommandHandler : IRequestHandler<RegisterCommand, Au
         if (existing is not null)
             throw new ConflictException("EMAIL_ALREADY_EXISTS", "El correo electrónico ya está registrado.");
 
-        var org = global::Zentory.Domain.Entities.Organization.Create(request.OrgName, request.AccountType, request.Country);
+        var org = global::Zentory.Domain.Entities.Organization.Create(request.OrgName, request.LegalType, request.Country);
         await _organizations.AddAsync(org, cancellationToken);
 
         var passwordHash = BCrypt.Net.BCrypt.HashPassword(request.Password);
+        var termsAcceptedAt = DateTime.UtcNow;
+        var termsAcceptedVersion = request.TermsVersion ?? Zentory.Domain.Constants.LegalDocuments.CurrentTermsVersion;
         var user = User.Create(
             request.Email,
             request.FirstName,
             request.LastName,
             role: "owner",
-            passwordHash: passwordHash);
+            passwordHash: passwordHash,
+            termsAcceptedAt: termsAcceptedAt,
+            termsAcceptedVersion: termsAcceptedVersion);
 
         await _users.AddAsync(user, cancellationToken);
 
@@ -91,7 +98,7 @@ public sealed class RegisterCommandHandler : IRequestHandler<RegisterCommand, Au
 
         var memberships = new List<OrgMembershipDto>
         {
-            new(org.OrganizationId.ToString(), org.Name, org.AccountType, PlanConstants.Free, "owner",
+            new(org.OrganizationId.ToString(), org.Name, org.LegalType, PlanConstants.Free, "owner",
                 DateTime.UtcNow.ToString("O"))
         };
 
@@ -101,10 +108,22 @@ public sealed class RegisterCommandHandler : IRequestHandler<RegisterCommand, Au
             AccessTokenExpiresInSeconds,
             new UserProfileDto(
                 user.UserId, user.FirstName, user.LastName, user.Email,
-                PlanConstants.Free, org.AccountType, user.Role,
-                ActiveOrgId:   org.OrganizationId.ToString(),
-                ActiveOrgName: org.Name,
-                ActiveOrgRole: "owner"),
+                PlanConstants.Free, org.LegalType, user.Role,
+                ActiveOrgId:          org.OrganizationId.ToString(),
+                ActiveOrgName:        org.Name,
+                ActiveOrgRole:        "owner",
+                TermsAcceptedAt:      user.TermsAcceptedAt,
+                TermsAcceptedVersion: user.TermsAcceptedVersion),
             memberships);
+    }
+}
+
+public sealed class RegisterCommandValidator : AbstractValidator<RegisterCommand>
+{
+    public RegisterCommandValidator()
+    {
+        RuleFor(x => x.AcceptedTerms)
+            .Equal(true)
+            .WithMessage("Debes aceptar los Términos y Condiciones y la Política de Privacidad para crear una cuenta.");
     }
 }

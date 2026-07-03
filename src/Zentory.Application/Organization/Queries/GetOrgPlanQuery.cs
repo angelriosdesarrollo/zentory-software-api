@@ -50,7 +50,7 @@ public sealed class GetOrgPlanQueryHandler : IRequestHandler<GetOrgPlanQuery, Or
 
         return new OrgPlanDto(
             Plan:              plan,
-            AccountType:       org.AccountType,
+            LegalType:       org.LegalType,
             RenewsAt:          subscription?.CurrentPeriodEnd?.ToString("yyyy-MM-dd"),
             CancelAtPeriodEnd: subscription?.CancelAtPeriodEnd ?? false,
             PriceMonthlyUsd:   price,

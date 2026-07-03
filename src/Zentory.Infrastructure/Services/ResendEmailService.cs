@@ -154,4 +154,307 @@ public sealed class ResendEmailService : IEmailService
 
         await _resend.EmailSendAsync(email, ct);
     }
+
+    public async Task SendPilaRequestEmailAsync(
+        string    toEmail,
+        string    collaboratorName,
+        string    companyName,
+        string    period,
+        string    uploadUrl,
+        DateTime  expiresAt,
+        CancellationToken ct = default)
+    {
+        var name    = System.Web.HttpUtility.HtmlEncode(collaboratorName);
+        var company = System.Web.HttpUtility.HtmlEncode(companyName);
+
+        var html = $"""
+            <!DOCTYPE html>
+            <html lang="es">
+            <head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/></head>
+            <body style="margin:0;padding:0;background:#f4f5f7;font-family:'Helvetica Neue',Arial,sans-serif;">
+              <table width="100%" cellpadding="0" cellspacing="0" style="background:#f4f5f7;padding:40px 0;">
+                <tr><td align="center">
+                  <table width="560" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.08);">
+                    <tr>
+                      <td style="background:#0f172a;padding:24px 32px;">
+                        <span style="color:#fff;font-size:20px;font-weight:700;letter-spacing:-0.5px;">Zentory</span>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td style="padding:32px 32px 24px;">
+                        <p style="margin:0 0 16px;font-size:15px;color:#374151;line-height:1.6;">Hola <strong>{name}</strong>,</p>
+                        <p style="margin:0 0 16px;font-size:15px;color:#374151;line-height:1.6;">
+                          <strong>{company}</strong> necesita verificar que realizaste tu pago de seguridad social (PILA) correspondiente a
+                          <strong>{period}</strong>, como parte del cumplimiento de la Ley 1150 de 2007.
+                        </p>
+                        <table cellpadding="0" cellspacing="0" style="margin:24px 0;">
+                          <tr>
+                            <td style="background:#2563eb;border-radius:8px;">
+                              <a href="{uploadUrl}" target="_blank"
+                                 style="display:inline-block;padding:12px 28px;color:#fff;font-size:14px;font-weight:600;text-decoration:none;">
+                                Subir comprobante →
+                              </a>
+                            </td>
+                          </tr>
+                        </table>
+                        <p style="margin:0 0 16px;font-size:13px;color:#6b7280;">
+                          Solo necesitas tu comprobante de pago en PDF o imagen. El enlace vence el {expiresAt:dd/MM/yyyy}.
+                        </p>
+                        <p style="margin:0;font-size:13px;color:#9ca3af;">
+                          O copia este enlace en tu navegador:<br/>
+                          <a href="{uploadUrl}" style="color:#2563eb;word-break:break-all;">{uploadUrl}</a>
+                        </p>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td style="padding:16px 32px;border-top:1px solid #f3f4f6;background:#fafafa;">
+                        <p style="margin:0;font-size:12px;color:#9ca3af;text-align:center;">
+                          Equipo de {company}, vía Zentory · Plataforma para software factories
+                        </p>
+                      </td>
+                    </tr>
+                  </table>
+                </td></tr>
+              </table>
+            </body>
+            </html>
+            """;
+
+        var email = new EmailMessage
+        {
+            From     = $"{_fromName} <{_fromEmail}>",
+            Subject  = $"{companyName} solicita tu comprobante de pago de planilla — {period}",
+            HtmlBody = html,
+        };
+        email.To.Add(toEmail);
+
+        await _resend.EmailSendAsync(email, ct);
+    }
+
+    public async Task SendPayoutInvoiceGeneratedEmailAsync(
+        string    toEmail,
+        string    collaboratorName,
+        string    companyName,
+        string    period,
+        decimal   amount,
+        string    currency,
+        string    downloadUrl,
+        string    portalUrl,
+        CancellationToken ct = default)
+    {
+        var name    = System.Web.HttpUtility.HtmlEncode(collaboratorName);
+        var company = System.Web.HttpUtility.HtmlEncode(companyName);
+
+        var html = $"""
+            <!DOCTYPE html>
+            <html lang="es">
+            <head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/></head>
+            <body style="margin:0;padding:0;background:#f4f5f7;font-family:'Helvetica Neue',Arial,sans-serif;">
+              <table width="100%" cellpadding="0" cellspacing="0" style="background:#f4f5f7;padding:40px 0;">
+                <tr><td align="center">
+                  <table width="560" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.08);">
+                    <tr>
+                      <td style="background:#0f172a;padding:24px 32px;">
+                        <span style="color:#fff;font-size:20px;font-weight:700;letter-spacing:-0.5px;">Zentory</span>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td style="padding:32px 32px 24px;">
+                        <p style="margin:0 0 16px;font-size:15px;color:#374151;line-height:1.6;">
+                          Hola <strong>{name}</strong>, <strong>{company}</strong> generó tu cuenta de cobro correspondiente a
+                          <strong>{period}</strong> por un valor de <strong>{amount:N0} {currency}</strong>.
+                        </p>
+                        <table cellpadding="0" cellspacing="0" style="margin:24px 0;">
+                          <tr>
+                            <td style="background:#2563eb;border-radius:8px;">
+                              <a href="{downloadUrl}" target="_blank"
+                                 style="display:inline-block;padding:12px 28px;color:#fff;font-size:14px;font-weight:600;text-decoration:none;">
+                                Descargar cuenta de cobro →
+                              </a>
+                            </td>
+                          </tr>
+                        </table>
+                        <p style="margin:0 0 16px;font-size:13px;color:#9ca3af;">
+                          O copia este enlace en tu navegador:<br/>
+                          <a href="{downloadUrl}" style="color:#2563eb;word-break:break-all;">{downloadUrl}</a>
+                        </p>
+                        <p style="margin:0 0 8px;font-size:14px;color:#374151;line-height:1.6;">
+                          Si necesitas firmarla, descárgala, fírmala fuera de la plataforma y súbela de vuelta desde tu portal de colaborador:
+                        </p>
+                        <p style="margin:0;font-size:13px;color:#9ca3af;">
+                          <a href="{portalUrl}" style="color:#2563eb;word-break:break-all;">{portalUrl}</a>
+                        </p>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td style="padding:16px 32px;border-top:1px solid #f3f4f6;background:#fafafa;">
+                        <p style="margin:0;font-size:12px;color:#9ca3af;text-align:center;">
+                          Equipo de {company}, vía Zentory · Plataforma para software factories
+                        </p>
+                      </td>
+                    </tr>
+                  </table>
+                </td></tr>
+              </table>
+            </body>
+            </html>
+            """;
+
+        var email = new EmailMessage
+        {
+            From     = $"{_fromName} <{_fromEmail}>",
+            Subject  = $"Tu cuenta de cobro de {period} está lista",
+            HtmlBody = html,
+        };
+        email.To.Add(toEmail);
+
+        await _resend.EmailSendAsync(email, ct);
+    }
+
+    public async Task SendPayoutInvoiceRequestEmailAsync(
+        string    toEmail,
+        string    collaboratorName,
+        string    companyName,
+        string    period,
+        string    uploadUrl,
+        DateTime  expiresAt,
+        CancellationToken ct = default)
+    {
+        var name    = System.Web.HttpUtility.HtmlEncode(collaboratorName);
+        var company = System.Web.HttpUtility.HtmlEncode(companyName);
+
+        var html = $"""
+            <!DOCTYPE html>
+            <html lang="es">
+            <head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/></head>
+            <body style="margin:0;padding:0;background:#f4f5f7;font-family:'Helvetica Neue',Arial,sans-serif;">
+              <table width="100%" cellpadding="0" cellspacing="0" style="background:#f4f5f7;padding:40px 0;">
+                <tr><td align="center">
+                  <table width="560" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.08);">
+                    <tr>
+                      <td style="background:#0f172a;padding:24px 32px;">
+                        <span style="color:#fff;font-size:20px;font-weight:700;letter-spacing:-0.5px;">Zentory</span>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td style="padding:32px 32px 24px;">
+                        <p style="margin:0 0 16px;font-size:15px;color:#374151;line-height:1.6;">Hola <strong>{name}</strong>,</p>
+                        <p style="margin:0 0 16px;font-size:15px;color:#374151;line-height:1.6;">
+                          <strong>{company}</strong> te solicita tu cuenta de cobro correspondiente a <strong>{period}</strong>.
+                        </p>
+                        <table cellpadding="0" cellspacing="0" style="margin:24px 0;">
+                          <tr>
+                            <td style="background:#2563eb;border-radius:8px;">
+                              <a href="{uploadUrl}" target="_blank"
+                                 style="display:inline-block;padding:12px 28px;color:#fff;font-size:14px;font-weight:600;text-decoration:none;">
+                                Subir cuenta de cobro →
+                              </a>
+                            </td>
+                          </tr>
+                        </table>
+                        <p style="margin:0 0 16px;font-size:13px;color:#6b7280;">
+                          El enlace vence el {expiresAt:dd/MM/yyyy}.
+                        </p>
+                        <p style="margin:0;font-size:13px;color:#9ca3af;">
+                          O copia este enlace en tu navegador:<br/>
+                          <a href="{uploadUrl}" style="color:#2563eb;word-break:break-all;">{uploadUrl}</a>
+                        </p>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td style="padding:16px 32px;border-top:1px solid #f3f4f6;background:#fafafa;">
+                        <p style="margin:0;font-size:12px;color:#9ca3af;text-align:center;">
+                          Equipo de {company}, vía Zentory · Plataforma para software factories
+                        </p>
+                      </td>
+                    </tr>
+                  </table>
+                </td></tr>
+              </table>
+            </body>
+            </html>
+            """;
+
+        var email = new EmailMessage
+        {
+            From     = $"{_fromName} <{_fromEmail}>",
+            Subject  = $"{companyName} te solicita tu cuenta de cobro — {period}",
+            HtmlBody = html,
+        };
+        email.To.Add(toEmail);
+
+        await _resend.EmailSendAsync(email, ct);
+    }
+
+    public async Task SendCollaboratorPortalAccessEmailAsync(
+        string    toEmail,
+        string    collaboratorName,
+        string    magicLinkUrl,
+        DateTime  expiresAt,
+        CancellationToken ct = default)
+    {
+        var name = System.Web.HttpUtility.HtmlEncode(collaboratorName);
+
+        var html = $"""
+            <!DOCTYPE html>
+            <html lang="es">
+            <head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/></head>
+            <body style="margin:0;padding:0;background:#f4f5f7;font-family:'Helvetica Neue',Arial,sans-serif;">
+              <table width="100%" cellpadding="0" cellspacing="0" style="background:#f4f5f7;padding:40px 0;">
+                <tr><td align="center">
+                  <table width="560" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.08);">
+                    <tr>
+                      <td style="background:#0f172a;padding:24px 32px;">
+                        <span style="color:#fff;font-size:20px;font-weight:700;letter-spacing:-0.5px;">Zentory</span>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td style="padding:32px 32px 24px;">
+                        <p style="margin:0 0 16px;font-size:15px;color:#374151;line-height:1.6;">Hola <strong>{name}</strong>,</p>
+                        <p style="margin:0 0 16px;font-size:15px;color:#374151;line-height:1.6;">
+                          Pediste acceder a tu portal de colaborador para subir o revisar tus planillas PILA y cuentas de cobro.
+                        </p>
+                        <table cellpadding="0" cellspacing="0" style="margin:24px 0;">
+                          <tr>
+                            <td style="background:#2563eb;border-radius:8px;">
+                              <a href="{magicLinkUrl}" target="_blank"
+                                 style="display:inline-block;padding:12px 28px;color:#fff;font-size:14px;font-weight:600;text-decoration:none;">
+                                Entrar al portal →
+                              </a>
+                            </td>
+                          </tr>
+                        </table>
+                        <p style="margin:0 0 16px;font-size:13px;color:#6b7280;">
+                          El enlace vence el {expiresAt:dd/MM/yyyy HH:mm} y solo se puede usar una vez. Si tú no lo pediste, ignora este correo.
+                        </p>
+                        <p style="margin:0;font-size:13px;color:#9ca3af;">
+                          O copia este enlace en tu navegador:<br/>
+                          <a href="{magicLinkUrl}" style="color:#2563eb;word-break:break-all;">{magicLinkUrl}</a>
+                        </p>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td style="padding:16px 32px;border-top:1px solid #f3f4f6;background:#fafafa;">
+                        <p style="margin:0;font-size:12px;color:#9ca3af;text-align:center;">
+                          Vía Zentory · Plataforma para software factories
+                        </p>
+                      </td>
+                    </tr>
+                  </table>
+                </td></tr>
+              </table>
+            </body>
+            </html>
+            """;
+
+        var email = new EmailMessage
+        {
+            From     = $"{_fromName} <{_fromEmail}>",
+            Subject  = "Tu enlace de acceso al portal de colaborador",
+            HtmlBody = html,
+        };
+        email.To.Add(toEmail);
+
+        await _resend.EmailSendAsync(email, ct);
+    }
 }

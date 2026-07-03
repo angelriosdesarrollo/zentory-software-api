@@ -1,9 +1,11 @@
+using FluentValidation;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Zentory.Application.Common.Interfaces;
 using Zentory.Application.Exceptions;
 using Zentory.Application.Organization.DTOs;
 using Zentory.Application.Organization.Queries;
+using Zentory.Domain.Constants;
 using Zentory.Domain.Entities;
 using Zentory.Domain.Repositories;
 
@@ -14,6 +16,7 @@ public record UpdateOrganizationProfileCommand(
     string? LogoUrl,
     string? Nit,
     string? CompanyType,
+    string? WorkType,
     string? LegalRep,
     string? LegalRepId,
     string? TaxRegime,
@@ -23,6 +26,16 @@ public record UpdateOrganizationProfileCommand(
     string? Address,
     string? City,
     string? Country) : IRequest<OrganizationProfileDto>;
+
+public sealed class UpdateOrganizationProfileCommandValidator : AbstractValidator<UpdateOrganizationProfileCommand>
+{
+    public UpdateOrganizationProfileCommandValidator()
+    {
+        RuleFor(x => x.WorkType)
+            .Must(t => t is null || Zentory.Domain.Constants.WorkType.All.Contains(t))
+            .WithMessage($"WorkType must be one of: {string.Join(", ", Zentory.Domain.Constants.WorkType.All)}.");
+    }
+}
 
 public sealed class UpdateOrganizationProfileCommandHandler
     : IRequestHandler<UpdateOrganizationProfileCommand, OrganizationProfileDto>
@@ -62,6 +75,7 @@ public sealed class UpdateOrganizationProfileCommandHandler
             ["profile.logo_url"]    = command.LogoUrl,
             ["profile.nit"]         = command.Nit,
             ["profile.company_type"]= command.CompanyType,
+            ["profile.work_type"]   = command.WorkType,
             ["profile.legal_rep"]   = command.LegalRep,
             ["profile.legal_rep_id"]= command.LegalRepId,
             ["profile.tax_regime"]  = command.TaxRegime,

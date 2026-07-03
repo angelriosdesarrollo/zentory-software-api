@@ -40,7 +40,7 @@ public sealed class TenantContext : ITenantContext
 
     public string UserInitials  => _user?.FindFirstValue("initials")        ?? "??";
     public string Plan          => _user?.FindFirstValue("plan")            ?? "free";
-    public string AccountType   => _user?.FindFirstValue("account_type")    ?? "freelance";
+    public string LegalType   => _user?.FindFirstValue("legal_type")    ?? "freelance";
     public string ActiveOrgRole => _user?.FindFirstValue("active_org_role") ?? "member";
     public bool   IsOwner       => ActiveOrgRole == "owner";
 }

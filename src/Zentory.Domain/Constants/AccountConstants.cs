@@ -1,6 +1,6 @@
 namespace Zentory.Domain.Constants;
 
-public static class AccountType
+public static class LegalType
 {
     public const string Freelance = "freelance";
     public const string Empresa   = "empresa";

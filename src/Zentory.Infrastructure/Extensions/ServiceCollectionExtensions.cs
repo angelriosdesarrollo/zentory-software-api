@@ -1,3 +1,5 @@
+using Hangfire;
+using Hangfire.PostgreSql;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -8,6 +10,7 @@ using Zentory.Infrastructure.Persistence;
 using Zentory.Infrastructure.Persistence.Interceptors;
 using Zentory.Infrastructure.Persistence.Repositories;
 using Zentory.Infrastructure.Services;
+using Zentory.Infrastructure.Documents;
 
 namespace Zentory.Infrastructure.Extensions;
 
@@ -19,7 +22,9 @@ public static class ServiceCollectionExtensions
     {
         services.AddScoped<AuditInterceptor>();
 
-        if (string.Equals(configuration["Database:UseInMemory"], "true", StringComparison.OrdinalIgnoreCase))
+        var useInMemory = string.Equals(configuration["Database:UseInMemory"], "true", StringComparison.OrdinalIgnoreCase);
+
+        if (useInMemory)
         {
             services.AddDbContext<ZentoryDbContext>((sp, options) =>
                 options.UseInMemoryDatabase("ZentoryDev")
@@ -55,8 +60,11 @@ public static class ServiceCollectionExtensions
         services.AddScoped<ICashFlowEntryRepository, CashFlowEntryRepository>();
         services.AddScoped<IProjectTaskRepository, ProjectTaskRepository>();
         services.AddScoped<IProjectShareRepository, ProjectShareRepository>();
+        services.AddScoped<IPilaVerificationRepository, PilaVerificationRepository>();
+        services.AddScoped<ICollaboratorPayoutInvoiceRepository, CollaboratorPayoutInvoiceRepository>();
 
         services.AddScoped<IJwtService, JwtService>();
+        services.AddScoped<ICollaboratorJwtService, CollaboratorJwtService>();
         services.AddScoped<IActivityLogService, ActivityLogService>();
         services.AddScoped<IPlanLimitService, PlanLimitService>();
         services.AddScoped<IPlanResolutionService, PlanResolutionService>();
@@ -71,6 +79,25 @@ public static class ServiceCollectionExtensions
         services.AddTransient<IResend, ResendClient>();
         services.AddScoped<IEmailService, ResendEmailService>();
         services.AddSingleton<IApplicationSettings, ApplicationSettings>();
+        services.AddScoped<IStorageService, CloudflareR2StorageService>();
+        services.AddScoped<IPayoutInvoicePdfGenerator, PayoutInvoicePdfGenerator>();
+
+        // Hangfire — job mensual de solicitud automática de PILA (Fase E).
+        // Mismo toggle que la base de datos: en dev/in-memory el storage de jobs
+        // también es en memoria (no persiste entre reinicios), en producción usa
+        // la misma base Postgres.
+        services.AddHangfire(config =>
+        {
+            config.SetDataCompatibilityLevel(CompatibilityLevel.Version_180)
+                  .UseSimpleAssemblyNameTypeSerializer()
+                  .UseRecommendedSerializerSettings();
+
+            if (useInMemory)
+                config.UseInMemoryStorage();
+            else
+                config.UsePostgreSqlStorage(o => o.UseNpgsqlConnection(configuration.GetConnectionString("DefaultConnection")));
+        });
+        services.AddHangfireServer();
 
         return services;
     }

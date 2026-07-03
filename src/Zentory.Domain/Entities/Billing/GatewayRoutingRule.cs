@@ -8,7 +8,7 @@ public class GatewayRoutingRule : BaseEntity
     public short    Priority     { get; private set; }
     public string?  CountryCode  { get; private set; }   // NULL = todos
     public string?  Currency     { get; private set; }   // NULL = todas
-    public string?  AccountType  { get; private set; }   // NULL = ambos | 'freelance' | 'empresa'
+    public string?  LegalType  { get; private set; }   // NULL = ambos | 'freelance' | 'empresa'
     public bool     IsActive     { get; private set; } = true;
     public DateTime ValidFrom    { get; private set; } = DateTime.UtcNow;
     public DateTime? ValidUntil  { get; private set; }
@@ -22,7 +22,7 @@ public class GatewayRoutingRule : BaseEntity
         string  reason,
         string? countryCode  = null,
         string? currency     = null,
-        string? accountType  = null,
+        string? legalType  = null,
         bool    isActive     = true,
         DateTime? validUntil = null)
     {
@@ -33,7 +33,7 @@ public class GatewayRoutingRule : BaseEntity
             Reason      = reason,
             CountryCode = countryCode,
             Currency    = currency,
-            AccountType = accountType,
+            LegalType = legalType,
             IsActive    = isActive,
             ValidUntil  = validUntil
         };

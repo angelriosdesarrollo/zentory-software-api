@@ -70,7 +70,7 @@ public sealed class AuditInterceptor : SaveChangesInterceptor
 
         // AuditLog is only for Empresa accounts; skip Freelance and unauthenticated contexts (seeder).
         if (!_tenant.IsAuthenticated ||
-            !string.Equals(_tenant.AccountType, "empresa", StringComparison.OrdinalIgnoreCase))
+            !string.Equals(_tenant.LegalType, "empresa", StringComparison.OrdinalIgnoreCase))
             return entries;
 
         Guid? orgId  = TryGetOrganizationId();

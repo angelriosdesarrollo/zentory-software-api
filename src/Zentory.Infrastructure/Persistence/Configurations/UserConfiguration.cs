@@ -22,6 +22,8 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
         builder.Property(u => u.IsActive).HasColumnName("is_active").HasDefaultValue(true);
         builder.Property(u => u.CreatedAt).HasColumnName("created_at");
         builder.Property(u => u.UpdatedAt).HasColumnName("updated_at");
+        builder.Property(u => u.TermsAcceptedAt).HasColumnName("terms_accepted_at").IsRequired(false);
+        builder.Property(u => u.TermsAcceptedVersion).HasColumnName("terms_accepted_version").HasMaxLength(20).IsRequired(false);
 
         builder.HasIndex(u => u.Email).IsUnique().HasDatabaseName("ix_users_email");
         builder.HasIndex(u => u.OrganizationId).HasDatabaseName("ix_users_org_id");

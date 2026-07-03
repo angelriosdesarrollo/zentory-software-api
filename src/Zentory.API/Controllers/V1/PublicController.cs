@@ -159,9 +159,9 @@ public sealed class PublicController : ControllerBase
     [ResponseCache(Duration = 86400)]
     public IActionResult GetTaxRegimes(
         [FromQuery] string countryCode  = "CO",
-        [FromQuery] string? accountType = null)
+        [FromQuery] string? legalType = null)
     {
-        var isFreelance = accountType?.Equals("freelance", StringComparison.OrdinalIgnoreCase) == true;
+        var isFreelance = legalType?.Equals("freelance", StringComparison.OrdinalIgnoreCase) == true;
         if (isFreelance)
             return Ok(new[]
             {

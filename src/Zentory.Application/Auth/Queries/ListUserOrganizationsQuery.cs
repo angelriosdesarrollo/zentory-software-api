@@ -30,7 +30,7 @@ public sealed class ListUserOrganizationsQueryHandler
             .Join(_db.Organizations,
                 m => m.OrganizationId,
                 o => o.OrganizationId,
-                (m, o) => new { o.OrganizationId, o.Name, o.AccountType, o.OwnerId, m.Role, m.JoinedAt })
+                (m, o) => new { o.OrganizationId, o.Name, o.LegalType, o.OwnerId, m.Role, m.JoinedAt })
             .ToListAsync(ct);
 
         var plansByOwner = await _plans.ResolveForOwnersAsync(
@@ -40,7 +40,7 @@ public sealed class ListUserOrganizationsQueryHandler
             .Select(r => new OrgMembershipDto(
                 r.OrganizationId.ToString(),
                 r.Name,
-                r.AccountType,
+                r.LegalType,
                 r.OwnerId.HasValue ? plansByOwner.GetValueOrDefault(r.OwnerId.Value, Zentory.Domain.Constants.Plan.Free) : Zentory.Domain.Constants.Plan.Free,
                 r.Role,
                 r.JoinedAt.ToString("O")))

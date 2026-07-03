@@ -53,7 +53,7 @@ public sealed class CreateClientCommandHandler : IRequestHandler<CreateClientCom
     {
         var limit = await _planLimits.GetLimitAsync(
             _tenant.Plan,
-            _tenant.AccountType,
+            _tenant.LegalType,
             PlanLimits.FeatureKeys.MaxClients,
             cancellationToken);
 

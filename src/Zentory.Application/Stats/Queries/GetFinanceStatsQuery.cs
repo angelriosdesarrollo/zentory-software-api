@@ -51,8 +51,8 @@ public sealed class GetFinanceStatsQueryHandler
         GetFinanceStatsQuery  request,
         CancellationToken     ct)
     {
-        if (_tenant.AccountType != AccountType.Empresa)
-            throw new ForbiddenException(ForbiddenReason.AccountTypeRequired);
+        if (_tenant.LegalType != LegalType.Empresa)
+            throw new ForbiddenException(ForbiddenReason.LegalTypeRequired);
 
         var oid = _tenant.OrganizationId;
 

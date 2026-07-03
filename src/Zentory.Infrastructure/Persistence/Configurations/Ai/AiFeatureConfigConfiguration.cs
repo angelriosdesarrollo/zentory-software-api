@@ -14,7 +14,7 @@ public class AiFeatureConfigConfiguration : IEntityTypeConfiguration<AiFeatureCo
         builder.Property(c => c.FeatureId).HasColumnName("feature_id").IsRequired();
         builder.Property(c => c.ModelId).HasColumnName("model_id").IsRequired();
         builder.Property(c => c.MinPlan).HasColumnName("min_plan").HasMaxLength(20).IsRequired();
-        builder.Property(c => c.AccountType).HasColumnName("account_type").HasMaxLength(20);
+        builder.Property(c => c.LegalType).HasColumnName("legal_type").HasMaxLength(20);
         builder.Property(c => c.MaxInputTokens).HasColumnName("max_input_tokens").HasDefaultValue(4000);
         builder.Property(c => c.MaxOutputTokens).HasColumnName("max_output_tokens").HasDefaultValue(2000);
         builder.Property(c => c.Temperature).HasColumnName("temperature").HasColumnType("decimal(3,2)");

@@ -7,7 +7,7 @@ public interface ITenantContext
     Guid   UserId          { get; }
     string UserInitials    { get; }
     string Plan            { get; }
-    string AccountType     { get; }
+    string LegalType     { get; }
     string ActiveOrgRole   { get; }  // "owner" | "admin" | "member"
     bool   IsOwner         { get; }
 }

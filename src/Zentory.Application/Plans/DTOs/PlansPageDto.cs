@@ -1,10 +1,10 @@
 namespace Zentory.Application.Plans.DTOs;
 
 public record PlansPageDto(
-    PlansByAccountTypeDto Freelance,
-    PlansByAccountTypeDto Empresa);
+    PlansByLegalTypeDto Freelance,
+    PlansByLegalTypeDto Empresa);
 
-public record PlansByAccountTypeDto(
+public record PlansByLegalTypeDto(
     IReadOnlyList<PlanDataDto> Plans,
     IReadOnlyList<CompareRowDto> CompareRows);
 

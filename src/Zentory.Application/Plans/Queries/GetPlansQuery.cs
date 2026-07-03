@@ -25,12 +25,12 @@ public sealed class GetPlansQueryHandler : IRequestHandler<GetPlansQuery, PlansP
         var compare  = await _db.PlanCompareItems.OrderBy(c => c.SortOrder).ToListAsync(cancellationToken);
 
         return new PlansPageDto(
-            Freelance: BuildForAccountType(AccountType.Freelance, plans, features, limits, mktg, compare),
-            Empresa:   BuildForAccountType(AccountType.Empresa,   plans, features, limits, mktg, compare));
+            Freelance: BuildForLegalType(LegalType.Freelance, plans, features, limits, mktg, compare),
+            Empresa:   BuildForLegalType(LegalType.Empresa,   plans, features, limits, mktg, compare));
     }
 
-    private static PlansByAccountTypeDto BuildForAccountType(
-        string accountType,
+    private static PlansByLegalTypeDto BuildForLegalType(
+        string legalType,
         IEnumerable<Domain.Entities.Billing.BillingPlan>    plans,
         IEnumerable<Domain.Entities.Billing.PlanFeature>    features,
         IEnumerable<Domain.Entities.Billing.PlanLimit>      limits,
@@ -39,12 +39,12 @@ public sealed class GetPlansQueryHandler : IRequestHandler<GetPlansQuery, PlansP
     {
         var planDtos = plans.Select(plan =>
         {
-            var m = mktg.FirstOrDefault(x => x.PlanId == plan.Id && x.AccountType == accountType);
-            var f = features.Where(x => x.PlanId == plan.Id && x.AccountType == accountType)
+            var m = mktg.FirstOrDefault(x => x.PlanId == plan.Id && x.LegalType == legalType);
+            var f = features.Where(x => x.PlanId == plan.Id && x.LegalType == legalType)
                             .OrderBy(x => x.SortOrder)
                             .Select(x => new PlanFeatureItemDto(x.Text, x.IsHighlight, x.BadgeText))
                             .ToList();
-            var l = limits.Where(x => x.PlanId == plan.Id && x.AccountType == accountType)
+            var l = limits.Where(x => x.PlanId == plan.Id && x.LegalType == legalType)
                           .Select(x => new PlanLimitDto(x.FeatureKey, x.LimitValue))
                           .ToList();
 
@@ -62,7 +62,7 @@ public sealed class GetPlansQueryHandler : IRequestHandler<GetPlansQuery, PlansP
         }).ToList();
 
         var compareRows = compare
-            .Where(c => c.AccountType == null || c.AccountType == accountType)
+            .Where(c => c.LegalType == null || c.LegalType == legalType)
             .Select(c => new CompareRowDto(
                 c.FeatureName,
                 c.IsEmpresaOnly,
@@ -71,6 +71,6 @@ public sealed class GetPlansQueryHandler : IRequestHandler<GetPlansQuery, PlansP
                 c.StudioValue))
             .ToList();
 
-        return new PlansByAccountTypeDto(planDtos, compareRows);
+        return new PlansByLegalTypeDto(planDtos, compareRows);
     }
 }

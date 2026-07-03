@@ -19,11 +19,11 @@ public sealed class PlanLimitService : IPlanLimitService
 
     public async Task<int?> GetLimitAsync(
         string            plan,
-        string            accountType,
+        string            legalType,
         string            featureKey,
         CancellationToken ct = default)
     {
-        var cacheKey = $"plan-limit:{plan}:{accountType}:{featureKey}";
+        var cacheKey = $"plan-limit:{plan}:{legalType}:{featureKey}";
 
         if (_cache.TryGetValue(cacheKey, out LimitEntry? entry) && entry is not null)
             return entry.Value;
@@ -32,15 +32,15 @@ public sealed class PlanLimitService : IPlanLimitService
             .Join(_db.BillingPlans,
                   pl => pl.PlanId,
                   bp => bp.Id,
-                  (pl, bp) => new { bp.Name, pl.AccountType, pl.FeatureKey, pl.LimitValue })
+                  (pl, bp) => new { bp.Name, pl.LegalType, pl.FeatureKey, pl.LimitValue })
             .Where(x => x.Name        == plan
-                     && x.AccountType == accountType
+                     && x.LegalType == legalType
                      && x.FeatureKey  == featureKey)
             .FirstOrDefaultAsync(ct);
 
         if (row is null)
             throw new InvalidOperationException(
-                $"No plan limit configured for plan='{plan}', accountType='{accountType}', featureKey='{featureKey}'. " +
+                $"No plan limit configured for plan='{plan}', legalType='{legalType}', featureKey='{featureKey}'. " +
                 $"Ensure the PlanLimits table is seeded.");
 
         entry = new LimitEntry(row.LimitValue);

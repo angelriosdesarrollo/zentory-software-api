@@ -25,7 +25,7 @@ public sealed class ActivityLogService : IActivityLogService
     {
         // ActivityLog is only for Empresa accounts; Freelance accounts are skipped.
         if (!_tenant.IsAuthenticated ||
-            !string.Equals(_tenant.AccountType, AccountType.Empresa, StringComparison.OrdinalIgnoreCase))
+            !string.Equals(_tenant.LegalType, LegalType.Empresa, StringComparison.OrdinalIgnoreCase))
             return;
 
         var entry = ActivityLog.Create(

@@ -6,7 +6,7 @@ public class OrganizationBankAccount : BaseEntity
 {
     public Guid     OrganizationId { get; private set; }
     public string   BankName       { get; private set; } = default!;
-    public string   AccountType    { get; private set; } = default!;
+    public string   LegalType    { get; private set; } = default!;
     // 'corriente' | 'ahorros' | 'nequi' | 'daviplata'
     public string   AccountNumber  { get; private set; } = default!;
     public string   AccountHolder  { get; private set; } = default!;
@@ -19,7 +19,7 @@ public class OrganizationBankAccount : BaseEntity
     public static OrganizationBankAccount Create(
         Guid   organizationId,
         string bankName,
-        string accountType,
+        string legalType,
         string accountNumber,
         string accountHolder,
         string currency   = "COP",
@@ -29,7 +29,7 @@ public class OrganizationBankAccount : BaseEntity
         {
             OrganizationId = organizationId,
             BankName       = bankName,
-            AccountType    = accountType,
+            LegalType    = legalType,
             AccountNumber  = accountNumber,
             AccountHolder  = accountHolder,
             Currency       = currency,
@@ -39,10 +39,10 @@ public class OrganizationBankAccount : BaseEntity
 
     public void SetDefault(bool value) { IsDefault = value; UpdatedAt = DateTime.UtcNow; }
 
-    public void Update(string bankName, string accountType, string accountNumber, string accountHolder, string currency)
+    public void Update(string bankName, string legalType, string accountNumber, string accountHolder, string currency)
     {
         BankName       = bankName;
-        AccountType    = accountType;
+        LegalType    = legalType;
         AccountNumber  = accountNumber;
         AccountHolder  = accountHolder;
         Currency       = currency;

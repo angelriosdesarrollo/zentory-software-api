@@ -13,5 +13,6 @@ public static class PlanLimits
         public const string MaxOrgMembers     = "max_org_members";
         public const string MaxProjects       = "max_projects";
         public const string MaxCollaborators  = "max_collaborators";
+        public const string MaxOwnedOrgs      = "max_owned_orgs";
     }
 }

@@ -13,7 +13,7 @@ public class OrganizationBankAccountConfiguration : IEntityTypeConfiguration<Org
         builder.Property(b => b.Id).HasColumnName("id");
         builder.Property(b => b.OrganizationId).HasColumnName("organization_id").IsRequired();
         builder.Property(b => b.BankName).HasColumnName("bank_name").HasMaxLength(100).IsRequired();
-        builder.Property(b => b.AccountType).HasColumnName("account_type").HasMaxLength(30).IsRequired();
+        builder.Property(b => b.LegalType).HasColumnName("legal_type").HasMaxLength(30).IsRequired();
         builder.Property(b => b.AccountNumber).HasColumnName("account_number").HasMaxLength(50).IsRequired();
         builder.Property(b => b.AccountHolder).HasColumnName("account_holder").HasMaxLength(255).IsRequired();
         builder.Property(b => b.Currency).HasColumnName("currency").HasMaxLength(3).IsRequired();

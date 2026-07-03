@@ -24,6 +24,12 @@ public class Collaborator : TenantEntity
     public string? PilaLastVerifiedPeriod  { get; private set; }  // 'YYYY-MM'
     public short?  ArlRiskLevel            { get; private set; }
 
+    // Cuentas de cobro — resumen de la última, evita consultar CollaboratorPayoutInvoice
+    // para listas rápidas (ver GetPilaComplianceQuery).
+    public string  PayoutInvoiceStatus     { get; private set; } = "ninguna";
+    // 'ninguna' | 'generated' | 'sent' | 'uploaded_manually'
+    public string? PayoutInvoiceLastPeriod { get; private set; }  // 'YYYY-MM'
+
     public string? IdNumber                { get; private set; }  // CC / NIT
 
     public DateTime? DeletedAt             { get; private set; }
@@ -93,6 +99,13 @@ public class Collaborator : TenantEntity
         PilaStatus             = status;
         PilaLastVerifiedPeriod = lastVerifiedPeriod ?? PilaLastVerifiedPeriod;
         UpdatedAt              = DateTime.UtcNow;
+    }
+
+    public void UpdatePayoutInvoiceStatus(string status, string? period = null)
+    {
+        PayoutInvoiceStatus     = status;
+        PayoutInvoiceLastPeriod = period ?? PayoutInvoiceLastPeriod;
+        UpdatedAt               = DateTime.UtcNow;
     }
 
     public void SoftDelete() { DeletedAt = DateTime.UtcNow; UpdatedAt = DateTime.UtcNow; }

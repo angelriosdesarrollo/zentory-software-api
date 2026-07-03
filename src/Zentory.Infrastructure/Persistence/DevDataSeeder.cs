@@ -51,89 +51,95 @@ public sealed class DevDataSeeder
         // ── Plan Marketing ───────────────────────────────────────────────────
         _db.PlanMarketing.AddRange(
             // Freelance
-            PlanMarketing.Create(free.Id,   AccountType.Freelance, "Para empezar a ordenar tu operación sin costo.",         "Empezar gratis",   isPopular: false, featuresHeading: null),
-            PlanMarketing.Create(pro.Id,    AccountType.Freelance, "Para el independiente que ya vive de esto.",              "Comenzar Pro",     isPopular: true,  featuresHeading: "Todo lo de Free, más"),
-            PlanMarketing.Create(studio.Id, AccountType.Freelance, "Para el freelance que quiere dominar su cash flow.",      "Comenzar Studio",  isPopular: false, featuresHeading: "Todo lo de Pro, más"),
+            PlanMarketing.Create(free.Id,   LegalType.Freelance, "Para empezar a ordenar tu operación sin costo.",         "Empezar gratis",   isPopular: false, featuresHeading: null),
+            PlanMarketing.Create(pro.Id,    LegalType.Freelance, "Para el independiente que ya vive de esto.",              "Comenzar Pro",     isPopular: true,  featuresHeading: "Todo lo de Free, más"),
+            PlanMarketing.Create(studio.Id, LegalType.Freelance, "Para el freelance que quiere dominar su cash flow.",      "Comenzar Studio",  isPopular: false, featuresHeading: "Todo lo de Pro, más"),
             // Empresa
-            PlanMarketing.Create(free.Id,   AccountType.Empresa,   "Para empezar a ordenar la operación sin costo.",         "Empezar gratis",   isPopular: false, featuresHeading: null),
-            PlanMarketing.Create(pro.Id,    AccountType.Empresa,   "Para la empresa que factura formalmente.",                "Comenzar Pro",     isPopular: true,  featuresHeading: "Todo lo de Free, más"),
-            PlanMarketing.Create(studio.Id, AccountType.Empresa,   "Para agencias y software factories con equipo.",          "Comenzar Studio",  isPopular: false, featuresHeading: "Todo lo de Pro, más")
+            PlanMarketing.Create(free.Id,   LegalType.Empresa,   "Para empezar a ordenar la operación sin costo.",         "Empezar gratis",   isPopular: false, featuresHeading: null),
+            PlanMarketing.Create(pro.Id,    LegalType.Empresa,   "Para la empresa que factura formalmente.",                "Comenzar Pro",     isPopular: true,  featuresHeading: "Todo lo de Free, más"),
+            PlanMarketing.Create(studio.Id, LegalType.Empresa,   "Para agencias y software factories con equipo.",          "Comenzar Studio",  isPopular: false, featuresHeading: "Todo lo de Pro, más")
         );
 
         // ── Plan Features ────────────────────────────────────────────────────
         _db.PlanFeatures.AddRange(
             // Freelance Free
-            PlanFeature.Create(free.Id,   AccountType.Freelance, "Hasta 2 clientes",                         sortOrder: 0),
-            PlanFeature.Create(free.Id,   AccountType.Freelance, "3 cobros / mes",                           sortOrder: 1),
-            PlanFeature.Create(free.Id,   AccountType.Freelance, "Proyectos básicos",                        sortOrder: 2),
-            PlanFeature.Create(free.Id,   AccountType.Freelance, "Calculadora PILA (seguridad social)", isHighlight: true, badgeText: "siempre gratis", sortOrder: 3),
+            PlanFeature.Create(free.Id,   LegalType.Freelance, "Hasta 2 clientes",                         sortOrder: 0),
+            PlanFeature.Create(free.Id,   LegalType.Freelance, "3 cobros / mes",                           sortOrder: 1),
+            PlanFeature.Create(free.Id,   LegalType.Freelance, "Proyectos básicos",                        sortOrder: 2),
+            PlanFeature.Create(free.Id,   LegalType.Freelance, "Calculadora PILA (seguridad social)", isHighlight: true, badgeText: "siempre gratis", sortOrder: 3),
             // Freelance Pro
-            PlanFeature.Create(pro.Id,    AccountType.Freelance, "Clientes y cobros ilimitados",             sortOrder: 0),
-            PlanFeature.Create(pro.Id,    AccountType.Freelance, "Sin marca Zentory en documentos",          sortOrder: 1),
-            PlanFeature.Create(pro.Id,    AccountType.Freelance, "Tracking de apertura de propuestas",       sortOrder: 2),
-            PlanFeature.Create(pro.Id,    AccountType.Freelance, "Multimoneda (USD, COP, EUR…)",             sortOrder: 3),
-            PlanFeature.Create(pro.Id,    AccountType.Freelance, "Recordatorios automáticos de cobro",       sortOrder: 4),
+            PlanFeature.Create(pro.Id,    LegalType.Freelance, "Clientes y cobros ilimitados",             sortOrder: 0),
+            PlanFeature.Create(pro.Id,    LegalType.Freelance, "Sin marca Zentory en documentos",          sortOrder: 1),
+            PlanFeature.Create(pro.Id,    LegalType.Freelance, "Tracking de apertura de propuestas",       sortOrder: 2),
+            PlanFeature.Create(pro.Id,    LegalType.Freelance, "Multimoneda (USD, COP, EUR…)",             sortOrder: 3),
+            PlanFeature.Create(pro.Id,    LegalType.Freelance, "Recordatorios automáticos de cobro",       sortOrder: 4),
             // Freelance Studio
-            PlanFeature.Create(studio.Id, AccountType.Freelance, "Vista Gantt / Timeline",                  sortOrder: 0),
-            PlanFeature.Create(studio.Id, AccountType.Freelance, "Flujo de caja y runway",                  sortOrder: 1),
-            PlanFeature.Create(studio.Id, AccountType.Freelance, "Flujo proyectado a 3 meses",              sortOrder: 2),
-            PlanFeature.Create(studio.Id, AccountType.Freelance, "Portal cliente completo",                  sortOrder: 3),
+            PlanFeature.Create(studio.Id, LegalType.Freelance, "Vista Gantt / Timeline",                  sortOrder: 0),
+            PlanFeature.Create(studio.Id, LegalType.Freelance, "Flujo de caja y runway",                  sortOrder: 1),
+            PlanFeature.Create(studio.Id, LegalType.Freelance, "Flujo proyectado a 3 meses",              sortOrder: 2),
+            PlanFeature.Create(studio.Id, LegalType.Freelance, "Portal cliente completo",                  sortOrder: 3),
             // Empresa Free
-            PlanFeature.Create(free.Id,   AccountType.Empresa,   "Hasta 2 clientes",                        sortOrder: 0),
-            PlanFeature.Create(free.Id,   AccountType.Empresa,   "3 facturas / mes",                        sortOrder: 1),
-            PlanFeature.Create(free.Id,   AccountType.Empresa,   "Proyectos básicos",                       sortOrder: 2),
-            PlanFeature.Create(free.Id,   AccountType.Empresa,   "Calculadora PILA (seguridad social)", isHighlight: true, badgeText: "siempre gratis", sortOrder: 3),
+            PlanFeature.Create(free.Id,   LegalType.Empresa,   "Hasta 2 clientes",                        sortOrder: 0),
+            PlanFeature.Create(free.Id,   LegalType.Empresa,   "3 facturas / mes",                        sortOrder: 1),
+            PlanFeature.Create(free.Id,   LegalType.Empresa,   "Proyectos básicos",                       sortOrder: 2),
+            PlanFeature.Create(free.Id,   LegalType.Empresa,   "Calculadora PILA (seguridad social)", isHighlight: true, badgeText: "siempre gratis", sortOrder: 3),
             // Empresa Pro
-            PlanFeature.Create(pro.Id,    AccountType.Empresa,   "Clientes y facturas ilimitados",          sortOrder: 0),
-            PlanFeature.Create(pro.Id,    AccountType.Empresa,   "Sin marca Zentory en documentos",         sortOrder: 1),
-            PlanFeature.Create(pro.Id,    AccountType.Empresa,   "Facturación Electrónica DIAN", isHighlight: true, sortOrder: 2),
-            PlanFeature.Create(pro.Id,    AccountType.Empresa,   "Tracking de apertura de propuestas",      sortOrder: 3),
-            PlanFeature.Create(pro.Id,    AccountType.Empresa,   "Multimoneda (USD, COP, EUR…)",            sortOrder: 4),
-            PlanFeature.Create(pro.Id,    AccountType.Empresa,   "Recordatorios automáticos de cobro",      sortOrder: 5),
+            PlanFeature.Create(pro.Id,    LegalType.Empresa,   "Clientes y facturas ilimitados",          sortOrder: 0),
+            PlanFeature.Create(pro.Id,    LegalType.Empresa,   "Sin marca Zentory en documentos",         sortOrder: 1),
+            PlanFeature.Create(pro.Id,    LegalType.Empresa,   "Facturación Electrónica DIAN", isHighlight: true, sortOrder: 2),
+            PlanFeature.Create(pro.Id,    LegalType.Empresa,   "Tracking de apertura de propuestas",      sortOrder: 3),
+            PlanFeature.Create(pro.Id,    LegalType.Empresa,   "Multimoneda (USD, COP, EUR…)",            sortOrder: 4),
+            PlanFeature.Create(pro.Id,    LegalType.Empresa,   "Recordatorios automáticos de cobro",      sortOrder: 5),
             // Empresa Studio
-            PlanFeature.Create(studio.Id, AccountType.Empresa,   "Rentabilidad real por proyecto",          sortOrder: 0),
-            PlanFeature.Create(studio.Id, AccountType.Empresa,   "Flujo de caja y runway",                  sortOrder: 1),
-            PlanFeature.Create(studio.Id, AccountType.Empresa,   "Colaboradores y cuentas por pagar",       sortOrder: 2),
-            PlanFeature.Create(studio.Id, AccountType.Empresa,   "Multi-usuario y roles de acceso",         sortOrder: 3),
-            PlanFeature.Create(studio.Id, AccountType.Empresa,   "Propuestas con margen y equipo",          sortOrder: 4)
+            PlanFeature.Create(studio.Id, LegalType.Empresa,   "Rentabilidad real por proyecto",          sortOrder: 0),
+            PlanFeature.Create(studio.Id, LegalType.Empresa,   "Flujo de caja y runway",                  sortOrder: 1),
+            PlanFeature.Create(studio.Id, LegalType.Empresa,   "Colaboradores y cuentas por pagar",       sortOrder: 2),
+            PlanFeature.Create(studio.Id, LegalType.Empresa,   "Multi-usuario y roles de acceso",         sortOrder: 3),
+            PlanFeature.Create(studio.Id, LegalType.Empresa,   "Propuestas con margen y equipo",          sortOrder: 4)
         );
 
         // ── Plan Limits ──────────────────────────────────────────────────────
         _db.PlanLimits.AddRange(
             // Freelance Free
-            PlanLimit.Create(free.Id,   AccountType.Freelance, FeatureKeys.MaxClients,        2),
-            PlanLimit.Create(free.Id,   AccountType.Freelance, FeatureKeys.MaxInvoicesMonth,  3),
-            PlanLimit.Create(free.Id,   AccountType.Freelance, FeatureKeys.MaxProjects,       5),
-            PlanLimit.Create(free.Id,   AccountType.Freelance, FeatureKeys.MaxCollaborators,  0),
-            PlanLimit.Create(free.Id,   AccountType.Freelance, FeatureKeys.MaxOrgMembers,     1),
+            PlanLimit.Create(free.Id,   LegalType.Freelance, FeatureKeys.MaxClients,        2),
+            PlanLimit.Create(free.Id,   LegalType.Freelance, FeatureKeys.MaxInvoicesMonth,  3),
+            PlanLimit.Create(free.Id,   LegalType.Freelance, FeatureKeys.MaxProjects,       5),
+            PlanLimit.Create(free.Id,   LegalType.Freelance, FeatureKeys.MaxCollaborators,  0),
+            PlanLimit.Create(free.Id,   LegalType.Freelance, FeatureKeys.MaxOrgMembers,     1),
+            PlanLimit.Create(free.Id,   LegalType.Freelance, FeatureKeys.MaxOwnedOrgs,      1),
             // Freelance Pro / Studio — sin límite (null)
-            PlanLimit.Create(pro.Id,    AccountType.Freelance, FeatureKeys.MaxClients,        null),
-            PlanLimit.Create(pro.Id,    AccountType.Freelance, FeatureKeys.MaxInvoicesMonth,  null),
-            PlanLimit.Create(pro.Id,    AccountType.Freelance, FeatureKeys.MaxProjects,       null),
-            PlanLimit.Create(pro.Id,    AccountType.Freelance, FeatureKeys.MaxCollaborators,  0),
-            PlanLimit.Create(pro.Id,    AccountType.Freelance, FeatureKeys.MaxOrgMembers,     1),
-            PlanLimit.Create(studio.Id, AccountType.Freelance, FeatureKeys.MaxClients,        null),
-            PlanLimit.Create(studio.Id, AccountType.Freelance, FeatureKeys.MaxInvoicesMonth,  null),
-            PlanLimit.Create(studio.Id, AccountType.Freelance, FeatureKeys.MaxProjects,       null),
-            PlanLimit.Create(studio.Id, AccountType.Freelance, FeatureKeys.MaxCollaborators,  null),
-            PlanLimit.Create(studio.Id, AccountType.Freelance, FeatureKeys.MaxOrgMembers,     1),
+            PlanLimit.Create(pro.Id,    LegalType.Freelance, FeatureKeys.MaxClients,        null),
+            PlanLimit.Create(pro.Id,    LegalType.Freelance, FeatureKeys.MaxInvoicesMonth,  null),
+            PlanLimit.Create(pro.Id,    LegalType.Freelance, FeatureKeys.MaxProjects,       null),
+            PlanLimit.Create(pro.Id,    LegalType.Freelance, FeatureKeys.MaxCollaborators,  0),
+            PlanLimit.Create(pro.Id,    LegalType.Freelance, FeatureKeys.MaxOrgMembers,     1),
+            PlanLimit.Create(pro.Id,    LegalType.Freelance, FeatureKeys.MaxOwnedOrgs,      null),
+            PlanLimit.Create(studio.Id, LegalType.Freelance, FeatureKeys.MaxClients,        null),
+            PlanLimit.Create(studio.Id, LegalType.Freelance, FeatureKeys.MaxInvoicesMonth,  null),
+            PlanLimit.Create(studio.Id, LegalType.Freelance, FeatureKeys.MaxProjects,       null),
+            PlanLimit.Create(studio.Id, LegalType.Freelance, FeatureKeys.MaxCollaborators,  null),
+            PlanLimit.Create(studio.Id, LegalType.Freelance, FeatureKeys.MaxOrgMembers,     1),
+            PlanLimit.Create(studio.Id, LegalType.Freelance, FeatureKeys.MaxOwnedOrgs,      null),
             // Empresa Free
-            PlanLimit.Create(free.Id,   AccountType.Empresa,   FeatureKeys.MaxClients,        2),
-            PlanLimit.Create(free.Id,   AccountType.Empresa,   FeatureKeys.MaxInvoicesMonth,  3),
-            PlanLimit.Create(free.Id,   AccountType.Empresa,   FeatureKeys.MaxProjects,       5),
-            PlanLimit.Create(free.Id,   AccountType.Empresa,   FeatureKeys.MaxCollaborators,  0),
-            PlanLimit.Create(free.Id,   AccountType.Empresa,   FeatureKeys.MaxOrgMembers,     1),
+            PlanLimit.Create(free.Id,   LegalType.Empresa,   FeatureKeys.MaxClients,        2),
+            PlanLimit.Create(free.Id,   LegalType.Empresa,   FeatureKeys.MaxInvoicesMonth,  3),
+            PlanLimit.Create(free.Id,   LegalType.Empresa,   FeatureKeys.MaxProjects,       5),
+            PlanLimit.Create(free.Id,   LegalType.Empresa,   FeatureKeys.MaxCollaborators,  0),
+            PlanLimit.Create(free.Id,   LegalType.Empresa,   FeatureKeys.MaxOrgMembers,     1),
+            PlanLimit.Create(free.Id,   LegalType.Empresa,   FeatureKeys.MaxOwnedOrgs,      1),
             // Empresa Pro / Studio
-            PlanLimit.Create(pro.Id,    AccountType.Empresa,   FeatureKeys.MaxClients,        null),
-            PlanLimit.Create(pro.Id,    AccountType.Empresa,   FeatureKeys.MaxInvoicesMonth,  null),
-            PlanLimit.Create(pro.Id,    AccountType.Empresa,   FeatureKeys.MaxProjects,       null),
-            PlanLimit.Create(pro.Id,    AccountType.Empresa,   FeatureKeys.MaxCollaborators,  10),
-            PlanLimit.Create(pro.Id,    AccountType.Empresa,   FeatureKeys.MaxOrgMembers,     5),
-            PlanLimit.Create(studio.Id, AccountType.Empresa,   FeatureKeys.MaxClients,        null),
-            PlanLimit.Create(studio.Id, AccountType.Empresa,   FeatureKeys.MaxInvoicesMonth,  null),
-            PlanLimit.Create(studio.Id, AccountType.Empresa,   FeatureKeys.MaxProjects,       null),
-            PlanLimit.Create(studio.Id, AccountType.Empresa,   FeatureKeys.MaxCollaborators,  null),
-            PlanLimit.Create(studio.Id, AccountType.Empresa,   FeatureKeys.MaxOrgMembers,     null)
+            PlanLimit.Create(pro.Id,    LegalType.Empresa,   FeatureKeys.MaxClients,        null),
+            PlanLimit.Create(pro.Id,    LegalType.Empresa,   FeatureKeys.MaxInvoicesMonth,  null),
+            PlanLimit.Create(pro.Id,    LegalType.Empresa,   FeatureKeys.MaxProjects,       null),
+            PlanLimit.Create(pro.Id,    LegalType.Empresa,   FeatureKeys.MaxCollaborators,  10),
+            PlanLimit.Create(pro.Id,    LegalType.Empresa,   FeatureKeys.MaxOrgMembers,     5),
+            PlanLimit.Create(pro.Id,    LegalType.Empresa,   FeatureKeys.MaxOwnedOrgs,      null),
+            PlanLimit.Create(studio.Id, LegalType.Empresa,   FeatureKeys.MaxClients,        null),
+            PlanLimit.Create(studio.Id, LegalType.Empresa,   FeatureKeys.MaxInvoicesMonth,  null),
+            PlanLimit.Create(studio.Id, LegalType.Empresa,   FeatureKeys.MaxProjects,       null),
+            PlanLimit.Create(studio.Id, LegalType.Empresa,   FeatureKeys.MaxCollaborators,  null),
+            PlanLimit.Create(studio.Id, LegalType.Empresa,   FeatureKeys.MaxOrgMembers,     null),
+            PlanLimit.Create(studio.Id, LegalType.Empresa,   FeatureKeys.MaxOwnedOrgs,      null)
         );
 
         // ── Plan Compare Items ───────────────────────────────────────────────
@@ -146,16 +152,16 @@ public sealed class DevDataSeeder
             PlanCompareItem.Create("Tracking de apertura",       freeValue: "false",   proValue: "true",        studioValue: "true",        sortOrder: 5),
             PlanCompareItem.Create("Multimoneda",                freeValue: "false",   proValue: "true",        studioValue: "true",        sortOrder: 6),
             PlanCompareItem.Create("Flujo de caja / runway",     freeValue: "false",   proValue: "false",       studioValue: "true",        sortOrder: 8),
-            PlanCompareItem.Create("Vista Gantt / Timeline",     freeValue: "false",   proValue: "false",       studioValue: "true",        sortOrder: 9, accountType: AccountType.Freelance),
-            PlanCompareItem.Create("Portal cliente completo",    freeValue: "false",   proValue: "false",       studioValue: "true",        sortOrder: 10, accountType: AccountType.Freelance),
+            PlanCompareItem.Create("Vista Gantt / Timeline",     freeValue: "false",   proValue: "false",       studioValue: "true",        sortOrder: 9, legalType: LegalType.Freelance),
+            PlanCompareItem.Create("Portal cliente completo",    freeValue: "false",   proValue: "false",       studioValue: "true",        sortOrder: 10, legalType: LegalType.Freelance),
             // Freelance specific
-            PlanCompareItem.Create("Cobros / mes",               freeValue: "3",       proValue: "Ilimitados",  studioValue: "Ilimitados",  sortOrder: 1, accountType: AccountType.Freelance),
+            PlanCompareItem.Create("Cobros / mes",               freeValue: "3",       proValue: "Ilimitados",  studioValue: "Ilimitados",  sortOrder: 1, legalType: LegalType.Freelance),
             // Empresa specific
-            PlanCompareItem.Create("Facturas / mes",             freeValue: "3",       proValue: "Ilimitados",  studioValue: "Ilimitados",  sortOrder: 1, accountType: AccountType.Empresa),
-            PlanCompareItem.Create("Facturación Electrónica DIAN", freeValue: "false", proValue: "true",        studioValue: "true",        sortOrder: 7, accountType: AccountType.Empresa, isEmpresaOnly: true),
-            PlanCompareItem.Create("Rentabilidad real por proyecto", freeValue: "false",proValue: "false",       studioValue: "true",        sortOrder: 11, accountType: AccountType.Empresa, isEmpresaOnly: true),
-            PlanCompareItem.Create("Colaboradores y cuentas por pagar", freeValue: "false", proValue: "false",  studioValue: "true",        sortOrder: 12, accountType: AccountType.Empresa, isEmpresaOnly: true),
-            PlanCompareItem.Create("Multi-usuario y roles",      freeValue: "false",   proValue: "false",       studioValue: "true",        sortOrder: 13, accountType: AccountType.Empresa, isEmpresaOnly: true)
+            PlanCompareItem.Create("Facturas / mes",             freeValue: "3",       proValue: "Ilimitados",  studioValue: "Ilimitados",  sortOrder: 1, legalType: LegalType.Empresa),
+            PlanCompareItem.Create("Facturación Electrónica DIAN", freeValue: "false", proValue: "true",        studioValue: "true",        sortOrder: 7, legalType: LegalType.Empresa, isEmpresaOnly: true),
+            PlanCompareItem.Create("Rentabilidad real por proyecto", freeValue: "false",proValue: "false",       studioValue: "true",        sortOrder: 11, legalType: LegalType.Empresa, isEmpresaOnly: true),
+            PlanCompareItem.Create("Colaboradores y cuentas por pagar", freeValue: "false", proValue: "false",  studioValue: "true",        sortOrder: 12, legalType: LegalType.Empresa, isEmpresaOnly: true),
+            PlanCompareItem.Create("Multi-usuario y roles",      freeValue: "false",   proValue: "false",       studioValue: "true",        sortOrder: 13, legalType: LegalType.Empresa, isEmpresaOnly: true)
         );
 
         await _db.SaveChangesAsync(ct);
@@ -247,7 +253,7 @@ public sealed class DevDataSeeder
 
         // ── Org + User ──────────────────────────────────────────────────────
         // Plan (Studio) comes from the owner's Subscription — seeded in SeedBillingAsync().
-        var org = Organization.Create("TechFactory CO", AccountType.Empresa, id: DevOrgId);
+        var org = Organization.Create("TechFactory CO", LegalType.Empresa, id: DevOrgId);
         _db.Organizations.Add(org);
         await _db.SaveChangesAsync(ct);
 
@@ -279,7 +285,8 @@ public sealed class DevDataSeeder
             OrganizationSettings.Set(oid, "invoice.payment_method","Transferencia bancaria"),
             OrganizationSettings.Set(oid, "proposal.validity_days","30"),
             OrganizationSettings.Set(oid, "proposal.revision_count","3"),
-            OrganizationSettings.Set(oid, "invoice.currency",      "USD")
+            OrganizationSettings.Set(oid, "invoice.currency",      "USD"),
+            OrganizationSettings.Set(oid, "profile.work_type",     Zentory.Domain.Constants.WorkType.Software)
         );
         await _db.SaveChangesAsync(ct);
 
@@ -662,10 +669,11 @@ public sealed class DevDataSeeder
 
         // Org 2: user is owner (Freelance). Plan is not set here — it is resolved from the
         // owner's Subscription, so this org shares whatever plan "TechFactory CO" has (Studio).
-        var org2 = Organization.Create("Camila Perez Freelance", AccountType.Freelance, id: DevOrg2Id);
+        var org2 = Organization.Create("Camila Perez Freelance", LegalType.Freelance, id: DevOrg2Id);
         org2.SetOwner(user.UserId);
         _db.Organizations.Add(org2);
         _db.OrganizationMembers.Add(OrganizationMember.Create(org2.OrganizationId, user.UserId, "owner"));
+        _db.OrganizationSettings.Add(OrganizationSettings.Set(org2.OrganizationId, "profile.work_type", Zentory.Domain.Constants.WorkType.Software));
 
         // Org 3: owned by a different person (Daniel Ospina) — dev user is only an admin here.
         // Exercises the "member views an org owned by someone else" path: the plan shown must
@@ -675,11 +683,12 @@ public sealed class DevDataSeeder
             BCrypt.Net.BCrypt.HashPassword("Zentory2026*"), id: StartupXOwnerId);
         _db.Users.Add(startupOwner);
 
-        var org3 = Organization.Create("StartupX SAS", AccountType.Empresa, id: DevOrg3Id);
+        var org3 = Organization.Create("StartupX SAS", LegalType.Empresa, id: DevOrg3Id);
         org3.SetOwner(startupOwner.UserId);
         _db.Organizations.Add(org3);
         _db.OrganizationMembers.Add(OrganizationMember.Create(org3.OrganizationId, startupOwner.UserId, "owner"));
         _db.OrganizationMembers.Add(OrganizationMember.Create(org3.OrganizationId, user.UserId, "admin"));
+        _db.OrganizationSettings.Add(OrganizationSettings.Set(org3.OrganizationId, "profile.work_type", Zentory.Domain.Constants.WorkType.Software));
         await _db.SaveChangesAsync(ct);
 
         var freePlan = await _db.BillingPlans.FirstAsync(p => p.Name == Plan.Free, ct);
@@ -749,7 +758,7 @@ public sealed class DevDataSeeder
         var owner = await _db.Users.FirstAsync(u => u.UserId == DevUserId, ct);
 
         // Owned by Camila (DevUserId) ⇒ resolves to Studio, same plan as her other orgs.
-        var org = Organization.Create("Interventoría y Gestión Pública SAS", AccountType.Empresa, id: PublicOrgId);
+        var org = Organization.Create("Interventoría y Gestión Pública SAS", LegalType.Empresa, id: PublicOrgId);
         org.SetOwner(owner.UserId);
         _db.Organizations.Add(org);
         _db.OrganizationMembers.Add(OrganizationMember.Create(org.OrganizationId, owner.UserId, "owner"));
@@ -769,7 +778,8 @@ public sealed class DevDataSeeder
             OrganizationSettings.Set(oid, "invoice.payment_method", "Transferencia bancaria"),
             OrganizationSettings.Set(oid, "proposal.validity_days", "30"),
             OrganizationSettings.Set(oid, "proposal.revision_count","3"),
-            OrganizationSettings.Set(oid, "invoice.currency",       "COP")
+            OrganizationSettings.Set(oid, "invoice.currency",       "COP"),
+            OrganizationSettings.Set(oid, "profile.work_type",      Zentory.Domain.Constants.WorkType.ObraPublica)
         );
         await _db.SaveChangesAsync(ct);
 
@@ -967,7 +977,7 @@ public sealed class DevDataSeeder
             BCrypt.Net.BCrypt.HashPassword("Zentory2026*"), id: MarketingOwnerId);
         _db.Users.Add(valentina);
 
-        var org = Organization.Create("Pulso Digital Agencia de Marketing", AccountType.Empresa, id: MarketingOrgId);
+        var org = Organization.Create("Pulso Digital Agencia de Marketing", LegalType.Empresa, id: MarketingOrgId);
         org.SetOwner(valentina.UserId);
         _db.Organizations.Add(org);
         _db.OrganizationMembers.Add(OrganizationMember.Create(org.OrganizationId, valentina.UserId, "owner"));
@@ -988,7 +998,8 @@ public sealed class DevDataSeeder
             OrganizationSettings.Set(oid, "invoice.payment_method", "Transferencia bancaria"),
             OrganizationSettings.Set(oid, "proposal.validity_days", "30"),
             OrganizationSettings.Set(oid, "proposal.revision_count","3"),
-            OrganizationSettings.Set(oid, "invoice.currency",       "COP")
+            OrganizationSettings.Set(oid, "invoice.currency",       "COP"),
+            OrganizationSettings.Set(oid, "profile.work_type",      Zentory.Domain.Constants.WorkType.Marketing)
         );
         await _db.SaveChangesAsync(ct);
 

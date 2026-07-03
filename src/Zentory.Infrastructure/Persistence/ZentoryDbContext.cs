@@ -25,6 +25,7 @@ public class ZentoryDbContext : DbContext, IZentoryDbContext
     public DbSet<OAuthAccount>               OAuthAccounts               { get; set; } = default!;
     public DbSet<PasswordResetToken>         PasswordResetTokens         { get; set; } = default!;
     public DbSet<EmailVerificationToken>     EmailVerificationTokens     { get; set; } = default!;
+    public DbSet<CollaboratorAccessToken>    CollaboratorAccessTokens    { get; set; } = default!;
 
     // ── Tenant configuration ─────────────────────────────────────────────────────
     public DbSet<OrganizationSettings>       OrganizationSettings        { get; set; } = default!;
@@ -68,6 +69,8 @@ public class ZentoryDbContext : DbContext, IZentoryDbContext
     // ── Team / PILA ──────────────────────────────────────────────────────────────
     public DbSet<Collaborator>               Collaborators               { get; set; } = default!;
     public DbSet<PilaVerification>           PilaVerifications           { get; set; } = default!;
+    public DbSet<PilaVerificationDocument>   PilaVerificationDocuments   { get; set; } = default!;
+    public DbSet<CollaboratorPayoutInvoice>  CollaboratorPayoutInvoices  { get; set; } = default!;
     public DbSet<SsCalculationLog>           SsCalculationLogs           { get; set; } = default!;
 
     // ── Time tracking & Finances ─────────────────────────────────────────────────
@@ -84,7 +87,7 @@ public class ZentoryDbContext : DbContext, IZentoryDbContext
     public DbSet<Country>                    Countries                   { get; set; } = default!;
     public DbSet<Currency>                   Currencies                  { get; set; } = default!;
     public DbSet<Industry>                   Industries                  { get; set; } = default!;
-    public DbSet<TaxType>                    TaxTypes                    { get; set; } = default!;
+    public DbSet<TaxType>                     TaxTypes                    { get; set; } = default!;
     public DbSet<ArlRiskLevel>               ArlRiskLevels               { get; set; } = default!;
     public DbSet<ExpenseCategory>            ExpenseCategories           { get; set; } = default!;
     public DbSet<UnitOfMeasure>              UnitsOfMeasure              { get; set; } = default!;
@@ -139,6 +142,10 @@ public class ZentoryDbContext : DbContext, IZentoryDbContext
         modelBuilder.Entity<Collaborator>().HasQueryFilter(c =>
             c.DeletedAt == null &&
             (!tenantActive || c.OrganizationId == _tenant!.OrganizationId));
+
+        modelBuilder.Entity<CollaboratorPayoutInvoice>().HasQueryFilter(p =>
+            p.DeletedAt == null &&
+            (!tenantActive || p.OrganizationId == _tenant!.OrganizationId));
 
         modelBuilder.Entity<Invoice>().HasQueryFilter(i =>
             i.DeletedAt == null &&

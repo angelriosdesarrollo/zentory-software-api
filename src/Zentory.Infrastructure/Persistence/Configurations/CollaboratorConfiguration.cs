@@ -26,6 +26,8 @@ public class CollaboratorConfiguration : IEntityTypeConfiguration<Collaborator>
         builder.Property(c => c.PilaStatus).HasColumnName("pila_status").HasMaxLength(20).IsRequired();
         builder.Property(c => c.PilaLastVerifiedPeriod).HasColumnName("pila_last_verified_period").HasMaxLength(7);
         builder.Property(c => c.ArlRiskLevel).HasColumnName("arl_risk_level");
+        builder.Property(c => c.PayoutInvoiceStatus).HasColumnName("payout_invoice_status").HasMaxLength(20).IsRequired();
+        builder.Property(c => c.PayoutInvoiceLastPeriod).HasColumnName("payout_invoice_last_period").HasMaxLength(7);
         builder.Property(c => c.IdNumber).HasColumnName("id_number").HasMaxLength(50);
         builder.Property(c => c.CreatedAt).HasColumnName("created_at");
         builder.Property(c => c.UpdatedAt).HasColumnName("updated_at");

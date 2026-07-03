@@ -28,13 +28,13 @@ public sealed class GetPlanLimitsQueryHandler : IRequestHandler<GetPlanLimitsQue
     public async Task<PlanLimitsDto> Handle(GetPlanLimitsQuery request, CancellationToken ct)
     {
         var plan        = _tenant.Plan;
-        var accountType = _tenant.AccountType;
+        var legalType = _tenant.LegalType;
 
-        var t0 = _limits.GetLimitAsync(plan, accountType, FeatureKeys.MaxClients,       ct);
-        var t1 = _limits.GetLimitAsync(plan, accountType, FeatureKeys.MaxInvoicesMonth, ct);
-        var t2 = _limits.GetLimitAsync(plan, accountType, FeatureKeys.MaxOrgMembers,    ct);
-        var t3 = _limits.GetLimitAsync(plan, accountType, FeatureKeys.MaxProjects,      ct);
-        var t4 = _limits.GetLimitAsync(plan, accountType, FeatureKeys.MaxCollaborators, ct);
+        var t0 = _limits.GetLimitAsync(plan, legalType, FeatureKeys.MaxClients,       ct);
+        var t1 = _limits.GetLimitAsync(plan, legalType, FeatureKeys.MaxInvoicesMonth, ct);
+        var t2 = _limits.GetLimitAsync(plan, legalType, FeatureKeys.MaxOrgMembers,    ct);
+        var t3 = _limits.GetLimitAsync(plan, legalType, FeatureKeys.MaxProjects,      ct);
+        var t4 = _limits.GetLimitAsync(plan, legalType, FeatureKeys.MaxCollaborators, ct);
 
         await Task.WhenAll(t0, t1, t2, t3, t4);
 
