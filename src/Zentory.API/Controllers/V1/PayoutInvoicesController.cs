@@ -64,4 +64,13 @@ public sealed class PayoutInvoicesController : ControllerBase
         var result = await _mediator.Send(new GetSuggestedPayoutAmountQuery(collaboratorId, period), ct);
         return Ok(result);
     }
+
+    /// <summary>PATCH /api/v1/team/payout-invoices/{id}/review — aprobar o rechazar</summary>
+    [HttpPatch("{id:guid}/review")]
+    public async Task<IActionResult> Review(
+        Guid id, [FromBody] ReviewPayoutInvoiceCommand command, CancellationToken ct = default)
+    {
+        await _mediator.Send(command with { Id = id }, ct);
+        return NoContent();
+    }
 }

@@ -79,8 +79,18 @@ public static class ServiceCollectionExtensions
         services.AddTransient<IResend, ResendClient>();
         services.AddScoped<IEmailService, ResendEmailService>();
         services.AddSingleton<IApplicationSettings, ApplicationSettings>();
-        services.AddScoped<IStorageService, CloudflareR2StorageService>();
+
+        // Sin credenciales R2 reales configuradas localmente, cae a disco (mismo espíritu
+        // que Database:UseInMemory) — así el flujo de subida/descarga completo se puede
+        // probar en dev sin depender de una cuenta de Cloudflare. Nunca pasa en producción,
+        // donde R2:AccountId siempre debe estar configurado.
+        if (string.IsNullOrWhiteSpace(configuration["R2:AccountId"]))
+            services.AddScoped<IStorageService, LocalDiskStorageService>();
+        else
+            services.AddScoped<IStorageService, CloudflareR2StorageService>();
+
         services.AddScoped<IPayoutInvoicePdfGenerator, PayoutInvoicePdfGenerator>();
+        services.AddHttpClient<IOrganizationBrandingResolver, OrganizationBrandingResolver>();
 
         // Hangfire — job mensual de solicitud automática de PILA (Fase E).
         // Mismo toggle que la base de datos: en dev/in-memory el storage de jobs

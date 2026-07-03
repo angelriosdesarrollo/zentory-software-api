@@ -40,7 +40,8 @@ public sealed class GetPayoutInvoicesQueryHandler
                 i.Id, i.CollaboratorId, i.Period, i.Concept, i.Amount, i.DeclaredAmount, i.Currency,
                 i.Status, i.Source, i.DocumentFileName, i.DocumentFileSize, i.GeneratedAt, i.SentAt, i.CreatedAt,
                 // Solo hay documento (y por lo tanto retención) una vez generado/enviado/subido — 'draft' aún no tiene archivo.
-                i.Status == "draft" ? null : DocumentRetentionRules.RetentionUntil(i.GeneratedAt ?? i.UpdatedAt)))
+                i.Status == "draft" ? null : DocumentRetentionRules.RetentionUntil(i.GeneratedAt ?? i.UpdatedAt),
+                i.Notes, i.SignedByName, i.SignedAt))
             .ToList();
     }
 }

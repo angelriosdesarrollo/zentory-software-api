@@ -26,7 +26,7 @@ public sealed class GetOwnPilaHistoryQueryHandler
         return list
             .Select(v => new OwnPilaVerificationDto(
                 v.Id, v.Period, v.Status, v.RequestedAt, v.ReceivedAt, v.VerifiedAt,
-                v.DocumentFileName, v.DocumentFileSize, v.Source))
+                v.DocumentFileName, v.DocumentFileSize, v.Source, v.Notes))
             .ToList();
     }
 }

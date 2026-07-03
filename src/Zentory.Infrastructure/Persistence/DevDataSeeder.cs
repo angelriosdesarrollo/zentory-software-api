@@ -302,10 +302,13 @@ public sealed class DevDataSeeder
         await _db.SaveChangesAsync(ct);
 
         // ── Collaborators ────────────────────────────────────────────────────
-        var colMateo  = Collaborator.Create(oid, "Mateo Vélez",  "hourly_contractor", "COP", role: "Frontend Dev",   hourlyRate: 25m);
-        var colLaura  = Collaborator.Create(oid, "Laura Patiño", "hourly_contractor", "COP", role: "Backend Dev",    hourlyRate: 20m);
-        var colJuan   = Collaborator.Create(oid, "Juan Sánchez", "hourly_contractor", "COP", role: "Full Stack Dev", hourlyRate: 22m);
-        var colCarlos = Collaborator.Create(oid, "Carlos Reyes", "fixed_contractor",  "COP", role: "DevOps",         monthlyRate: 3200m);
+        // Email sembrado a propósito: DevToolsController y el portal de colaborador (magic
+        // link) necesitan al menos un colaborador de prueba con correo para poder probar
+        // esos flujos de punta a punta en dev — dominio claramente de prueba, nunca real.
+        var colMateo  = Collaborator.Create(oid, "Mateo Vélez",  "hourly_contractor", "COP", role: "Frontend Dev",   hourlyRate: 25m,   email: "mateo.velez@dev.zentory.test");
+        var colLaura  = Collaborator.Create(oid, "Laura Patiño", "hourly_contractor", "COP", role: "Backend Dev",    hourlyRate: 20m,   email: "laura.patino@dev.zentory.test");
+        var colJuan   = Collaborator.Create(oid, "Juan Sánchez", "hourly_contractor", "COP", role: "Full Stack Dev", hourlyRate: 22m,   email: "juan.sanchez@dev.zentory.test");
+        var colCarlos = Collaborator.Create(oid, "Carlos Reyes", "fixed_contractor",  "COP", role: "DevOps",         monthlyRate: 3200m, email: "carlos.reyes@dev.zentory.test");
 
         _db.Collaborators.AddRange(colMateo, colLaura, colJuan, colCarlos);
         await _db.SaveChangesAsync(ct);

@@ -1,5 +1,6 @@
 using FluentValidation;
 using MediatR;
+using Zentory.Application.Common;
 using Zentory.Application.Common.Interfaces;
 using Zentory.Application.Exceptions;
 using Zentory.Domain.Entities;
@@ -31,6 +32,7 @@ public sealed class GeneratePayoutInvoiceCommandHandler : IRequestHandler<Genera
     private readonly IOrganizationRepository               _organizations;
     private readonly IStorageService                       _storage;
     private readonly IPayoutInvoicePdfGenerator             _pdf;
+    private readonly IOrganizationBrandingResolver          _branding;
     private readonly IUnitOfWork                            _uow;
     private readonly ITenantContext                         _tenant;
 
@@ -40,6 +42,7 @@ public sealed class GeneratePayoutInvoiceCommandHandler : IRequestHandler<Genera
         IOrganizationRepository               organizations,
         IStorageService                       storage,
         IPayoutInvoicePdfGenerator            pdf,
+        IOrganizationBrandingResolver         branding,
         IUnitOfWork                           uow,
         ITenantContext                        tenant)
     {
@@ -48,6 +51,7 @@ public sealed class GeneratePayoutInvoiceCommandHandler : IRequestHandler<Genera
         _organizations = organizations;
         _storage       = storage;
         _pdf           = pdf;
+        _branding      = branding;
         _uow           = uow;
         _tenant        = tenant;
     }
@@ -59,6 +63,7 @@ public sealed class GeneratePayoutInvoiceCommandHandler : IRequestHandler<Genera
             throw new NotFoundException("Collaborator", request.CollaboratorId);
 
         var organization = await _organizations.GetByIdAsync(_tenant.OrganizationId, cancellationToken);
+        var branding     = await _branding.ResolveAsync(_tenant.OrganizationId, cancellationToken);
 
         var invoice = CollaboratorPayoutInvoice.Create(
             _tenant.OrganizationId,
@@ -78,9 +83,18 @@ public sealed class GeneratePayoutInvoiceCommandHandler : IRequestHandler<Genera
             request.Concept,
             request.Amount,
             collaborator.Currency,
-            DateTime.UtcNow));
+            DateTime.UtcNow,
+            LogoBytes: branding.LogoBytes,
+            LegalName: branding.LegalName,
+            Nit: branding.Nit,
+            Address: branding.Address,
+            City: branding.City,
+            Email: branding.Email,
+            Phone: branding.Phone));
 
-        var key      = $"payout-invoices/{_tenant.OrganizationId}/{request.CollaboratorId}/{invoice.Id}.pdf";
+        var key      = StorageKeyBuilder.Build(
+            _tenant.OrganizationId, "payout-invoices", request.CollaboratorId,
+            $"cuenta-cobro-{request.Period}", "application/pdf");
         var fileName = $"cuenta-cobro-{request.Period}.pdf";
         using (var stream = new MemoryStream(pdfBytes))
         {

@@ -12,6 +12,13 @@ namespace Zentory.API.Controllers.V1;
 // Devuelven 404 fuera de Development. Van directo a los repositorios en vez de
 // pasar por MediatR/ITenantContext a propósito: no requieren sesión ni
 // organización activa, y no representan un caso de uso real del producto.
+//
+// A propósito NO tiene IStorageService/IPayoutInvoicePdfGenerator en el constructor:
+// ASP.NET Core resuelve TODAS las dependencias del constructor al enrutar cualquier
+// acción de este controller, así que si CloudflareR2StorageService no puede construirse
+// (sin credenciales R2 reales configuradas localmente), CUALQUIER endpoint de acá
+// fallaría — incluidos los que no tocan storage para nada. El seed que sí necesita
+// generar un PDF real y subirlo a R2 vive aparte, en DevToolsPayoutGenerationController.
 [ApiController]
 [Route("api/v1/public/dev")]
 public sealed class DevToolsController : ControllerBase
@@ -20,32 +27,23 @@ public sealed class DevToolsController : ControllerBase
 
     private readonly IWebHostEnvironment            _env;
     private readonly ICollaboratorRepository        _collaborators;
-    private readonly IOrganizationRepository        _organizations;
     private readonly IPilaVerificationRepository    _pilaVerifications;
     private readonly ICollaboratorPayoutInvoiceRepository _payoutInvoices;
-    private readonly IStorageService                _storage;
-    private readonly IPayoutInvoicePdfGenerator      _pdf;
     private readonly IZentoryDbContext              _db;
     private readonly IUnitOfWork                    _uow;
 
     public DevToolsController(
         IWebHostEnvironment            env,
         ICollaboratorRepository        collaborators,
-        IOrganizationRepository        organizations,
         IPilaVerificationRepository    pilaVerifications,
         ICollaboratorPayoutInvoiceRepository payoutInvoices,
-        IStorageService                storage,
-        IPayoutInvoicePdfGenerator     pdf,
         IZentoryDbContext              db,
         IUnitOfWork                    uow)
     {
         _env               = env;
         _collaborators     = collaborators;
-        _organizations     = organizations;
         _pilaVerifications = pilaVerifications;
         _payoutInvoices    = payoutInvoices;
-        _storage           = storage;
-        _pdf               = pdf;
         _db                = db;
         _uow               = uow;
     }
@@ -102,60 +100,6 @@ public sealed class DevToolsController : ControllerBase
             amount: collaborator.MonthlyRate ?? collaborator.HourlyRate ?? 0,
             currency: collaborator.Currency,
             source: "manual_upload");
-
-        await _payoutInvoices.AddAsync(invoice, ct);
-        await _uow.SaveChangesAsync(ct);
-
-        return Ok(new { token = invoice.PublicToken, collaboratorName = collaborator.Name });
-    }
-
-    /// <summary>
-    /// POST /api/v1/public/dev/seed-payout-generated-token — a diferencia de seed-payout-token
-    /// (source=manual_upload, emula "Solicitar al colaborador"), esta genera un PDF real y sube
-    /// a R2 (source=generated, emula "Generar y enviar"). Devuelve un token — igual que los otros
-    /// seeds — porque el flujo unificado también pasa por el portal (descargar borrador → firmar
-    /// → subir), aunque el correo real además incluya un link de descarga directo.
-    /// </summary>
-    [HttpPost("seed-payout-generated-token")]
-    public async Task<IActionResult> SeedPayoutGeneratedToken(CancellationToken ct)
-    {
-        if (!_env.IsDevelopment()) return NotFound();
-
-        var collaborator = await GetSeedCollaboratorAsync(ct);
-        if (collaborator is null)
-            return NotFound(new { error = "No hay colaboradores de prueba sembrados por DevDataSeeder." });
-
-        var organization = await _organizations.GetByIdAsync(DevOrgId, ct);
-        var period        = DateTime.UtcNow.ToString("yyyy-MM");
-        var amount        = collaborator.MonthlyRate ?? collaborator.HourlyRate ?? 0;
-
-        var invoice = CollaboratorPayoutInvoice.Create(
-            DevOrgId,
-            collaborator.Id,
-            period,
-            concept: "Cuenta de cobro (prueba)",
-            amount: amount,
-            currency: collaborator.Currency,
-            source: "generated");
-
-        var pdfBytes = _pdf.Generate(new PayoutInvoicePdfModel(
-            organization?.Name ?? string.Empty,
-            collaborator.Name,
-            collaborator.IdNumber,
-            period,
-            "Cuenta de cobro (prueba)",
-            amount,
-            collaborator.Currency,
-            DateTime.UtcNow));
-
-        var key      = $"payout-invoices/{DevOrgId}/{collaborator.Id}/{invoice.Id}.pdf";
-        var fileName = $"cuenta-cobro-{period}.pdf";
-        using (var stream = new MemoryStream(pdfBytes))
-        {
-            await _storage.UploadAsync(key, stream, "application/pdf", ct);
-        }
-
-        invoice.MarkGenerated(key, fileName, pdfBytes.LongLength, "application/pdf");
 
         await _payoutInvoices.AddAsync(invoice, ct);
         await _uow.SaveChangesAsync(ct);

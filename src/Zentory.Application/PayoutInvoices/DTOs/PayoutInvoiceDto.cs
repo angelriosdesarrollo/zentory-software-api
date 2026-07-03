@@ -8,14 +8,17 @@ public record PayoutInvoiceDto(
     decimal   Amount,
     decimal?  DeclaredAmount,  // monto que el colaborador declaró al subir (solo source=manual_upload)
     string    Currency,
-    string    Status,   // 'draft' | 'generated' | 'sent' | 'uploaded_manually'
-    string    Source,   // 'generated' | 'manual_upload'
+    string    Status,   // 'draft' | 'generated' | 'sent' | 'signed' | 'uploaded_manually' | 'approved' | 'rejected'
+    string    Source,   // 'generated' | 'manual_upload' | 'self_service'
     string?   DocumentFileName,
     long?     DocumentFileSize,
     DateTime? GeneratedAt,
     DateTime? SentAt,
     DateTime  CreatedAt,
-    DateTime? RetentionUntil);
+    DateTime? RetentionUntil,
+    string?   Notes,    // motivo de rechazo — solo presente cuando Status == 'rejected'
+    string?   SignedByName,  // firma electrónica — solo presente cuando el colaborador firmó desde el portal
+    DateTime? SignedAt);
 
 public record SuggestedPayoutAmountDto(
     decimal Amount,

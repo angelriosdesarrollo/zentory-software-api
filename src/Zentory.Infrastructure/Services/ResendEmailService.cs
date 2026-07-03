@@ -9,12 +9,33 @@ public sealed class ResendEmailService : IEmailService
     private readonly IResend        _resend;
     private readonly string         _fromEmail;
     private readonly string         _fromName;
+    private readonly string?        _devOverrideRecipient;
 
     public ResendEmailService(IResend resend, IConfiguration configuration)
     {
         _resend    = resend;
         _fromEmail = configuration["Resend:FromEmail"] ?? "noreply@zentory.co";
         _fromName  = configuration["Resend:FromName"]  ?? "Zentory";
+
+        // Si está seteado (solo en appsettings.Development.json, gitignored), todos los correos
+        // se redirigen a esta dirección en vez del destinatario real — necesario porque el dominio
+        // de pruebas de Resend (onboarding@resend.dev) solo permite enviar a la cuenta registrada.
+        _devOverrideRecipient = configuration["Resend:DevOverrideRecipient"];
+    }
+
+    private Task SendAsync(EmailMessage email, string toEmail, CancellationToken ct)
+    {
+        if (!string.IsNullOrWhiteSpace(_devOverrideRecipient))
+        {
+            email.Subject = $"[dev → {toEmail}] {email.Subject}";
+            email.To.Add(_devOverrideRecipient);
+        }
+        else
+        {
+            email.To.Add(toEmail);
+        }
+
+        return _resend.EmailSendAsync(email, ct);
     }
 
     public async Task SendProposalEmailAsync(
@@ -82,9 +103,7 @@ public sealed class ResendEmailService : IEmailService
             Subject = $"Propuesta: {proposalTitle}",
             HtmlBody = html,
         };
-        email.To.Add(toEmail);
-
-        await _resend.EmailSendAsync(email, ct);
+        await SendAsync(email, toEmail, ct);
     }
 
     public async Task SendProposalViewedNotificationAsync(
@@ -150,9 +169,7 @@ public sealed class ResendEmailService : IEmailService
             Subject  = $"Tu propuesta fue abierta: {proposalTitle}",
             HtmlBody = html,
         };
-        email.To.Add(toEmail);
-
-        await _resend.EmailSendAsync(email, ct);
+        await SendAsync(email, toEmail, ct);
     }
 
     public async Task SendPilaRequestEmailAsync(
@@ -226,9 +243,7 @@ public sealed class ResendEmailService : IEmailService
             Subject  = $"{companyName} solicita tu comprobante de pago de planilla — {period}",
             HtmlBody = html,
         };
-        email.To.Add(toEmail);
-
-        await _resend.EmailSendAsync(email, ct);
+        await SendAsync(email, toEmail, ct);
     }
 
     public async Task SendPayoutInvoiceGeneratedEmailAsync(
@@ -306,9 +321,7 @@ public sealed class ResendEmailService : IEmailService
             Subject  = $"Tu cuenta de cobro de {period} está lista",
             HtmlBody = html,
         };
-        email.To.Add(toEmail);
-
-        await _resend.EmailSendAsync(email, ct);
+        await SendAsync(email, toEmail, ct);
     }
 
     public async Task SendPayoutInvoiceRequestEmailAsync(
@@ -381,9 +394,7 @@ public sealed class ResendEmailService : IEmailService
             Subject  = $"{companyName} te solicita tu cuenta de cobro — {period}",
             HtmlBody = html,
         };
-        email.To.Add(toEmail);
-
-        await _resend.EmailSendAsync(email, ct);
+        await SendAsync(email, toEmail, ct);
     }
 
     public async Task SendCollaboratorPortalAccessEmailAsync(
@@ -453,8 +464,6 @@ public sealed class ResendEmailService : IEmailService
             Subject  = "Tu enlace de acceso al portal de colaborador",
             HtmlBody = html,
         };
-        email.To.Add(toEmail);
-
-        await _resend.EmailSendAsync(email, ct);
+        await SendAsync(email, toEmail, ct);
     }
 }

@@ -27,6 +27,14 @@ public sealed class CollaboratorSelfServiceController : ControllerBase
         return Ok(result);
     }
 
+    /// <summary>GET /api/v1/collaborator-portal/me — datos del colaborador activo</summary>
+    [HttpGet("me")]
+    public async Task<IActionResult> GetProfile(CancellationToken ct = default)
+    {
+        var result = await _mediator.Send(new GetOwnProfileQuery(), ct);
+        return Ok(result);
+    }
+
     /// <summary>GET /api/v1/collaborator-portal/pila — historial PILA propio</summary>
     [HttpGet("pila")]
     public async Task<IActionResult> GetPilaHistory(CancellationToken ct = default)
@@ -51,6 +59,14 @@ public sealed class CollaboratorSelfServiceController : ControllerBase
     {
         await _mediator.Send(command, ct);
         return NoContent();
+    }
+
+    /// <summary>GET /api/v1/collaborator-portal/pila/{id}/download-url</summary>
+    [HttpGet("pila/{id:guid}/download-url")]
+    public async Task<IActionResult> GetPilaDownloadUrl(Guid id, CancellationToken ct = default)
+    {
+        var url = await _mediator.Send(new GetOwnPilaDownloadUrlQuery(id), ct);
+        return Ok(new { url });
     }
 
     /// <summary>GET /api/v1/collaborator-portal/payout-invoices — historial de cuentas de cobro propio</summary>
@@ -86,4 +102,15 @@ public sealed class CollaboratorSelfServiceController : ControllerBase
         var url = await _mediator.Send(new GetOwnPayoutInvoiceDownloadUrlQuery(id), ct);
         return Ok(new { url });
     }
+
+    /// <summary>POST /api/v1/collaborator-portal/payout-invoices/{id}/sign — firma electrónica (nombre + checkbox), regenera el PDF</summary>
+    [HttpPost("payout-invoices/{id:guid}/sign")]
+    public async Task<IActionResult> SignPayoutInvoice(
+        Guid id, [FromBody] SignPayoutInvoiceRequest body, CancellationToken ct = default)
+    {
+        await _mediator.Send(new SignOwnPayoutInvoiceCommand(id, body.SignedByName), ct);
+        return NoContent();
+    }
 }
+
+public sealed record SignPayoutInvoiceRequest(string SignedByName);

@@ -13,4 +13,16 @@ public record PayoutInvoicePdfModel(
     string    Concept,
     decimal   Amount,
     string    Currency,
-    DateTime  IssuedAt);
+    DateTime  IssuedAt,
+    // Branding — todos opcionales, se leen del perfil de organización (OrganizationSettings
+    // profile.*) ya existente; si no están diligenciados, esa sección del PDF se omite.
+    byte[]?   LogoBytes    = null,
+    string?   LegalName    = null,
+    string?   Nit          = null,
+    string?   Address      = null,
+    string?   City         = null,
+    string?   Email        = null,
+    string?   Phone        = null,
+    // Firma electrónica — presentes solo cuando el colaborador ya firmó en el portal.
+    string?   SignedByName = null,
+    DateTime? SignedAt     = null);

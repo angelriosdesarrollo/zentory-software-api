@@ -29,7 +29,8 @@ public record OwnPilaVerificationDto(
     DateTime? VerifiedAt,
     string?   DocumentFileName,
     long?     DocumentFileSize,
-    string    Source);
+    string    Source,
+    string?   Notes);  // motivo de rechazo — solo presente cuando Status == 'rechazada'
 
 public record OwnPayoutInvoiceDto(
     Guid      Id,
@@ -41,4 +42,7 @@ public record OwnPayoutInvoiceDto(
     string    Status,
     string    Source,
     string?   DocumentFileName,
-    long?     DocumentFileSize);
+    long?     DocumentFileSize,
+    string?   Notes,   // motivo de rechazo — solo presente cuando Status == 'rejected'
+    string?   SignedByName,
+    DateTime? SignedAt);

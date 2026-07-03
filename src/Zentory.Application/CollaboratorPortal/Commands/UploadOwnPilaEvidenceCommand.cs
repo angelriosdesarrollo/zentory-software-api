@@ -1,6 +1,7 @@
 using FluentValidation;
 using MediatR;
 using Zentory.Application.Common.Interfaces;
+using Zentory.Application.Exceptions;
 using Zentory.Domain.Entities;
 using Zentory.Domain.Repositories;
 
@@ -60,6 +61,15 @@ public sealed class UploadOwnPilaEvidenceCommandHandler : IRequestHandler<Upload
         }
         else
         {
+            // Una vez verificada, el período queda cerrado — subir otra evidencia la
+            // revertiría silenciosamente a "recibida" y perdería la aprobación de la
+            // empresa. Si el colaborador necesita corregir algo, debe pedirle a la
+            // empresa que la rechace primero (deja motivo) para poder volver a subir.
+            if (target.Status == "verificada")
+                throw new ConflictException(
+                    "PILA_ALREADY_VERIFIED",
+                    "Esta planilla ya fue aprobada para este período. Si necesitas corregirla, contacta a la empresa.");
+
             target.MarkReceived(request.StorageKey, request.FileName, request.FileSize, request.ContentType);
             await _verifications.UpdateAsync(target, cancellationToken);
         }

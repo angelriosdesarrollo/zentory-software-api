@@ -21,6 +21,9 @@ public sealed class CloudflareR2StorageService : IStorageService
         {
             ServiceURL     = $"https://{accountId}.r2.cloudflarestorage.com",
             ForcePathStyle = true,
+            // R2 solo soporta presigned URLs SigV4; sin esto, el SDK genera SigV2
+            // (AWSAccessKeyId=...) por defecto al no reconocer el endpoint como AWS real.
+            AuthenticationRegion = "auto",
         };
 
         _s3 = new AmazonS3Client(accessKey, secretKey, s3Config);
@@ -73,6 +76,9 @@ public sealed class CloudflareR2StorageService : IStorageService
             Key         = key,
             InputStream = content,
             ContentType = contentType,
+            // R2 no implementa la firma de payload en streaming/chunks que el SDK usa
+            // por defecto en versiones recientes; hay que forzar el modo no-streaming.
+            DisablePayloadSigning = true,
         };
         await _s3.PutObjectAsync(request, ct);
     }

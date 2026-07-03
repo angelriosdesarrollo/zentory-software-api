@@ -3,6 +3,9 @@ bin/
 obj/
 out/
 
+# Storage local de LocalDiskStorageService (dev sin credenciales R2)
+src/Zentory.API/App_Data/
+
 # NuGet
 *.nupkg
 *.snupkg

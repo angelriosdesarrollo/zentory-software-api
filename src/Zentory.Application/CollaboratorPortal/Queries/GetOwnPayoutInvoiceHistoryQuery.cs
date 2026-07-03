@@ -27,7 +27,7 @@ public sealed class GetOwnPayoutInvoiceHistoryQueryHandler
         return list
             .Select(i => new OwnPayoutInvoiceDto(
                 i.Id, i.Period, i.Concept, i.Amount, i.DeclaredAmount, i.Currency, i.Status, i.Source,
-                i.DocumentFileName, i.DocumentFileSize))
+                i.DocumentFileName, i.DocumentFileSize, i.Notes, i.SignedByName, i.SignedAt))
             .ToList();
     }
 }

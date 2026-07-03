@@ -1,3 +1,4 @@
+using FluentValidation;
 using MediatR;
 using Zentory.Application.Common.Interfaces;
 using Zentory.Application.Exceptions;
@@ -9,6 +10,19 @@ public record VerifyPilaCommand(
     Guid    Id,
     bool    Approved,
     string? Notes = null) : IRequest;
+
+public sealed class VerifyPilaCommandValidator : AbstractValidator<VerifyPilaCommand>
+{
+    public VerifyPilaCommandValidator()
+    {
+        // Un rechazo sin motivo deja al colaborador sin saber qué corregir — se exige
+        // el comentario para que quede en el histórico (ver PilaVerification.Notes).
+        RuleFor(x => x.Notes)
+            .NotEmpty()
+            .When(x => !x.Approved)
+            .WithMessage("Debes indicar el motivo del rechazo.");
+    }
+}
 
 public sealed class VerifyPilaCommandHandler : IRequestHandler<VerifyPilaCommand>
 {
