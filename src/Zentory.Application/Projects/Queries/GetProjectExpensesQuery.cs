@@ -5,7 +5,7 @@ namespace Zentory.Application.Projects.Queries;
 
 public record ProjectExpenseDto(
     Guid    Id,
-    Guid    ProjectId,
+    Guid?   ProjectId,
     string  Date,
     string  Category,
     string  Description,
@@ -14,7 +14,9 @@ public record ProjectExpenseDto(
     string? Vendor,
     bool    Billable,
     string  Status,
-    string  CreatedBy);
+    string  CreatedBy,
+    string  Source = "manual",
+    Guid?   SourcePayoutInvoiceId = null);
 
 public record GetProjectExpensesQuery(Guid ProjectId) : IRequest<IReadOnlyList<ProjectExpenseDto>>;
 

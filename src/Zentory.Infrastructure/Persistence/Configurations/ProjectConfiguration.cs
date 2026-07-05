@@ -28,6 +28,7 @@ public class ProjectConfiguration : IEntityTypeConfiguration<Project>
         builder.Property(p => p.StartDate).HasColumnName("start_date");
         builder.Property(p => p.EndDate).HasColumnName("end_date");
         builder.Property(p => p.ProposalId).HasColumnName("proposal_id");
+        builder.Property(p => p.Type).HasColumnName("type").HasMaxLength(20);
         builder.Property(p => p.IsDeleted).HasColumnName("is_deleted").HasDefaultValue(false);
         builder.Property(p => p.CreatedAt).HasColumnName("created_at");
         builder.Property(p => p.UpdatedAt).HasColumnName("updated_at");

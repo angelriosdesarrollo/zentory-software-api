@@ -11,11 +11,12 @@ namespace Zentory.Application.Clients.Commands;
 public record CreateClientCommand(
     string  Name,
     string  ContactName,
-    string? Email = null,
-    string? Phone = null,
-    string? City  = null,
-    string? Nit   = null,
-    string? Notes = null) : IRequest<Guid>;
+    string? Email   = null,
+    string? Phone   = null,
+    string? City    = null,
+    string? Address = null,
+    string? Nit     = null,
+    string? Notes   = null) : IRequest<Guid>;
 
 public sealed class CreateClientCommandValidator : AbstractValidator<CreateClientCommand>
 {
@@ -74,6 +75,7 @@ public sealed class CreateClientCommandHandler : IRequestHandler<CreateClientCom
             request.Email,
             request.Phone,
             request.City,
+            request.Address,
             request.Nit,
             request.Notes);
 

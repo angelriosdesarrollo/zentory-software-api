@@ -19,6 +19,7 @@ public class ClientConfiguration : IEntityTypeConfiguration<Client>
         builder.Property(c => c.Email).HasColumnName("email").HasMaxLength(254);
         builder.Property(c => c.Phone).HasColumnName("phone").HasMaxLength(30);
         builder.Property(c => c.City).HasColumnName("city").HasMaxLength(100);
+        builder.Property(c => c.Address).HasColumnName("address").HasMaxLength(300);
         builder.Property(c => c.Nit).HasColumnName("nit").HasMaxLength(30);
         builder.Property(c => c.Notes).HasColumnName("notes").HasMaxLength(2000);
         builder.Property(c => c.IsDeleted).HasColumnName("is_deleted").HasDefaultValue(false);

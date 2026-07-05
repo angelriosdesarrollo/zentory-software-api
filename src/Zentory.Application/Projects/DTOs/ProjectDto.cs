@@ -16,7 +16,8 @@ public record ProjectSummaryDto(
     int       HealthScore,
     string    HealthStatus,
     DateTime? StartDate,
-    DateTime? EndDate);
+    DateTime? EndDate,
+    string?   Type = null);
 
 public record ProjectDto(
     Guid      Id,
@@ -37,4 +38,5 @@ public record ProjectDto(
     DateTime? EndDate,
     Guid?     ProposalId,
     DateTime  CreatedAt,
-    DateTime  UpdatedAt);
+    DateTime  UpdatedAt,
+    string?   Type = null);

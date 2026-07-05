@@ -47,11 +47,13 @@ public sealed class GetProfitabilityStatsQueryHandler
 
     private readonly IZentoryDbContext _db;
     private readonly ITenantContext    _tenant;
+    private readonly ProjectExpenseStore _expenses;
 
-    public GetProfitabilityStatsQueryHandler(IZentoryDbContext db, ITenantContext tenant)
+    public GetProfitabilityStatsQueryHandler(IZentoryDbContext db, ITenantContext tenant, ProjectExpenseStore expenses)
     {
-        _db     = db;
-        _tenant = tenant;
+        _db       = db;
+        _tenant   = tenant;
+        _expenses = expenses;
     }
 
     public async Task<ProfitabilityStatsDto> Handle(
@@ -88,9 +90,14 @@ public sealed class GetProfitabilityStatsQueryHandler
             .ToListAsync(ct);
 
         // ── Costo de horas por proyecto ───────────────────────────────────────
+        // Excluye 'billed': son horas cuyo costo real ya quedó registrado como gasto al
+        // aprobar la cuenta de cobro del colaborador (ver ReviewPayoutInvoiceCommand) — la
+        // cuenta de cobro tiene prioridad sobre el estimado, así que estas horas no se cuentan
+        // dos veces aquí.
         var timeCost = await _db.TimeEntries
             .Where(t => t.OrganizationId == oid
-                     && projectIds.Contains(t.ProjectId))
+                     && projectIds.Contains(t.ProjectId)
+                     && t.Status != "billed")
             .GroupBy(t => t.ProjectId)
             .Select(g => new { ProjectId = g.Key, Cost = g.Sum(t => t.Hours * t.RateCost) })
             .ToListAsync(ct);
@@ -100,7 +107,14 @@ public sealed class GetProfitabilityStatsQueryHandler
         {
             var p          = x.Project;
             var revenue    = invoiceRevenue.FirstOrDefault(r => r.ProjectId == p.Id)?.Revenue ?? 0m;
-            var costHours  = timeCost.FirstOrDefault(t => t.ProjectId == p.Id)?.Cost ?? 0m;
+            var estimatedCost = timeCost.FirstOrDefault(t => t.ProjectId == p.Id)?.Cost ?? 0m;
+            // Solo los gastos generados por cuentas de cobro aprobadas (Source ==
+            // "payout_invoice") cuentan como "costo de equipo" — un gasto manual de licencias
+            // o viáticos no es costo de horas y no debería mezclarse aquí.
+            var realizedPayoutCost = _expenses.GetByProject(p.Id)
+                .Where(e => e.Status == "aprobado" && e.Source == "payout_invoice")
+                .Sum(e => e.Amount);
+            var costHours = estimatedCost + realizedPayoutCost;
             var overhead   = revenue * 0.08m;
             var profit     = revenue - costHours - overhead;
             var margin     = revenue > 0 ? (int)Math.Round(profit / revenue * 100) : 0;

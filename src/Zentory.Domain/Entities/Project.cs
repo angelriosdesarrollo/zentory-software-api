@@ -18,6 +18,8 @@ public class Project : TenantEntity
     public DateTime?     StartDate      { get; private set; }
     public DateTime?     EndDate        { get; private set; }
     public Guid?         ProposalId     { get; private set; }
+    public string?       Type           { get; private set; }
+    // "software" | "obra_publica" | "consultoria" | "marketing" | "otro" — Zentory.Domain.Constants.WorkType
     public bool          IsDeleted      { get; private set; }
 
     private Project() { }
@@ -33,6 +35,7 @@ public class Project : TenantEntity
         DateTime?    startDate    = null,
         DateTime?    endDate      = null,
         Guid?        proposalId   = null,
+        string?      type         = null,
         Guid?        id           = null)
     {
         return new Project
@@ -47,7 +50,8 @@ public class Project : TenantEntity
             HoursTotal     = hoursTotal,
             StartDate      = startDate,
             EndDate        = endDate,
-            ProposalId     = proposalId
+            ProposalId     = proposalId,
+            Type           = type
         };
     }
 
@@ -58,7 +62,8 @@ public class Project : TenantEntity
         string      currency,
         int         hoursTotal,
         DateTime?   startDate,
-        DateTime?   endDate)
+        DateTime?   endDate,
+        string?     type)
     {
         Name          = name;
         BillingType   = billingType;
@@ -67,6 +72,7 @@ public class Project : TenantEntity
         HoursTotal    = hoursTotal;
         StartDate     = startDate;
         EndDate       = endDate;
+        Type          = type;
         Touch();
     }
 

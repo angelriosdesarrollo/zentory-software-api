@@ -7,6 +7,7 @@ public record ClientDto(
     string? Email,
     string? Phone,
     string? City,
+    string? Address,
     string? Nit,
     string? Notes,
     int     ActiveProjects,

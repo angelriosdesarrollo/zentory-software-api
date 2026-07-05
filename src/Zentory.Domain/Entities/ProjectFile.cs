@@ -10,6 +10,7 @@ public class ProjectFile : TenantEntity
     public string Size         { get; private set; } = default!;
     public string UploadedBy   { get; private set; } = default!;
     public DateTime UploadedAt { get; private set; }
+    public string StorageKey   { get; private set; } = default!;
 
     private ProjectFile() { }
 
@@ -20,6 +21,7 @@ public class ProjectFile : TenantEntity
         string   fileType,
         string   size,
         string   uploadedBy,
+        string   storageKey,
         DateTime? uploadedAt = null)
     {
         return new ProjectFile
@@ -30,6 +32,7 @@ public class ProjectFile : TenantEntity
             FileType       = fileType,
             Size           = size,
             UploadedBy     = uploadedBy,
+            StorageKey     = storageKey,
             UploadedAt     = uploadedAt ?? DateTime.UtcNow,
         };
     }

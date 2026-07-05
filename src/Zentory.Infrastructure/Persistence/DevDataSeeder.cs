@@ -314,12 +314,12 @@ public sealed class DevDataSeeder
         await _db.SaveChangesAsync(ct);
 
         // ── Projects ─────────────────────────────────────────────────────────
-        var prjPortal = Project.Create(oid, cTechCorp.Id,   "Portal Corporativo",    BillingType.FixedPrice, 85_000m,  "USD", 400, new DateTime(2025, 10, 1), new DateTime(2026, 3, 31), id: PrjPortalId);
-        var prjMobile = Project.Create(oid, cBancoGreen.Id, "App Móvil Fintech",     BillingType.Hourly,    120_000m, "USD", 600, new DateTime(2025,  9, 1), new DateTime(2026, 6, 30), id: PrjMobileId);
-        var prjData   = Project.Create(oid, cLogistica.Id,  "Plataforma de Datos",   BillingType.Milestone,  95_000m,  "USD", 500, new DateTime(2025, 11, 1), new DateTime(2026, 5, 31), id: PrjDataId);
-        var prjEcomm  = Project.Create(oid, cMediaSol.Id,   "E-commerce Renovation", BillingType.FixedPrice, 45_000m,  "USD", 250, new DateTime(2025, 12, 1), new DateTime(2026, 4, 30), id: PrjEcommId);
-        var prjAudit  = Project.Create(oid, cInnova.Id,     "Security Audit",        BillingType.Hourly,     32_000m,  "USD", 200, new DateTime(2026,  1, 1), new DateTime(2026, 3, 31), id: PrjAuditId);
-        var prjMktg   = Project.Create(oid, cRetail.Id,     "Marketing Dashboard",   BillingType.FixedPrice, 28_000m,  "USD", 150, new DateTime(2025,  8, 1), new DateTime(2025,12, 31), id: PrjMktgId);
+        var prjPortal = Project.Create(oid, cTechCorp.Id,   "Portal Corporativo",    BillingType.FixedPrice, 85_000m,  "USD", 400, new DateTime(2025, 10, 1), new DateTime(2026, 3, 31), type: WorkType.Software, id: PrjPortalId);
+        var prjMobile = Project.Create(oid, cBancoGreen.Id, "App Móvil Fintech",     BillingType.Hourly,    120_000m, "USD", 600, new DateTime(2025,  9, 1), new DateTime(2026, 6, 30), type: WorkType.Software, id: PrjMobileId);
+        var prjData   = Project.Create(oid, cLogistica.Id,  "Plataforma de Datos",   BillingType.Milestone,  95_000m,  "USD", 500, new DateTime(2025, 11, 1), new DateTime(2026, 5, 31), type: WorkType.Software, id: PrjDataId);
+        var prjEcomm  = Project.Create(oid, cMediaSol.Id,   "E-commerce Renovation", BillingType.FixedPrice, 45_000m,  "USD", 250, new DateTime(2025, 12, 1), new DateTime(2026, 4, 30), type: WorkType.Software, id: PrjEcommId);
+        var prjAudit  = Project.Create(oid, cInnova.Id,     "Security Audit",        BillingType.Hourly,     32_000m,  "USD", 200, new DateTime(2026,  1, 1), new DateTime(2026, 3, 31), type: WorkType.Software, id: PrjAuditId);
+        var prjMktg   = Project.Create(oid, cRetail.Id,     "Marketing Dashboard",   BillingType.FixedPrice, 28_000m,  "USD", 150, new DateTime(2025,  8, 1), new DateTime(2025,12, 31), type: WorkType.Marketing, id: PrjMktgId);
 
         prjMobile.ChangeStatus(ProjectStatus.Paused);
 
@@ -630,11 +630,11 @@ public sealed class DevDataSeeder
 
         // ── Project Files ─────────────────────────────────────────────────────
         _db.ProjectFiles.AddRange(
-            ProjectFile.Create(oid, prjPortal.Id, "Contrato_TechCorp_Portal.pdf", "pdf", "245 KB", "MV", new DateTime(2026, 1, 15, 0, 0, 0, DateTimeKind.Utc)),
-            ProjectFile.Create(oid, prjPortal.Id, "Propuesta_Tecnica_v2.docx",    "doc", "128 KB", "LP", new DateTime(2026, 1, 20, 0, 0, 0, DateTimeKind.Utc)),
-            ProjectFile.Create(oid, prjPortal.Id, "Wireframes_UI_Portal.fig",     "fig", "8.4 MB", "LP", new DateTime(2026, 2,  1, 0, 0, 0, DateTimeKind.Utc)),
-            ProjectFile.Create(oid, prjPortal.Id, "API_Spec_v1.0.yaml",           "yml",  "67 KB", "JS", new DateTime(2026, 3, 10, 0, 0, 0, DateTimeKind.Utc)),
-            ProjectFile.Create(oid, prjPortal.Id, "Acta_Reunion_Kick_Off.pdf",    "pdf",  "92 KB", "MV", new DateTime(2026, 1, 16, 0, 0, 0, DateTimeKind.Utc))
+            ProjectFile.Create(oid, prjPortal.Id, "Contrato_TechCorp_Portal.pdf", "pdf", "245 KB", "MV", $"{oid}/projects/{prjPortal.Id}/seed/contrato-techcorp-portal.pdf", new DateTime(2026, 1, 15, 0, 0, 0, DateTimeKind.Utc)),
+            ProjectFile.Create(oid, prjPortal.Id, "Propuesta_Tecnica_v2.docx",    "doc", "128 KB", "LP", $"{oid}/projects/{prjPortal.Id}/seed/propuesta-tecnica-v2.docx", new DateTime(2026, 1, 20, 0, 0, 0, DateTimeKind.Utc)),
+            ProjectFile.Create(oid, prjPortal.Id, "Wireframes_UI_Portal.fig",     "fig", "8.4 MB", "LP", $"{oid}/projects/{prjPortal.Id}/seed/wireframes-ui-portal.fig", new DateTime(2026, 2,  1, 0, 0, 0, DateTimeKind.Utc)),
+            ProjectFile.Create(oid, prjPortal.Id, "API_Spec_v1.0.yaml",           "yml",  "67 KB", "JS", $"{oid}/projects/{prjPortal.Id}/seed/api-spec-v1.yaml", new DateTime(2026, 3, 10, 0, 0, 0, DateTimeKind.Utc)),
+            ProjectFile.Create(oid, prjPortal.Id, "Acta_Reunion_Kick_Off.pdf",    "pdf",  "92 KB", "MV", $"{oid}/projects/{prjPortal.Id}/seed/acta-reunion-kick-off.pdf", new DateTime(2026, 1, 16, 0, 0, 0, DateTimeKind.Utc))
         );
         await _db.SaveChangesAsync(ct);
 
@@ -805,9 +805,9 @@ public sealed class DevDataSeeder
         await _db.SaveChangesAsync(ct);
 
         // ── Projects ─────────────────────────────────────────────────────────
-        var prjAcueducto = Project.Create(oid, cAguazul.Id,  "Interventoría Acueducto Regional Aguazul",    BillingType.Milestone,  420_000_000m, "COP", 2200, new DateTime(2025, 11, 1), new DateTime(2026, 10, 31), id: PrjAcueductoId);
-        var prjBpin      = Project.Create(oid, cCasanare.Id, "Formulación BPIN Vías Terciarias Casanare",   BillingType.FixedPrice, 180_000_000m, "COP",  900, new DateTime(2026,  1, 15), new DateTime(2026,  7, 15), id: PrjBpinViasId);
-        var prjHospital  = Project.Create(oid, cYopal.Id,    "Supervisión Técnica Hospital Regional Yopal", BillingType.Hourly,     260_000_000m, "COP", 1500, new DateTime(2025,  9, 1), new DateTime(2026,  8, 31), id: PrjHospitalId);
+        var prjAcueducto = Project.Create(oid, cAguazul.Id,  "Interventoría Acueducto Regional Aguazul",    BillingType.Milestone,  420_000_000m, "COP", 2200, new DateTime(2025, 11, 1), new DateTime(2026, 10, 31), type: WorkType.ObraPublica, id: PrjAcueductoId);
+        var prjBpin      = Project.Create(oid, cCasanare.Id, "Formulación BPIN Vías Terciarias Casanare",   BillingType.FixedPrice, 180_000_000m, "COP",  900, new DateTime(2026,  1, 15), new DateTime(2026,  7, 15), type: WorkType.ObraPublica, id: PrjBpinViasId);
+        var prjHospital  = Project.Create(oid, cYopal.Id,    "Supervisión Técnica Hospital Regional Yopal", BillingType.Hourly,     260_000_000m, "COP", 1500, new DateTime(2025,  9, 1), new DateTime(2026,  8, 31), type: WorkType.ObraPublica, id: PrjHospitalId);
 
         _db.Projects.AddRange(prjAcueducto, prjBpin, prjHospital);
         await _db.SaveChangesAsync(ct);
@@ -926,10 +926,10 @@ public sealed class DevDataSeeder
 
         // ── Files ────────────────────────────────────────────────────────────
         _db.ProjectFiles.AddRange(
-            ProjectFile.Create(oid, prjAcueducto.Id, "Contrato_Interventoria_Aguazul.pdf", "pdf", "310 KB", "RF", new DateTime(2025, 11,  5, 0, 0, 0, DateTimeKind.Utc)),
-            ProjectFile.Create(oid, prjAcueducto.Id, "Polizas_Cumplimiento.pdf",            "pdf", "180 KB", "MU", new DateTime(2025, 11, 10, 0, 0, 0, DateTimeKind.Utc)),
-            ProjectFile.Create(oid, prjAcueducto.Id, "Acta_de_Inicio.pdf",                  "pdf",  "95 KB", "RF", new DateTime(2025, 11,  8, 0, 0, 0, DateTimeKind.Utc)),
-            ProjectFile.Create(oid, prjAcueducto.Id, "Ficha_BPIN_v1.pdf",                   "pdf", "420 KB", "MU", new DateTime(2026,  2, 18, 0, 0, 0, DateTimeKind.Utc))
+            ProjectFile.Create(oid, prjAcueducto.Id, "Contrato_Interventoria_Aguazul.pdf", "pdf", "310 KB", "RF", $"{oid}/projects/{prjAcueducto.Id}/seed/contrato-interventoria-aguazul.pdf", new DateTime(2025, 11,  5, 0, 0, 0, DateTimeKind.Utc)),
+            ProjectFile.Create(oid, prjAcueducto.Id, "Polizas_Cumplimiento.pdf",            "pdf", "180 KB", "MU", $"{oid}/projects/{prjAcueducto.Id}/seed/polizas-cumplimiento.pdf", new DateTime(2025, 11, 10, 0, 0, 0, DateTimeKind.Utc)),
+            ProjectFile.Create(oid, prjAcueducto.Id, "Acta_de_Inicio.pdf",                  "pdf",  "95 KB", "RF", $"{oid}/projects/{prjAcueducto.Id}/seed/acta-de-inicio.pdf", new DateTime(2025, 11,  8, 0, 0, 0, DateTimeKind.Utc)),
+            ProjectFile.Create(oid, prjAcueducto.Id, "Ficha_BPIN_v1.pdf",                   "pdf", "420 KB", "MU", $"{oid}/projects/{prjAcueducto.Id}/seed/ficha-bpin-v1.pdf", new DateTime(2026,  2, 18, 0, 0, 0, DateTimeKind.Utc))
         );
         await _db.SaveChangesAsync(ct);
 
@@ -1024,9 +1024,9 @@ public sealed class DevDataSeeder
         await _db.SaveChangesAsync(ct);
 
         // ── Projects ─────────────────────────────────────────────────────────
-        var prjModaViva   = Project.Create(oid, cModaViva.Id,    "Campaña Lanzamiento ModaViva Verano", BillingType.FixedPrice, 38_000_000m, "COP", 320, new DateTime(2026, 5, 10), new DateTime(2026, 8, 10), id: PrjModaVivaId);
-        var prjFintech    = Project.Create(oid, cFintechNova.Id, "Rebranding Fintech Nova",              BillingType.Milestone,  65_000_000m, "COP", 500, new DateTime(2025, 12, 1), new DateTime(2026, 6, 30), id: PrjFintechNovaId);
-        var prjLaCanasta  = Project.Create(oid, cLaCanasta.Id,   "Estrategia Digital La Canasta",        BillingType.Hourly,     28_000_000m, "COP", 260, new DateTime(2026, 2,  1), new DateTime(2026, 7, 31), id: PrjLaCanastaId);
+        var prjModaViva   = Project.Create(oid, cModaViva.Id,    "Campaña Lanzamiento ModaViva Verano", BillingType.FixedPrice, 38_000_000m, "COP", 320, new DateTime(2026, 5, 10), new DateTime(2026, 8, 10), type: WorkType.Marketing, id: PrjModaVivaId);
+        var prjFintech    = Project.Create(oid, cFintechNova.Id, "Rebranding Fintech Nova",              BillingType.Milestone,  65_000_000m, "COP", 500, new DateTime(2025, 12, 1), new DateTime(2026, 6, 30), type: WorkType.Marketing, id: PrjFintechNovaId);
+        var prjLaCanasta  = Project.Create(oid, cLaCanasta.Id,   "Estrategia Digital La Canasta",        BillingType.Hourly,     28_000_000m, "COP", 260, new DateTime(2026, 2,  1), new DateTime(2026, 7, 31), type: WorkType.Marketing, id: PrjLaCanastaId);
 
         _db.Projects.AddRange(prjModaViva, prjFintech, prjLaCanasta);
         await _db.SaveChangesAsync(ct);
@@ -1140,9 +1140,9 @@ public sealed class DevDataSeeder
 
         // ── Files ────────────────────────────────────────────────────────────
         _db.ProjectFiles.AddRange(
-            ProjectFile.Create(oid, prjModaViva.Id, "Contrato_ModaViva_Campana.pdf", "pdf", "210 KB", "SM", new DateTime(2026, 5, 10, 0, 0, 0, DateTimeKind.Utc)),
-            ProjectFile.Create(oid, prjModaViva.Id, "Brief_Creativo_v1.pdf",         "pdf", "150 KB", "MR", new DateTime(2026, 5, 22, 0, 0, 0, DateTimeKind.Utc)),
-            ProjectFile.Create(oid, prjModaViva.Id, "Moodboard_Verano.fig",          "fig", "6.1 MB", "SM", new DateTime(2026, 5, 28, 0, 0, 0, DateTimeKind.Utc))
+            ProjectFile.Create(oid, prjModaViva.Id, "Contrato_ModaViva_Campana.pdf", "pdf", "210 KB", "SM", $"{oid}/projects/{prjModaViva.Id}/seed/contrato-modaviva-campana.pdf", new DateTime(2026, 5, 10, 0, 0, 0, DateTimeKind.Utc)),
+            ProjectFile.Create(oid, prjModaViva.Id, "Brief_Creativo_v1.pdf",         "pdf", "150 KB", "MR", $"{oid}/projects/{prjModaViva.Id}/seed/brief-creativo-v1.pdf", new DateTime(2026, 5, 22, 0, 0, 0, DateTimeKind.Utc)),
+            ProjectFile.Create(oid, prjModaViva.Id, "Moodboard_Verano.fig",          "fig", "6.1 MB", "SM", $"{oid}/projects/{prjModaViva.Id}/seed/moodboard-verano.fig", new DateTime(2026, 5, 28, 0, 0, 0, DateTimeKind.Utc))
         );
         await _db.SaveChangesAsync(ct);
 

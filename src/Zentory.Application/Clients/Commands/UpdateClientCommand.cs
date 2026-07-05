@@ -16,11 +16,12 @@ public record UpdateClientCommand(
     Guid    Id,
     string  Name,
     string  ContactName,
-    string? Email = null,
-    string? Phone = null,
-    string? City  = null,
-    string? Nit   = null,
-    string? Notes = null) : IRequest<ClientDto>;
+    string? Email   = null,
+    string? Phone   = null,
+    string? City    = null,
+    string? Address = null,
+    string? Nit     = null,
+    string? Notes   = null) : IRequest<ClientDto>;
 
 public sealed class UpdateClientCommandValidator : AbstractValidator<UpdateClientCommand>
 {
@@ -61,6 +62,7 @@ public sealed class UpdateClientCommandHandler : IRequestHandler<UpdateClientCom
             request.Email,
             request.Phone,
             request.City,
+            request.Address,
             request.Nit,
             request.Notes);
 
@@ -74,6 +76,7 @@ public sealed class UpdateClientCommandHandler : IRequestHandler<UpdateClientCom
             client.Email,
             client.Phone,
             client.City,
+            client.Address,
             client.Nit,
             client.Notes,
             ActiveProjects: 0,

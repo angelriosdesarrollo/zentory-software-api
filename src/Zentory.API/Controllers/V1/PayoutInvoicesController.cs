@@ -73,4 +73,12 @@ public sealed class PayoutInvoicesController : ControllerBase
         await _mediator.Send(command with { Id = id }, ct);
         return NoContent();
     }
+
+    /// <summary>GET /api/v1/team/payout-invoices/{id}/project-breakdown</summary>
+    [HttpGet("{id:guid}/project-breakdown")]
+    public async Task<IActionResult> GetProjectBreakdown(Guid id, CancellationToken ct = default)
+    {
+        var result = await _mediator.Send(new GetPayoutInvoiceProjectBreakdownQuery(id), ct);
+        return Ok(result);
+    }
 }

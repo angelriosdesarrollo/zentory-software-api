@@ -10,7 +10,8 @@ public record ProjectFileDto(
     string FileType,
     string Size,
     string UploadedBy,
-    string UploadedAt);
+    string UploadedAt,
+    string StorageKey);
 
 public record GetProjectFilesQuery(Guid ProjectId) : IRequest<IReadOnlyList<ProjectFileDto>>;
 
@@ -39,7 +40,8 @@ public sealed class GetProjectFilesQueryHandler
                 f.FileType,
                 f.Size,
                 f.UploadedBy,
-                f.UploadedAt.ToString("yyyy-MM-dd")))
+                f.UploadedAt.ToString("yyyy-MM-dd"),
+                f.StorageKey))
             .ToListAsync(cancellationToken);
     }
 }

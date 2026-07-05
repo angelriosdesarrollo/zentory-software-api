@@ -60,7 +60,8 @@ public sealed class GetProjectsQueryHandler
                 HealthScore:  healthScore,
                 HealthStatus: healthStatus,
                 StartDate:    p.StartDate,
-                EndDate:      p.EndDate);
+                EndDate:      p.EndDate,
+                Type:         p.Type);
         }).ToList();
     }
 }

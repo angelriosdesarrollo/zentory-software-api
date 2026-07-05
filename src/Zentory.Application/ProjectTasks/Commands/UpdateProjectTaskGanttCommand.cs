@@ -31,6 +31,10 @@ public sealed class UpdateProjectTaskGanttCommandHandler : IRequestHandler<Updat
 
     public async Task Handle(UpdateProjectTaskGanttCommand request, CancellationToken cancellationToken)
     {
+        // Nota: este comando también lo usa el tab "Tareas" (no solo Gantt) para vincular
+        // una tarea a un hito y fijar horas estimadas — no gatear a Studio aquí bloquearía
+        // esa funcionalidad básica para todos los planes. El gate de Gantt vive en el frontend
+        // (página /projects/gantt), no en este comando compartido.
         var task = await _tasks.GetByIdAsync(request.TaskId, cancellationToken);
         if (task is null || task.OrganizationId != _tenant.OrganizationId)
             throw new NotFoundException("ProjectTask", request.TaskId);

@@ -34,6 +34,18 @@ public sealed class ProjectTasksController : ControllerBase
         return CreatedAtAction(nameof(List), new { projectId }, new { id });
     }
 
+    /// <summary>PATCH /api/v1/projects/{projectId}/tasks/{taskId}</summary>
+    [HttpPatch("{taskId:guid}")]
+    public async Task<IActionResult> Update(
+        Guid projectId,
+        Guid taskId,
+        [FromBody] UpdateProjectTaskCommand command,
+        CancellationToken ct = default)
+    {
+        await _mediator.Send(command with { TaskId = taskId }, ct);
+        return NoContent();
+    }
+
     /// <summary>PATCH /api/v1/projects/{projectId}/tasks/{taskId}/move</summary>
     [HttpPatch("{taskId:guid}/move")]
     public async Task<IActionResult> Move(

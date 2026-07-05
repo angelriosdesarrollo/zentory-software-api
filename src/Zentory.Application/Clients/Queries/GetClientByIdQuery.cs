@@ -33,6 +33,7 @@ public sealed class GetClientByIdQueryHandler : IRequestHandler<GetClientByIdQue
             client.Email,
             client.Phone,
             client.City,
+            client.Address,
             client.Nit,
             client.Notes,
             ActiveProjects: 0,   // TODO: join with projects when available

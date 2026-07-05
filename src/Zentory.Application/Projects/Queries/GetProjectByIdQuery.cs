@@ -53,6 +53,7 @@ public sealed class GetProjectByIdQueryHandler : IRequestHandler<GetProjectByIdQ
             EndDate:       project.EndDate,
             ProposalId:    project.ProposalId,
             CreatedAt:     project.CreatedAt,
-            UpdatedAt:     project.UpdatedAt);
+            UpdatedAt:     project.UpdatedAt,
+            Type:          project.Type);
     }
 }

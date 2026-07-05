@@ -39,6 +39,24 @@ public sealed class ProjectExpenseStore
         }
     }
 
+    public ProjectExpenseDto? GetById(Guid id)
+    {
+        lock (_lock)
+            return _expenses.FirstOrDefault(e => e.Id == id);
+    }
+
+    public ProjectExpenseDto? Update(ProjectExpenseDto expense)
+    {
+        lock (_lock)
+        {
+            var index = _expenses.FindIndex(e => e.Id == expense.Id);
+            if (index < 0) return null;
+
+            _expenses[index] = expense;
+            return expense;
+        }
+    }
+
     private static IEnumerable<ProjectExpenseDto> Seed() =>
     [
         // ── Portal Corporativo (USD) ─────────────────────────────────────────

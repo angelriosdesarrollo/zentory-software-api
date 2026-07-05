@@ -9,6 +9,7 @@ public class Client : TenantEntity
     public string? Email      { get; private set; }
     public string? Phone      { get; private set; }
     public string? City       { get; private set; }
+    public string? Address    { get; private set; }
     public string? Nit        { get; private set; }
     public string? Notes      { get; private set; }
     public bool IsDeleted     { get; private set; }
@@ -19,11 +20,12 @@ public class Client : TenantEntity
         Guid organizationId,
         string name,
         string contactName,
-        string? email  = null,
-        string? phone  = null,
-        string? city   = null,
-        string? nit    = null,
-        string? notes  = null)
+        string? email   = null,
+        string? phone   = null,
+        string? city    = null,
+        string? address = null,
+        string? nit     = null,
+        string? notes   = null)
     {
         return new Client
         {
@@ -33,6 +35,7 @@ public class Client : TenantEntity
             Email          = email,
             Phone          = phone,
             City           = city,
+            Address        = address,
             Nit            = nit,
             Notes          = notes
         };
@@ -44,6 +47,7 @@ public class Client : TenantEntity
         string? email,
         string? phone,
         string? city,
+        string? address,
         string? nit,
         string? notes)
     {
@@ -52,6 +56,7 @@ public class Client : TenantEntity
         Email       = email;
         Phone       = phone;
         City        = city;
+        Address     = address;
         Nit         = nit;
         Notes       = notes;
         Touch();

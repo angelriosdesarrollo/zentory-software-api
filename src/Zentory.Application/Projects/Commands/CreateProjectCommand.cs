@@ -1,5 +1,6 @@
 using FluentValidation;
 using MediatR;
+using Microsoft.EntityFrameworkCore;
 using Zentory.Application.Common.Interfaces;
 using Zentory.Domain.Constants;
 using Zentory.Domain.Entities;
@@ -18,7 +19,8 @@ public record CreateProjectCommand(
     int       HoursTotal   = 0,
     DateTime? StartDate    = null,
     DateTime? EndDate      = null,
-    Guid?     ProposalId   = null) : IRequest<Guid>;
+    Guid?     ProposalId   = null,
+    string?   Type         = null) : IRequest<Guid>;
 
 public sealed class CreateProjectCommandValidator : AbstractValidator<CreateProjectCommand>
 {
@@ -32,6 +34,9 @@ public sealed class CreateProjectCommandValidator : AbstractValidator<CreateProj
         RuleFor(x => x.ContractValue).GreaterThanOrEqualTo(0);
         RuleFor(x => x.Currency).NotEmpty().MaximumLength(3);
         RuleFor(x => x.HoursTotal).GreaterThanOrEqualTo(0);
+        RuleFor(x => x.Type)
+            .Must(v => string.IsNullOrWhiteSpace(v) || WorkType.All.Contains(v))
+            .WithMessage($"Type must be one of: {string.Join(", ", WorkType.All)}.");
     }
 }
 
@@ -39,24 +44,27 @@ public sealed class CreateProjectCommandHandler : IRequestHandler<CreateProjectC
 {
     private const int FreeProjectLimit = 3;
 
-    private readonly IProjectRepository _projects;
-    private readonly IClientRepository  _clients;
-    private readonly IUnitOfWork        _uow;
-    private readonly ITenantContext     _tenant;
+    private readonly IProjectRepository  _projects;
+    private readonly IClientRepository   _clients;
+    private readonly IUnitOfWork         _uow;
+    private readonly ITenantContext      _tenant;
     private readonly IActivityLogService _activityLog;
+    private readonly IZentoryDbContext   _db;
 
     public CreateProjectCommandHandler(
         IProjectRepository  projects,
         IClientRepository   clients,
         IUnitOfWork         uow,
         ITenantContext      tenant,
-        IActivityLogService activityLog)
+        IActivityLogService activityLog,
+        IZentoryDbContext   db)
     {
         _projects    = projects;
         _clients     = clients;
         _uow         = uow;
         _tenant      = tenant;
         _activityLog = activityLog;
+        _db          = db;
     }
 
     public async Task<Guid> Handle(CreateProjectCommand request, CancellationToken cancellationToken)
@@ -78,6 +86,17 @@ public sealed class CreateProjectCommandHandler : IRequestHandler<CreateProjectC
 
         var billingType = Enum.Parse<BillingType>(request.BillingType, ignoreCase: true);
 
+        // Sin override explícito, el proyecto hereda el WorkType de la organización
+        // (mismo concepto que PROJECT_TYPE en frontend, decisión TASK-PRD-024).
+        var type = request.Type;
+        if (string.IsNullOrWhiteSpace(type))
+        {
+            type = await _db.OrganizationSettings
+                .Where(s => s.OrganizationId == _tenant.OrganizationId && s.Key == "profile.work_type")
+                .Select(s => s.Value)
+                .FirstOrDefaultAsync(cancellationToken);
+        }
+
         var project = Project.Create(
             _tenant.OrganizationId,
             request.ClientId,
@@ -88,7 +107,8 @@ public sealed class CreateProjectCommandHandler : IRequestHandler<CreateProjectC
             request.HoursTotal,
             request.StartDate,
             request.EndDate,
-            request.ProposalId);
+            request.ProposalId,
+            type);
 
         await _projects.AddAsync(project, cancellationToken);
         await _activityLog.LogAsync(

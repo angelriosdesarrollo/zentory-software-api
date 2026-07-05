@@ -3,6 +3,7 @@ using MediatR;
 using Zentory.Application.Common.Interfaces;
 using Zentory.Application.Exceptions;
 using Zentory.Application.Projects.DTOs;
+using Zentory.Domain.Constants;
 using Zentory.Domain.Entities;
 using Zentory.Domain.Repositories;
 
@@ -16,7 +17,8 @@ public record UpdateProjectCommand(
     string    Currency,
     int       HoursTotal,
     DateTime? StartDate,
-    DateTime? EndDate) : IRequest<ProjectDto>;
+    DateTime? EndDate,
+    string?   Type = null) : IRequest<ProjectDto>;
 
 public sealed class UpdateProjectCommandValidator : AbstractValidator<UpdateProjectCommand>
 {
@@ -29,6 +31,9 @@ public sealed class UpdateProjectCommandValidator : AbstractValidator<UpdateProj
         RuleFor(x => x.ContractValue).GreaterThanOrEqualTo(0);
         RuleFor(x => x.Currency).NotEmpty().MaximumLength(3);
         RuleFor(x => x.HoursTotal).GreaterThanOrEqualTo(0);
+        RuleFor(x => x.Type)
+            .Must(v => string.IsNullOrWhiteSpace(v) || WorkType.All.Contains(v))
+            .WithMessage($"Type must be one of: {string.Join(", ", WorkType.All)}.");
     }
 }
 
@@ -67,7 +72,8 @@ public sealed class UpdateProjectCommandHandler : IRequestHandler<UpdateProjectC
             request.Currency,
             request.HoursTotal,
             request.StartDate,
-            request.EndDate);
+            request.EndDate,
+            request.Type ?? project.Type);
 
         await _projects.UpdateAsync(project, cancellationToken);
         await _uow.SaveChangesAsync(cancellationToken);
@@ -93,6 +99,7 @@ public sealed class UpdateProjectCommandHandler : IRequestHandler<UpdateProjectC
             EndDate:       project.EndDate,
             ProposalId:    project.ProposalId,
             CreatedAt:     project.CreatedAt,
-            UpdatedAt:     project.UpdatedAt);
+            UpdatedAt:     project.UpdatedAt,
+            Type:          project.Type);
     }
 }
