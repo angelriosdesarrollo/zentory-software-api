@@ -16,7 +16,10 @@ public record ProjectExpenseDto(
     string  Status,
     string  CreatedBy,
     string  Source = "manual",
-    Guid?   SourcePayoutInvoiceId = null);
+    Guid?   SourcePayoutInvoiceId = null,
+    // Solo poblado por GetAllExpensesQuery (vista cross-proyecto en /finances) — el listado
+    // por proyecto (GetProjectExpensesQuery) no lo necesita, el proyecto ya está implícito.
+    string? ProjectName = null);
 
 public record GetProjectExpensesQuery(Guid ProjectId) : IRequest<IReadOnlyList<ProjectExpenseDto>>;
 

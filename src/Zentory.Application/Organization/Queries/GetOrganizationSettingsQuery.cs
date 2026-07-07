@@ -57,5 +57,6 @@ public static class DefaultOrgSettings
         [OrgSettingKey.NdaClause]            = null,
         [OrgSettingKey.IpClause]             = null,
         [OrgSettingKey.PaymentPolicy]        = null,
+        [OrgSettingKey.PilaDueDay]           = null,
     };
 }

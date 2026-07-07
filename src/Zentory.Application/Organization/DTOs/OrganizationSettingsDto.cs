@@ -20,4 +20,5 @@ public static class OrgSettingKey
     public const string NdaClause        = "contract.nda";
     public const string IpClause         = "contract.ip";
     public const string PaymentPolicy    = "contract.payment_policy";
+    public const string PilaDueDay       = "pila.due_day";  // día del mes (1-31), autodeclarado por el freelance
 }

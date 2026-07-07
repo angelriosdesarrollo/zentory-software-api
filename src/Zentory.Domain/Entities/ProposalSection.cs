@@ -10,7 +10,9 @@ public class ProposalSection : BaseEntity
     // 'overview'|'scope'|'deliverables'|'timeline'|'team'
     // 'pricing'|'conditions'|'about_us'|'acceptance'|'custom'
     public string? Title          { get; private set; }
-    public string? Content        { get; private set; }  // markdown
+    public string? Content        { get; private set; }
+    // HTML del editor de secciones, codificado en base64 unicode-safe por el frontend
+    // (ver encodeContent/decodeContent en zentory-app/lib/api/proposals.ts). No es markdown.
     public short   SortOrder      { get; private set; }
     public bool    IsVisible      { get; private set; } = true;
     public bool    IsEncrypted    { get; private set; }

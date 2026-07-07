@@ -1,3 +1,4 @@
+using Anthropic;
 using Hangfire;
 using Hangfire.PostgreSql;
 using Microsoft.EntityFrameworkCore;
@@ -60,6 +61,8 @@ public static class ServiceCollectionExtensions
         services.AddScoped<ICashFlowEntryRepository, CashFlowEntryRepository>();
         services.AddScoped<IProjectTaskRepository, ProjectTaskRepository>();
         services.AddScoped<IProjectShareRepository, ProjectShareRepository>();
+        services.AddScoped<IAiFeatureConfigRepository, AiFeatureConfigRepository>();
+        services.AddScoped<IAiUsageLogRepository, AiUsageLogRepository>();
         services.AddScoped<IPilaVerificationRepository, PilaVerificationRepository>();
         services.AddScoped<ICollaboratorPayoutInvoiceRepository, CollaboratorPayoutInvoiceRepository>();
 
@@ -79,6 +82,9 @@ public static class ServiceCollectionExtensions
         services.AddTransient<IResend, ResendClient>();
         services.AddScoped<IEmailService, ResendEmailService>();
         services.AddSingleton<IApplicationSettings, ApplicationSettings>();
+
+        services.AddSingleton(_ => new AnthropicClient { ApiKey = configuration["Anthropic:ApiKey"] ?? string.Empty });
+        services.AddScoped<IAiTextGenerationService, AnthropicTextGenerationService>();
 
         // Sin credenciales R2 reales configuradas localmente, cae a disco (mismo espíritu
         // que Database:UseInMemory) — así el flujo de subida/descarga completo se puede

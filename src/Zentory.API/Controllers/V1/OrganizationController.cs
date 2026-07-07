@@ -43,13 +43,18 @@ public sealed class OrganizationController : ControllerBase
         return Ok(result);
     }
 
-    /// <summary>PATCH /api/v1/organization/settings — actualizar uno o varios settings</summary>
+    /// <summary>
+    /// PATCH /api/v1/organization/settings — actualizar uno o varios settings.
+    /// El body es el diccionario plano tal como lo manda el frontend
+    /// (lib/api/settings.ts::updateOrganizationSettings), no un objeto envolvente
+    /// — de ahí el binding manual en vez de bindear el record de MediatR directo.
+    /// </summary>
     [HttpPatch("settings")]
     public async Task<IActionResult> UpdateSettings(
-        [FromBody] UpdateOrganizationSettingsCommand command,
+        [FromBody] Dictionary<string, string?> settings,
         CancellationToken ct = default)
     {
-        var result = await _mediator.Send(command, ct);
+        var result = await _mediator.Send(new UpdateOrganizationSettingsCommand(settings), ct);
         return Ok(result);
     }
 

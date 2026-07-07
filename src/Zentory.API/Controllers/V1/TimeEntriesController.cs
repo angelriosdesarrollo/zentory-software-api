@@ -37,6 +37,18 @@ public sealed class TimeEntriesController : ControllerBase
         return Ok(result);
     }
 
+    /// <summary>GET /api/v1/time-entries/anomalies — entradas atípicas para revisión antes de aprobar</summary>
+    [HttpGet("anomalies")]
+    public async Task<IActionResult> Anomalies(
+        [FromQuery] Guid?     projectId = null,
+        [FromQuery] DateTime? from      = null,
+        [FromQuery] DateTime? to        = null,
+        CancellationToken     ct        = default)
+    {
+        var result = await _mediator.Send(new GetTimeEntryAnomaliesQuery(projectId, from, to), ct);
+        return Ok(result);
+    }
+
     /// <summary>POST /api/v1/time-entries — registrar horas</summary>
     [HttpPost]
     public async Task<IActionResult> Create([FromBody] CreateTimeEntryCommand command, CancellationToken ct = default)

@@ -102,6 +102,19 @@ public sealed class GetProfitabilityStatsQueryHandler
             .Select(g => new { ProjectId = g.Key, Cost = g.Sum(t => t.Hours * t.RateCost) })
             .ToListAsync(ct);
 
+        // ── Pagos recibidos y avance de tareas por proyecto (factores del Health Score) ──
+        var paidByProject = await _db.Invoices
+            .Where(i => i.OrganizationId == oid && i.ProjectId != null && projectIds.Contains(i.ProjectId!.Value))
+            .GroupBy(i => i.ProjectId!.Value)
+            .Select(g => new { ProjectId = g.Key, Paid = g.Sum(i => i.AmountPaid) })
+            .ToListAsync(ct);
+
+        var taskCounts = await _db.ProjectTasks
+            .Where(t => t.OrganizationId == oid && t.DeletedAt == null && projectIds.Contains(t.ProjectId))
+            .GroupBy(t => t.ProjectId)
+            .Select(g => new { ProjectId = g.Key, Total = g.Count(), Done = g.Count(t => t.Status == "done") })
+            .ToListAsync(ct);
+
         // ── Construir DTOs por proyecto ───────────────────────────────────────
         var projectDtos = projects.Select(x =>
         {
@@ -119,7 +132,18 @@ public sealed class GetProfitabilityStatsQueryHandler
             var profit     = revenue - costHours - overhead;
             var margin     = revenue > 0 ? (int)Math.Round(profit / revenue * 100) : 0;
 
-            var (_, healthScore, healthStatus) = ProjectHealthHelper.Compute(p.HoursUsed, p.HoursTotal);
+            var paid  = paidByProject.FirstOrDefault(r => r.ProjectId == p.Id)?.Paid ?? 0m;
+            var tasks = taskCounts.FirstOrDefault(t => t.ProjectId == p.Id);
+
+            var health = ProjectHealthHelper.Compute(new ProjectHealthHelper.HealthInput(
+                HoursUsed:     p.HoursUsed,
+                HoursTotal:    p.HoursTotal,
+                ContractValue: p.ContractValue,
+                AmountPaid:    paid,
+                StartDate:     p.StartDate,
+                EndDate:       p.EndDate,
+                TasksTotal:    tasks?.Total ?? 0,
+                TasksDone:     tasks?.Done ?? 0));
 
             return new ProjectProfitabilityDto(
                 Id:           p.Id.ToString(),
@@ -130,8 +154,8 @@ public sealed class GetProfitabilityStatsQueryHandler
                 Overhead:     overhead,
                 Profitability: profit,
                 Margin:       margin,
-                HealthScore:  healthScore,
-                HealthStatus: healthStatus,
+                HealthScore:  health.HealthScore,
+                HealthStatus: health.HealthStatus,
                 IsNegative:   profit < 0
             );
         }).ToList();

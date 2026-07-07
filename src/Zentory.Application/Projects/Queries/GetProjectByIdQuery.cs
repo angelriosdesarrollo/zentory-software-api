@@ -10,17 +10,23 @@ public record GetProjectByIdQuery(Guid Id) : IRequest<ProjectDto>;
 
 public sealed class GetProjectByIdQueryHandler : IRequestHandler<GetProjectByIdQuery, ProjectDto>
 {
-    private readonly IProjectRepository _projects;
-    private readonly IClientRepository  _clients;
-    private readonly ITenantContext     _tenant;
+    private readonly IProjectRepository     _projects;
+    private readonly IClientRepository      _clients;
+    private readonly IInvoiceRepository     _invoices;
+    private readonly IProjectTaskRepository _tasks;
+    private readonly ITenantContext         _tenant;
 
     public GetProjectByIdQueryHandler(
-        IProjectRepository projects,
-        IClientRepository  clients,
-        ITenantContext     tenant)
+        IProjectRepository     projects,
+        IClientRepository      clients,
+        IInvoiceRepository     invoices,
+        IProjectTaskRepository tasks,
+        ITenantContext         tenant)
     {
         _projects = projects;
         _clients  = clients;
+        _invoices = invoices;
+        _tasks    = tasks;
         _tenant   = tenant;
     }
 
@@ -32,7 +38,23 @@ public sealed class GetProjectByIdQueryHandler : IRequestHandler<GetProjectByIdQ
 
         var client = await _clients.GetByIdAsync(project.ClientId, cancellationToken);
 
-        var (progress, healthScore, healthStatus) = ProjectHealthHelper.Compute(project.HoursUsed, project.HoursTotal);
+        var amountPaidByProject = await _invoices.GetAmountPaidByProjectIdsAsync(
+            [project.Id], _tenant.OrganizationId, cancellationToken);
+        var taskCountsByProject = await _tasks.GetTaskCountsByProjectIdsAsync(
+            [project.Id], _tenant.OrganizationId, cancellationToken);
+
+        amountPaidByProject.TryGetValue(project.Id, out var amountPaid);
+        taskCountsByProject.TryGetValue(project.Id, out var taskCounts);
+
+        var health = ProjectHealthHelper.Compute(new ProjectHealthHelper.HealthInput(
+            HoursUsed:     project.HoursUsed,
+            HoursTotal:    project.HoursTotal,
+            ContractValue: project.ContractValue,
+            AmountPaid:    amountPaid,
+            StartDate:     project.StartDate,
+            EndDate:       project.EndDate,
+            TasksTotal:    taskCounts.Total,
+            TasksDone:     taskCounts.Done));
 
         return new ProjectDto(
             Id:            project.Id,
@@ -46,9 +68,10 @@ public sealed class GetProjectByIdQueryHandler : IRequestHandler<GetProjectByIdQ
             Currency:      project.Currency,
             HoursTotal:    project.HoursTotal,
             HoursUsed:     project.HoursUsed,
-            Progress:      progress,
-            HealthScore:   healthScore,
-            HealthStatus:  healthStatus,
+            Progress:      health.Progress,
+            HealthScore:   health.HealthScore,
+            HealthStatus:  health.HealthStatus,
+            Alert:         health.Alert,
             StartDate:     project.StartDate,
             EndDate:       project.EndDate,
             ProposalId:    project.ProposalId,

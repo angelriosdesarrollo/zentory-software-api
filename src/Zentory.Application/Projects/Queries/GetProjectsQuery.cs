@@ -13,17 +13,23 @@ public record GetProjectsQuery(
 public sealed class GetProjectsQueryHandler
     : IRequestHandler<GetProjectsQuery, IReadOnlyList<ProjectSummaryDto>>
 {
-    private readonly IProjectRepository _projects;
-    private readonly IClientRepository  _clients;
-    private readonly ITenantContext     _tenant;
+    private readonly IProjectRepository     _projects;
+    private readonly IClientRepository      _clients;
+    private readonly IInvoiceRepository     _invoices;
+    private readonly IProjectTaskRepository _tasks;
+    private readonly ITenantContext         _tenant;
 
     public GetProjectsQueryHandler(
-        IProjectRepository projects,
-        IClientRepository  clients,
-        ITenantContext     tenant)
+        IProjectRepository     projects,
+        IClientRepository      clients,
+        IInvoiceRepository     invoices,
+        IProjectTaskRepository tasks,
+        ITenantContext         tenant)
     {
         _projects = projects;
         _clients  = clients;
+        _invoices = invoices;
+        _tasks    = tasks;
         _tenant   = tenant;
     }
 
@@ -41,9 +47,27 @@ public sealed class GetProjectsQueryHandler
         var clientList = await _clients.ListAsync(_tenant.OrganizationId, ct: cancellationToken);
         var clientMap  = clientList.ToDictionary(c => c.Id, c => c.Name);
 
+        var projectIds          = list.Select(p => p.Id).ToList();
+        var amountPaidByProject = await _invoices.GetAmountPaidByProjectIdsAsync(
+            projectIds, _tenant.OrganizationId, cancellationToken);
+        var taskCountsByProject = await _tasks.GetTaskCountsByProjectIdsAsync(
+            projectIds, _tenant.OrganizationId, cancellationToken);
+
         return list.Select(p =>
         {
-            var (progress, healthScore, healthStatus) = ProjectHealthHelper.Compute(p.HoursUsed, p.HoursTotal);
+            amountPaidByProject.TryGetValue(p.Id, out var amountPaid);
+            taskCountsByProject.TryGetValue(p.Id, out var taskCounts);
+
+            var health = ProjectHealthHelper.Compute(new ProjectHealthHelper.HealthInput(
+                HoursUsed:     p.HoursUsed,
+                HoursTotal:    p.HoursTotal,
+                ContractValue: p.ContractValue,
+                AmountPaid:    amountPaid,
+                StartDate:     p.StartDate,
+                EndDate:       p.EndDate,
+                TasksTotal:    taskCounts.Total,
+                TasksDone:     taskCounts.Done));
+
             return new ProjectSummaryDto(
                 Id:           p.Id,
                 Code:         $"PRJ-{p.Id.ToString("N")[..8].ToUpperInvariant()}",
@@ -56,9 +80,10 @@ public sealed class GetProjectsQueryHandler
                 Currency:     p.Currency,
                 HoursTotal:   p.HoursTotal,
                 HoursUsed:    p.HoursUsed,
-                Progress:     progress,
-                HealthScore:  healthScore,
-                HealthStatus: healthStatus,
+                Progress:     health.Progress,
+                HealthScore:  health.HealthScore,
+                HealthStatus: health.HealthStatus,
+                Alert:        health.Alert,
                 StartDate:    p.StartDate,
                 EndDate:      p.EndDate,
                 Type:         p.Type);

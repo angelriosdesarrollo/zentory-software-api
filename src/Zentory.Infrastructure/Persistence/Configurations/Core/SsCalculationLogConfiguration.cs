@@ -21,6 +21,12 @@ public class SsCalculationLogConfiguration : IEntityTypeConfiguration<SsCalculat
         builder.Property(s => s.Result).HasColumnName("result").HasColumnType("jsonb").IsRequired();
         builder.Property(s => s.TotalContribution).HasColumnName("total_contribution").HasColumnType("decimal(12,2)").IsRequired();
         builder.Property(s => s.SmlvUsed).HasColumnName("smlv_used").HasColumnType("decimal(12,2)");
+        builder.Property(s => s.Status).HasColumnName("status").HasMaxLength(20).IsRequired();
+        builder.Property(s => s.FiledAt).HasColumnName("filed_at");
+        builder.Property(s => s.DocumentUrl).HasColumnName("document_url");
+        builder.Property(s => s.DocumentFileName).HasColumnName("document_file_name").HasMaxLength(255);
+        builder.Property(s => s.DocumentFileSize).HasColumnName("document_file_size");
+        builder.Property(s => s.DocumentContentType).HasColumnName("document_content_type").HasMaxLength(100);
         builder.Property(s => s.CreatedAt).HasColumnName("created_at");
         builder.Property(s => s.UpdatedAt).HasColumnName("updated_at");
         builder.HasIndex(s => new { s.OrganizationId, s.Period }).HasDatabaseName("ix_ss_calc_logs_org_period");

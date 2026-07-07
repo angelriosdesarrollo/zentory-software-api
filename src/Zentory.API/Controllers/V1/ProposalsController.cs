@@ -67,6 +67,17 @@ public sealed class ProposalsController : ControllerBase
         return NoContent();
     }
 
+    public record EnrichSectionBody(string Content);
+
+    /// <summary>POST /api/v1/proposals/{id}/sections/{sectionType}/enrich — mejora el texto de una sección con IA (no la guarda)</summary>
+    [HttpPost("{id:guid}/sections/{sectionType}/enrich")]
+    public async Task<IActionResult> EnrichSection(
+        Guid id, string sectionType, [FromBody] EnrichSectionBody body, CancellationToken ct = default)
+    {
+        var result = await _mediator.Send(new EnrichProposalSectionCommand(id, sectionType, body.Content), ct);
+        return Ok(result);
+    }
+
     public record SendProposalBody(string? EmailTo, string? Message);
 
     /// <summary>POST /api/v1/proposals/{id}/send — marcar como enviada y enviar email opcional</summary>

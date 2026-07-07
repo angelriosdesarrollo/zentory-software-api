@@ -49,6 +49,19 @@ public sealed class InvoiceRepository : IInvoiceRepository
                 i.CreatedAt.Month == now.Month, ct);
     }
 
+    public async Task<Dictionary<Guid, decimal>> GetAmountPaidByProjectIdsAsync(
+        IEnumerable<Guid> projectIds, Guid organizationId, CancellationToken ct = default)
+    {
+        var ids = projectIds.ToList();
+        if (ids.Count == 0) return new Dictionary<Guid, decimal>();
+
+        return await _db.Invoices
+            .Where(i => i.OrganizationId == organizationId && i.ProjectId != null && ids.Contains(i.ProjectId.Value))
+            .GroupBy(i => i.ProjectId!.Value)
+            .Select(g => new { ProjectId = g.Key, Total = g.Sum(i => i.AmountPaid) })
+            .ToDictionaryAsync(x => x.ProjectId, x => x.Total, ct);
+    }
+
     public async Task AddAsync(Invoice invoice, CancellationToken ct = default)
         => await _db.Invoices.AddAsync(invoice, ct);
 

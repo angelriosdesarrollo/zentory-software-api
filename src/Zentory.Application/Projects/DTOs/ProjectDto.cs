@@ -15,6 +15,7 @@ public record ProjectSummaryDto(
     int       Progress,
     int       HealthScore,
     string    HealthStatus,
+    string?   Alert,
     DateTime? StartDate,
     DateTime? EndDate,
     string?   Type = null);
@@ -34,6 +35,7 @@ public record ProjectDto(
     int       Progress,
     int       HealthScore,
     string    HealthStatus,
+    string?   Alert,
     DateTime? StartDate,
     DateTime? EndDate,
     Guid?     ProposalId,

@@ -39,19 +39,25 @@ public sealed class UpdateProjectCommandValidator : AbstractValidator<UpdateProj
 
 public sealed class UpdateProjectCommandHandler : IRequestHandler<UpdateProjectCommand, ProjectDto>
 {
-    private readonly IProjectRepository _projects;
-    private readonly IClientRepository  _clients;
-    private readonly IUnitOfWork        _uow;
-    private readonly ITenantContext     _tenant;
+    private readonly IProjectRepository     _projects;
+    private readonly IClientRepository      _clients;
+    private readonly IInvoiceRepository     _invoices;
+    private readonly IProjectTaskRepository _tasks;
+    private readonly IUnitOfWork            _uow;
+    private readonly ITenantContext         _tenant;
 
     public UpdateProjectCommandHandler(
-        IProjectRepository projects,
-        IClientRepository  clients,
-        IUnitOfWork        uow,
-        ITenantContext     tenant)
+        IProjectRepository     projects,
+        IClientRepository      clients,
+        IInvoiceRepository     invoices,
+        IProjectTaskRepository tasks,
+        IUnitOfWork            uow,
+        ITenantContext         tenant)
     {
         _projects = projects;
         _clients  = clients;
+        _invoices = invoices;
+        _tasks    = tasks;
         _uow      = uow;
         _tenant   = tenant;
     }
@@ -78,7 +84,23 @@ public sealed class UpdateProjectCommandHandler : IRequestHandler<UpdateProjectC
         await _projects.UpdateAsync(project, cancellationToken);
         await _uow.SaveChangesAsync(cancellationToken);
 
-        var (progress, healthScore, healthStatus) = ProjectHealthHelper.Compute(project.HoursUsed, project.HoursTotal);
+        var amountPaidByProject = await _invoices.GetAmountPaidByProjectIdsAsync(
+            [project.Id], _tenant.OrganizationId, cancellationToken);
+        var taskCountsByProject = await _tasks.GetTaskCountsByProjectIdsAsync(
+            [project.Id], _tenant.OrganizationId, cancellationToken);
+
+        amountPaidByProject.TryGetValue(project.Id, out var amountPaid);
+        taskCountsByProject.TryGetValue(project.Id, out var taskCounts);
+
+        var health = ProjectHealthHelper.Compute(new ProjectHealthHelper.HealthInput(
+            HoursUsed:     project.HoursUsed,
+            HoursTotal:    project.HoursTotal,
+            ContractValue: project.ContractValue,
+            AmountPaid:    amountPaid,
+            StartDate:     project.StartDate,
+            EndDate:       project.EndDate,
+            TasksTotal:    taskCounts.Total,
+            TasksDone:     taskCounts.Done));
 
         return new ProjectDto(
             Id:            project.Id,
@@ -92,9 +114,10 @@ public sealed class UpdateProjectCommandHandler : IRequestHandler<UpdateProjectC
             Currency:      project.Currency,
             HoursTotal:    project.HoursTotal,
             HoursUsed:     project.HoursUsed,
-            Progress:      progress,
-            HealthScore:   healthScore,
-            HealthStatus:  healthStatus,
+            Progress:      health.Progress,
+            HealthScore:   health.HealthScore,
+            HealthStatus:  health.HealthStatus,
+            Alert:         health.Alert,
             StartDate:     project.StartDate,
             EndDate:       project.EndDate,
             ProposalId:    project.ProposalId,

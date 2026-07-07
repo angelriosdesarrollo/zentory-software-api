@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Zentory.Domain.Constants;
 using Zentory.Domain.Entities;
+using Zentory.Domain.Entities.Ai;
 using Zentory.Domain.Entities.Billing;
 using Zentory.Domain.Entities.Master;
 using static Zentory.Domain.Constants.PlanLimits;
@@ -35,6 +36,7 @@ public sealed class DevDataSeeder
         await SeedSsRulesAsync(ct);
         await SeedExpenseCategoriesAsync(ct);
         await SeedIntegrationCatalogAsync(ct);
+        await SeedAiConfigAsync(ct);
     }
 
     private async Task SeedBillingPlansAsync(CancellationToken ct)
@@ -206,6 +208,68 @@ public sealed class DevDataSeeder
             IntegrationCatalog.Create("github",      "GitHub",      "Vincula repositorios con proyectos y time entries",          sortOrder: 3),
             IntegrationCatalog.Create("figma",       "Figma",       "Adjunta entregables de diseño directamente en propuestas",   sortOrder: 4)
         );
+
+        await _db.SaveChangesAsync(ct);
+    }
+
+    // Config mínima de IA para el único feature del MVP (enriquecer secciones de propuesta).
+    // El resto del catálogo de ai.features (resúmenes, reportes, etc.) se siembra cuando esos
+    // features se implementen — no antes.
+    private async Task SeedAiConfigAsync(CancellationToken ct)
+    {
+        if (await _db.AiProviders.AnyAsync(ct)) return;
+
+        var anthropic = AiProvider.Create("anthropic", "Anthropic", "https://api.anthropic.com");
+        await _db.AiProviders.AddAsync(anthropic, ct);
+
+        // Precios vigentes por MTok ($1.00 in / $5.00 out) expresados por 1k tokens.
+        var haiku = AiModel.Create(
+            providerId:      anthropic.Id,
+            modelId:         "claude-haiku-4-5",
+            displayName:     "Claude Haiku 4.5",
+            contextWindow:   200_000,
+            maxOutputTokens: 8192,
+            inputCostPer1k:  0.00100000m,
+            outputCostPer1k: 0.00500000m,
+            supportsVision:  true);
+        await _db.AiModels.AddAsync(haiku, ct);
+
+        var enrichFeature = AiFeature.Create(
+            key:         "proposal_section_enrich",
+            displayName: "Enriquecer sección de propuesta",
+            category:    "text_generation",
+            description: "Mejora la redacción de una sección de propuesta comercial manteniendo el formato HTML.");
+        await _db.AiFeatures.AddAsync(enrichFeature, ct);
+
+        var enrichConfig = AiFeatureConfig.Create(
+            featureId:       enrichFeature.Id,
+            modelId:         haiku.Id,
+            minPlan:         Plan.Pro,
+            maxInputTokens:  4000,
+            maxOutputTokens: 2000,
+            temperature:     0.70m,
+            monthlyReqLimit: 50);
+        await _db.AiFeatureConfigs.AddAsync(enrichConfig, ct);
+
+        const string systemPrompt = """
+            Eres un asistente que mejora la redacción de secciones de propuestas comerciales para
+            software factories en Latinoamérica. Recibirás el contenido de una sección en HTML.
+
+            Reglas estrictas:
+            - Responde únicamente con HTML válido, sin explicaciones ni comentarios adicionales.
+            - Preserva exactamente las mismas etiquetas HTML y su estructura (no agregues, quites
+              ni reordenes tags) — solo mejora la redacción del texto dentro de ellas.
+            - Usa español latinoamericano, tono profesional y persuasivo, sin tecnicismos innecesarios.
+            - No inventes cifras, plazos ni compromisos que no estén ya en el texto original.
+            """;
+
+        var promptTemplate = AiPromptTemplate.Create(
+            featureId:    enrichFeature.Id,
+            version:      1,
+            name:         "proposal_section_enrich_v1",
+            systemPrompt: systemPrompt,
+            createdBy:    "seed");
+        await _db.AiPromptTemplates.AddAsync(promptTemplate, ct);
 
         await _db.SaveChangesAsync(ct);
     }

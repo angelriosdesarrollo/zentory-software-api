@@ -16,6 +16,26 @@ public sealed class ProjectTaskRepository : IProjectTaskRepository
             .OrderBy(t => t.CreatedAt)
             .ToListAsync(ct);
 
+    public async Task<Dictionary<Guid, (int Total, int Done)>> GetTaskCountsByProjectIdsAsync(
+        IEnumerable<Guid> projectIds, Guid organizationId, CancellationToken ct = default)
+    {
+        var ids = projectIds.ToList();
+        if (ids.Count == 0) return new Dictionary<Guid, (int, int)>();
+
+        var rows = await _db.ProjectTasks
+            .Where(t => t.OrganizationId == organizationId && t.DeletedAt == null && ids.Contains(t.ProjectId))
+            .GroupBy(t => t.ProjectId)
+            .Select(g => new
+            {
+                ProjectId = g.Key,
+                Total     = g.Count(),
+                Done      = g.Count(t => t.Status == "done")
+            })
+            .ToListAsync(ct);
+
+        return rows.ToDictionary(r => r.ProjectId, r => (r.Total, r.Done));
+    }
+
     public async Task<ProjectTask?> GetByIdAsync(Guid id, CancellationToken ct = default)
         => await _db.ProjectTasks.FirstOrDefaultAsync(t => t.Id == id && t.DeletedAt == null, ct);
 

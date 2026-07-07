@@ -30,6 +30,12 @@ public sealed class ProjectExpenseStore
                             .ToList();
     }
 
+    public IReadOnlyList<ProjectExpenseDto> GetAll()
+    {
+        lock (_lock)
+            return _expenses.OrderByDescending(e => e.Date).ToList();
+    }
+
     public ProjectExpenseDto Add(ProjectExpenseDto expense)
     {
         lock (_lock)

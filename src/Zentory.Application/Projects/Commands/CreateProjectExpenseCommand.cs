@@ -5,7 +5,7 @@ using Zentory.Application.Projects.Queries;
 namespace Zentory.Application.Projects.Commands;
 
 public record CreateProjectExpenseCommand(
-    Guid    ProjectId,
+    Guid?   ProjectId,
     string  Date,
     string  Category,
     string  Description,

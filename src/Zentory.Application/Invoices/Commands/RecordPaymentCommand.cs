@@ -2,6 +2,7 @@ using FluentValidation;
 using MediatR;
 using Zentory.Application.Common.Interfaces;
 using Zentory.Application.Exceptions;
+using Zentory.Domain.Entities;
 using Zentory.Domain.Repositories;
 
 namespace Zentory.Application.Invoices.Commands;
@@ -18,21 +19,24 @@ public sealed class RecordPaymentCommandValidator : AbstractValidator<RecordPaym
 
 public sealed class RecordPaymentCommandHandler : IRequestHandler<RecordPaymentCommand>
 {
-    private readonly IInvoiceRepository  _invoices;
-    private readonly IUnitOfWork         _uow;
-    private readonly ITenantContext      _tenant;
-    private readonly IActivityLogService _activityLog;
+    private readonly IInvoiceRepository       _invoices;
+    private readonly ICashFlowEntryRepository _cashFlowEntries;
+    private readonly IUnitOfWork              _uow;
+    private readonly ITenantContext           _tenant;
+    private readonly IActivityLogService      _activityLog;
 
     public RecordPaymentCommandHandler(
-        IInvoiceRepository  invoices,
-        IUnitOfWork         uow,
-        ITenantContext      tenant,
-        IActivityLogService activityLog)
+        IInvoiceRepository       invoices,
+        ICashFlowEntryRepository cashFlowEntries,
+        IUnitOfWork              uow,
+        ITenantContext           tenant,
+        IActivityLogService      activityLog)
     {
-        _invoices    = invoices;
-        _uow         = uow;
-        _tenant      = tenant;
-        _activityLog = activityLog;
+        _invoices        = invoices;
+        _cashFlowEntries = cashFlowEntries;
+        _uow             = uow;
+        _tenant          = tenant;
+        _activityLog     = activityLog;
     }
 
     public async Task Handle(RecordPaymentCommand request, CancellationToken cancellationToken)
@@ -47,6 +51,20 @@ public sealed class RecordPaymentCommandHandler : IRequestHandler<RecordPaymentC
         invoice.RecordPayment(request.Amount);
 
         await _invoices.UpdateAsync(invoice, cancellationToken);
+
+        // Cierra la conexión que CashFlowEntry.CreateFromInvoice ya esperaba pero que nunca se
+        // invocaba fuera de datos semilla — sin esto, /finances nunca reflejaba ingresos reales,
+        // solo los que alguien cargara a mano con "Agregar transacción".
+        var cashEntry = CashFlowEntry.CreateFromInvoice(
+            organizationId:  _tenant.OrganizationId,
+            invoiceId:       invoice.Id,
+            description:     $"Pago factura {invoice.InvoiceNumber}",
+            amount:          request.Amount,
+            currency:        invoice.Currency,
+            exchangeRate:    1m,
+            amountBase:      request.Amount,
+            transactionDate: DateOnly.FromDateTime(DateTime.UtcNow));
+        await _cashFlowEntries.AddAsync(cashEntry, cancellationToken);
 
         await _activityLog.LogAsync(
             "Invoice",
