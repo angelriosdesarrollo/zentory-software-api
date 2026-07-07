@@ -67,6 +67,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<ICollaboratorPayoutInvoiceRepository, CollaboratorPayoutInvoiceRepository>();
 
         services.AddScoped<IJwtService, JwtService>();
+        services.AddScoped<IGoogleTokenValidator, GoogleTokenValidator>();
         services.AddScoped<ICollaboratorJwtService, CollaboratorJwtService>();
         services.AddScoped<IActivityLogService, ActivityLogService>();
         services.AddScoped<IPlanLimitService, PlanLimitService>();

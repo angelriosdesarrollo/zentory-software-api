@@ -16,6 +16,7 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
         builder.Property(u => u.OrganizationId).HasColumnName("organization_id").IsRequired(false);
         builder.Property(u => u.Email).HasColumnName("email").HasMaxLength(254).IsRequired();
         builder.Property(u => u.PasswordHash).HasColumnName("password_hash").HasMaxLength(500);
+        builder.Property(u => u.GoogleId).HasColumnName("google_id").HasMaxLength(64);
         builder.Property(u => u.FirstName).HasColumnName("first_name").HasMaxLength(100).IsRequired();
         builder.Property(u => u.LastName).HasColumnName("last_name").HasMaxLength(100).IsRequired();
         builder.Property(u => u.Role).HasColumnName("role").HasMaxLength(30).IsRequired();
@@ -27,5 +28,6 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
 
         builder.HasIndex(u => u.Email).IsUnique().HasDatabaseName("ix_users_email");
         builder.HasIndex(u => u.OrganizationId).HasDatabaseName("ix_users_org_id");
+        builder.HasIndex(u => u.GoogleId).HasDatabaseName("ix_users_google_id");
     }
 }

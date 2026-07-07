@@ -5,7 +5,8 @@ public record AuthTokenDto(
     string                          RefreshToken,
     int                             ExpiresIn,
     UserProfileDto                  User,
-    IReadOnlyList<OrgMembershipDto> Memberships);
+    IReadOnlyList<OrgMembershipDto> Memberships,
+    bool                            IsNewUser = false);
 
 public record SwitchOrgResponseDto(
     string                          AccessToken,

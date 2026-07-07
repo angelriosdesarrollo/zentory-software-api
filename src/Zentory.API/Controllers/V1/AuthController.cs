@@ -37,4 +37,12 @@ public sealed class AuthController : ControllerBase
         var result = await _mediator.Send(command, ct);
         return Ok(result);
     }
+
+    /// <summary>POST /api/v1/auth/google — login/registro con id_token de Google verificado por el backend</summary>
+    [HttpPost("google")]
+    public async Task<IActionResult> Google([FromBody] GoogleLoginCommand command, CancellationToken ct = default)
+    {
+        var result = await _mediator.Send(command, ct);
+        return Ok(result);
+    }
 }

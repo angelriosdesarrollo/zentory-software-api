@@ -6,6 +6,7 @@ public class User
     public Guid?     OrganizationId { get; private set; }
     public string    Email          { get; private set; } = default!;
     public string?   PasswordHash   { get; private set; }
+    public string?   GoogleId       { get; private set; }
     public string    FirstName      { get; private set; } = default!;
     public string    LastName       { get; private set; } = default!;
     public string    Role           { get; private set; } = default!;
@@ -33,7 +34,8 @@ public class User
         Guid?     id                   = null,
         Guid?     organizationId       = null,
         DateTime? termsAcceptedAt      = null,
-        string?   termsAcceptedVersion = null)
+        string?   termsAcceptedVersion = null,
+        string?   googleId             = null)
     {
         return new User
         {
@@ -45,7 +47,14 @@ public class User
             Role                 = role,
             PasswordHash         = passwordHash,
             TermsAcceptedAt      = termsAcceptedAt,
-            TermsAcceptedVersion = termsAcceptedVersion
+            TermsAcceptedVersion = termsAcceptedVersion,
+            GoogleId             = googleId
         };
+    }
+
+    public void LinkGoogleAccount(string googleId)
+    {
+        GoogleId  = googleId;
+        UpdatedAt = DateTime.UtcNow;
     }
 }

@@ -16,6 +16,9 @@ public sealed class UserRepository : IUserRepository
     public async Task<User?> GetByIdAsync(Guid userId, CancellationToken ct = default)
         => await _db.Users.FirstOrDefaultAsync(u => u.UserId == userId, ct);
 
+    public async Task<User?> GetByGoogleIdAsync(string googleId, CancellationToken ct = default)
+        => await _db.Users.FirstOrDefaultAsync(u => u.GoogleId == googleId, ct);
+
     public async Task AddAsync(User user, CancellationToken ct = default)
         => await _db.Users.AddAsync(user, ct);
 }
