@@ -9,56 +9,74 @@ namespace Zentory.Application.Projects;
 /// </summary>
 public sealed class ProjectExpenseStore
 {
+    // Debe coincidir con DevDataSeeder.DevOrgId: la semilla pertenece solo a la organización de dev.
+    private static readonly Guid DevOrg = new("a1000000-0000-0000-0000-000000000001");
+
     // Fixed dev project GUIDs — must match DevDataSeeder.PrjPortalId etc.
     private static readonly Guid PrjPortal = new("c3000000-0001-0000-0000-000000000001");
     private static readonly Guid PrjMobile = new("c3000000-0002-0000-0000-000000000002");
     private static readonly Guid PrjData   = new("c3000000-0003-0000-0000-000000000003");
 
-    private readonly List<ProjectExpenseDto> _expenses;
+    // La organización vive solo en el registro interno para que ProjectExpenseDto (y su JSON)
+    // no cambie; todo acceso público exige organizationId y filtra por él (R-2).
+    private sealed record Entry(Guid OrganizationId, ProjectExpenseDto Expense);
+
+    private readonly List<Entry> _entries;
     private readonly object _lock = new();
 
     public ProjectExpenseStore()
     {
-        _expenses = [.. Seed()];
+        _entries = [.. Seed().Select(e => new Entry(DevOrg, e))];
     }
 
-    public IReadOnlyList<ProjectExpenseDto> GetByProject(Guid projectId)
+    public int Count
+    {
+        get { lock (_lock) return _entries.Count; }
+    }
+
+    public IReadOnlyList<ProjectExpenseDto> GetByProject(Guid organizationId, Guid projectId)
     {
         lock (_lock)
-            return _expenses.Where(e => e.ProjectId == projectId)
-                            .OrderByDescending(e => e.Date)
-                            .ToList();
+            return _entries.Where(e => e.OrganizationId == organizationId && e.Expense.ProjectId == projectId)
+                           .Select(e => e.Expense)
+                           .OrderByDescending(e => e.Date)
+                           .ToList();
     }
 
-    public IReadOnlyList<ProjectExpenseDto> GetAll()
+    public IReadOnlyList<ProjectExpenseDto> GetAll(Guid organizationId)
     {
         lock (_lock)
-            return _expenses.OrderByDescending(e => e.Date).ToList();
+            return _entries.Where(e => e.OrganizationId == organizationId)
+                           .Select(e => e.Expense)
+                           .OrderByDescending(e => e.Date)
+                           .ToList();
     }
 
-    public ProjectExpenseDto Add(ProjectExpenseDto expense)
+    public ProjectExpenseDto Add(Guid organizationId, ProjectExpenseDto expense)
     {
         lock (_lock)
         {
-            _expenses.Add(expense);
+            _entries.Add(new Entry(organizationId, expense));
             return expense;
         }
     }
 
-    public ProjectExpenseDto? GetById(Guid id)
+    public ProjectExpenseDto? GetById(Guid organizationId, Guid id)
     {
         lock (_lock)
-            return _expenses.FirstOrDefault(e => e.Id == id);
+            return _entries.FirstOrDefault(e => e.OrganizationId == organizationId && e.Expense.Id == id)?.Expense;
     }
 
-    public ProjectExpenseDto? Update(ProjectExpenseDto expense)
+    // Devuelve null si el gasto no existe en esa organización; la organización del Entry
+    // original se conserva (un Update nunca mueve un gasto de organización).
+    public ProjectExpenseDto? Update(Guid organizationId, ProjectExpenseDto expense)
     {
         lock (_lock)
         {
-            var index = _expenses.FindIndex(e => e.Id == expense.Id);
+            var index = _entries.FindIndex(e => e.OrganizationId == organizationId && e.Expense.Id == expense.Id);
             if (index < 0) return null;
 
-            _expenses[index] = expense;
+            _entries[index] = _entries[index] with { Expense = expense };
             return expense;
         }
     }

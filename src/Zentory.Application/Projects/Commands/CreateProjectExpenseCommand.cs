@@ -1,6 +1,8 @@
 using MediatR;
 using Zentory.Application.Common.Interfaces;
+using Zentory.Application.Exceptions;
 using Zentory.Application.Projects.Queries;
+using Zentory.Domain.Repositories;
 
 namespace Zentory.Application.Projects.Commands;
 
@@ -18,18 +20,29 @@ public sealed class CreateProjectExpenseCommandHandler
     : IRequestHandler<CreateProjectExpenseCommand, ProjectExpenseDto>
 {
     private readonly ProjectExpenseStore _store;
+    private readonly IProjectRepository  _projects;
     private readonly ITenantContext      _tenant;
 
-    public CreateProjectExpenseCommandHandler(ProjectExpenseStore store, ITenantContext tenant)
+    public CreateProjectExpenseCommandHandler(ProjectExpenseStore store, IProjectRepository projects, ITenantContext tenant)
     {
-        _store  = store;
-        _tenant = tenant;
+        _store    = store;
+        _projects = projects;
+        _tenant   = tenant;
     }
 
-    public Task<ProjectExpenseDto> Handle(
+    public async Task<ProjectExpenseDto> Handle(
         CreateProjectExpenseCommand request,
         CancellationToken           cancellationToken)
     {
+        // Un gasto sin ProjectId es de empresa y no necesita validación de proyecto. Comparación
+        // explícita: GetByIdAsync no filtra por organización (no se confía en el filtro global de EF).
+        if (request.ProjectId is { } projectId)
+        {
+            var project = await _projects.GetByIdAsync(projectId, cancellationToken);
+            if (project is null || project.OrganizationId != _tenant.OrganizationId)
+                throw new NotFoundException("Project", projectId);
+        }
+
         var expense = new ProjectExpenseDto(
             Id:          Guid.NewGuid(),
             ProjectId:   request.ProjectId,
@@ -43,7 +56,7 @@ public sealed class CreateProjectExpenseCommandHandler
             Status:      "pendiente",
             CreatedBy:   _tenant.UserInitials);
 
-        _store.Add(expense);
-        return Task.FromResult(expense);
+        _store.Add(_tenant.OrganizationId, expense);
+        return expense;
     }
 }

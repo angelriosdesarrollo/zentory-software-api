@@ -6,13 +6,17 @@ using Microsoft.EntityFrameworkCore;
 using Zentory.Application.CollaboratorPortal.DTOs;
 using Zentory.Application.Common.Interfaces;
 using Zentory.Application.Exceptions;
+using Zentory.Domain.Entities;
 using Zentory.Domain.Repositories;
 
 namespace Zentory.Application.CollaboratorPortal.Commands;
 
 // Canje único para los tres tipos de entrada al portal: un magic link propio (Camino B),
-// o un token de solicitud puntual de la empresa (PILA o cuenta de cobro — Camino A). Los
-// tres terminan en el mismo lugar: una sesión de portal completa, multi-org por email.
+// o un token de solicitud puntual de la empresa (PILA o cuenta de cobro — Camino A).
+// Solo magic_link abre una sesión multi-org por email: es el único que prueba control del
+// buzón. Un token de solicitud solo prueba que alguien recibió ese enlace, así que su sesión
+// queda limitada al colaborador del token (auth_method=request), aunque su email coincida
+// con colaboradores de otras organizaciones.
 public sealed record ExchangeCollaboratorTokenCommand(string Kind, string Token) : IRequest<CollaboratorSessionDto>;
 
 public sealed class ExchangeCollaboratorTokenCommandValidator : AbstractValidator<ExchangeCollaboratorTokenCommand>
@@ -59,27 +63,10 @@ public sealed class ExchangeCollaboratorTokenCommandHandler
     public async Task<CollaboratorSessionDto> Handle(
         ExchangeCollaboratorTokenCommand request, CancellationToken cancellationToken)
     {
-        string email;
-        Guid?  originCollaboratorId = null;
-        CollaboratorHighlightDto? highlight = null;
-
         switch (request.Kind)
         {
             case "magic_link":
-            {
-                var hash = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(request.Token)));
-                var accessToken = await _db.CollaboratorAccessTokens
-                    .FirstOrDefaultAsync(t => t.TokenHash == hash, cancellationToken);
-                if (accessToken is null)
-                    throw new NotFoundException("CollaboratorAccessToken", request.Token);
-                if (!accessToken.IsValid())
-                    throw new ConflictException("TOKEN_EXPIRED", "El enlace ha expirado o ya fue usado. Pide uno nuevo.");
-
-                accessToken.MarkUsed();
-                await _uow.SaveChangesAsync(cancellationToken);
-                email = accessToken.Email;
-                break;
-            }
+                return await ExchangeMagicLinkAsync(request.Token, cancellationToken);
             case "pila_request":
             {
                 if (!Guid.TryParse(request.Token, out var token))
@@ -89,14 +76,8 @@ public sealed class ExchangeCollaboratorTokenCommandHandler
                 if (!row.IsTokenValid())
                     throw new ConflictException("TOKEN_EXPIRED", "El enlace ha expirado. Pide que te reenvíen la solicitud.");
 
-                var collaborator = await _collaborators.GetByIdAsync(row.CollaboratorId, cancellationToken);
-                if (collaborator?.Email is null)
-                    throw new ConflictException("NO_EMAIL", "Tu registro no tiene correo asociado — contacta a la empresa.");
-
-                email                = collaborator.Email;
-                originCollaboratorId = row.CollaboratorId;
-                highlight            = new CollaboratorHighlightDto("pila", row.Period, row.Id);
-                break;
+                return await ExchangeRequestAsync(
+                    row.CollaboratorId, new CollaboratorHighlightDto("pila", row.Period, row.Id), cancellationToken);
             }
             case "payout_invoice_request":
             {
@@ -107,29 +88,66 @@ public sealed class ExchangeCollaboratorTokenCommandHandler
                 if (!row.IsTokenValid())
                     throw new ConflictException("TOKEN_EXPIRED", "El enlace ha expirado. Pide que te reenvíen la solicitud.");
 
-                var collaborator = await _collaborators.GetByIdAsync(row.CollaboratorId, cancellationToken);
-                if (collaborator?.Email is null)
-                    throw new ConflictException("NO_EMAIL", "Tu registro no tiene correo asociado — contacta a la empresa.");
-
-                email                = collaborator.Email;
-                originCollaboratorId = row.CollaboratorId;
-                highlight            = new CollaboratorHighlightDto("payout_invoice", row.Period, row.Id);
-                break;
+                return await ExchangeRequestAsync(
+                    row.CollaboratorId, new CollaboratorHighlightDto("payout_invoice", row.Period, row.Id), cancellationToken);
             }
             default:
                 // Inalcanzable: ExchangeCollaboratorTokenCommandValidator ya restringe Kind
                 // a los tres valores manejados arriba.
                 throw new ConflictException("INVALID_KIND", $"Kind '{request.Kind}' no es válido.");
         }
+    }
+
+    private async Task<CollaboratorSessionDto> ExchangeMagicLinkAsync(string rawToken, CancellationToken cancellationToken)
+    {
+        var hash = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(rawToken)));
+        var accessToken = await _db.CollaboratorAccessTokens
+            .FirstOrDefaultAsync(t => t.TokenHash == hash, cancellationToken);
+        if (accessToken is null)
+            throw new NotFoundException("CollaboratorAccessToken", rawToken);
+        if (!accessToken.IsValid())
+            throw new ConflictException("TOKEN_EXPIRED", "El enlace ha expirado o ya fue usado. Pide uno nuevo.");
+
+        accessToken.MarkUsed();
+        await _uow.SaveChangesAsync(cancellationToken);
+        var email = accessToken.Email;
 
         var memberships = await _collaborators.ListByEmailAsync(email, cancellationToken);
         if (memberships.Count == 0)
             throw new NotFoundException("Collaborator", email);
 
-        var activeCollaborator = originCollaboratorId.HasValue
-            ? memberships.FirstOrDefault(m => m.Id == originCollaboratorId.Value) ?? memberships[0]
-            : memberships[0]; // magic_link: arbitraria — el frontend pide elegir si hay más de una
+        // Arbitraria: el frontend pide elegir si hay más de una membresía.
+        var activeCollaborator = memberships[0];
 
+        return await BuildSessionAsync(
+            email, memberships, activeCollaborator, CollaboratorAuthMethod.MagicLink, highlight: null, cancellationToken);
+    }
+
+    // Sin ListByEmailAsync a propósito: el email del colaborador lo edita la empresa, así que
+    // buscar por email permitiría que un token de la org A abra sesión en colaboradores de B.
+    private async Task<CollaboratorSessionDto> ExchangeRequestAsync(
+        Guid collaboratorId, CollaboratorHighlightDto highlight, CancellationToken cancellationToken)
+    {
+        var collaborator = await _collaborators.GetByIdAsync(collaboratorId, cancellationToken);
+        // Mismo filtro que aplicaba ListByEmailAsync: solo colaboradores activos y no borrados.
+        if (collaborator is null || collaborator.Status != "active" || collaborator.DeletedAt is not null)
+            throw new NotFoundException("Collaborator", collaboratorId);
+        // El email sigue siendo el sub del JWT, así que sin email no hay sesión posible.
+        if (collaborator.Email is null)
+            throw new ConflictException("NO_EMAIL", "Tu registro no tiene correo asociado — contacta a la empresa.");
+
+        return await BuildSessionAsync(
+            collaborator.Email, [collaborator], collaborator, CollaboratorAuthMethod.Request, highlight, cancellationToken);
+    }
+
+    private async Task<CollaboratorSessionDto> BuildSessionAsync(
+        string                       email,
+        IReadOnlyList<Collaborator>  memberships,
+        Collaborator                 activeCollaborator,
+        string                       authMethod,
+        CollaboratorHighlightDto?    highlight,
+        CancellationToken            cancellationToken)
+    {
         var orgIds  = memberships.Select(m => m.OrganizationId).Distinct().ToList();
         var orgs    = new Dictionary<Guid, string>();
         foreach (var orgId in orgIds)
@@ -148,7 +166,8 @@ public sealed class ExchangeCollaboratorTokenCommandHandler
             memberships.Select(m => m.Id).ToList(),
             activeCollaborator.Id,
             activeCollaborator.OrganizationId,
-            orgs[activeCollaborator.OrganizationId]);
+            orgs[activeCollaborator.OrganizationId],
+            authMethod);
 
         return new CollaboratorSessionDto(accessTokenJwt, SessionDurationSeconds, activeDto, membershipDtos, highlight);
     }

@@ -57,4 +57,7 @@ public sealed class CollaboratorPortalContext : ICollaboratorPortalContext
     }
 
     public string ActiveOrganizationName => _user?.FindFirstValue("active_org_name") ?? string.Empty;
+
+    // Nulable a propósito: las sesiones emitidas antes de existir el claim no lo traen.
+    public string? AuthMethod => _user?.FindFirstValue("auth_method");
 }
