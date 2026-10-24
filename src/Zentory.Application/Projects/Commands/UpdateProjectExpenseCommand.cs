@@ -1,6 +1,8 @@
 using MediatR;
+using Zentory.Application.Common.Interfaces;
 using Zentory.Application.Exceptions;
 using Zentory.Application.Projects.Queries;
+using Zentory.Domain.Repositories;
 
 namespace Zentory.Application.Projects.Commands;
 
@@ -23,15 +25,33 @@ public sealed class UpdateProjectExpenseCommandHandler
     : IRequestHandler<UpdateProjectExpenseCommand, ProjectExpenseDto>
 {
     private readonly ProjectExpenseStore _store;
+    private readonly IProjectRepository  _projects;
+    private readonly ITenantContext      _tenant;
 
-    public UpdateProjectExpenseCommandHandler(ProjectExpenseStore store) => _store = store;
+    public UpdateProjectExpenseCommandHandler(ProjectExpenseStore store, IProjectRepository projects, ITenantContext tenant)
+    {
+        _store    = store;
+        _projects = projects;
+        _tenant   = tenant;
+    }
 
-    public Task<ProjectExpenseDto> Handle(
+    public async Task<ProjectExpenseDto> Handle(
         UpdateProjectExpenseCommand request,
         CancellationToken           cancellationToken)
     {
-        var existing = _store.GetById(request.Id)
+        // Un gasto de otra organización es indistinguible de uno inexistente (404).
+        var existing = _store.GetById(_tenant.OrganizationId, request.Id)
             ?? throw new NotFoundException("ProjectExpense", request.Id);
+
+        // D-7: reasignar el gasto a un proyecto de otra organización también es 404 y no toca
+        // el store. Comparación explícita: GetByIdAsync no filtra por organización. Solo se
+        // valida si el proyecto cambia: el actual ya viene del gasto propio de la organización.
+        if (request.ProjectId is { } projectId && projectId != existing.ProjectId)
+        {
+            var project = await _projects.GetByIdAsync(projectId, cancellationToken);
+            if (project is null || project.OrganizationId != _tenant.OrganizationId)
+                throw new NotFoundException("Project", projectId);
+        }
 
         var updated = existing with
         {
@@ -46,7 +66,8 @@ public sealed class UpdateProjectExpenseCommandHandler
             Status      = request.Status,
         };
 
-        _store.Update(updated);
-        return Task.FromResult(updated);
+        _ = _store.Update(_tenant.OrganizationId, updated)
+            ?? throw new NotFoundException("ProjectExpense", request.Id);
+        return updated;
     }
 }

@@ -38,6 +38,11 @@ public sealed class SwitchActiveCollaboratorCommandHandler
         if (!_portal.CollaboratorIds.Contains(request.CollaboratorId))
             throw new ConflictException("NOT_A_MEMBERSHIP", "Esa organización no pertenece a tu sesión.");
 
+        // Solo una sesión de magic link es multi-org. Una de solicitud, o una emitida antes del
+        // claim (AuthMethod null), no puede re-emitirse para otra organización (H-01, D-4).
+        if (_portal.AuthMethod != CollaboratorAuthMethod.MagicLink)
+            throw new ConflictException("SESSION_NOT_SWITCHABLE", "Para cambiar de organización entra con un enlace de acceso nuevo.");
+
         var memberships = await _collaborators.ListByEmailAsync(_portal.Email, cancellationToken);
         var active = memberships.FirstOrDefault(m => m.Id == request.CollaboratorId)
             ?? throw new NotFoundException("Collaborator", request.CollaboratorId);
@@ -56,7 +61,8 @@ public sealed class SwitchActiveCollaboratorCommandHandler
         var activeDto = membershipDtos.First(m => m.CollaboratorId == active.Id);
 
         var accessToken = _jwt.GenerateSessionToken(
-            _portal.Email, memberships.Select(m => m.Id).ToList(), active.Id, active.OrganizationId, orgs[active.OrganizationId]);
+            _portal.Email, memberships.Select(m => m.Id).ToList(), active.Id, active.OrganizationId, orgs[active.OrganizationId],
+            CollaboratorAuthMethod.MagicLink);
 
         return new CollaboratorSessionDto(accessToken, SessionDurationSeconds, activeDto, membershipDtos, Highlight: null);
     }

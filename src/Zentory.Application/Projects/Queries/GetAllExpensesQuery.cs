@@ -27,7 +27,7 @@ public sealed class GetAllExpensesQueryHandler
         GetAllExpensesQuery request,
         CancellationToken    cancellationToken)
     {
-        var expenses = _store.GetAll();
+        var expenses = _store.GetAll(_tenant.OrganizationId);
         if (expenses.Count == 0) return expenses;
 
         var projects = await _projects.ListByOrganizationAsync(_tenant.OrganizationId, cancellationToken);

@@ -1,5 +1,8 @@
 using MediatR;
+using Zentory.Application.Common.Interfaces;
+using Zentory.Application.Exceptions;
 using Zentory.Application.Projects;
+using Zentory.Domain.Repositories;
 
 namespace Zentory.Application.Projects.Queries;
 
@@ -27,11 +30,26 @@ public sealed class GetProjectExpensesQueryHandler
     : IRequestHandler<GetProjectExpensesQuery, IReadOnlyList<ProjectExpenseDto>>
 {
     private readonly ProjectExpenseStore _store;
+    private readonly IProjectRepository  _projects;
+    private readonly ITenantContext      _tenant;
 
-    public GetProjectExpensesQueryHandler(ProjectExpenseStore store) => _store = store;
+    public GetProjectExpensesQueryHandler(ProjectExpenseStore store, IProjectRepository projects, ITenantContext tenant)
+    {
+        _store    = store;
+        _projects = projects;
+        _tenant   = tenant;
+    }
 
-    public Task<IReadOnlyList<ProjectExpenseDto>> Handle(
+    public async Task<IReadOnlyList<ProjectExpenseDto>> Handle(
         GetProjectExpensesQuery request,
         CancellationToken       cancellationToken)
-        => Task.FromResult(_store.GetByProject(request.ProjectId));
+    {
+        // Comparación explícita: GetByIdAsync no filtra por organización (no se confía en el
+        // filtro global de EF). Un proyecto ajeno es indistinguible de uno inexistente (404).
+        var project = await _projects.GetByIdAsync(request.ProjectId, cancellationToken);
+        if (project is null || project.OrganizationId != _tenant.OrganizationId)
+            throw new NotFoundException("Project", request.ProjectId);
+
+        return _store.GetByProject(_tenant.OrganizationId, request.ProjectId);
+    }
 }

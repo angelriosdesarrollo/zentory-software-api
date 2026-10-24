@@ -113,7 +113,7 @@ public sealed class ReviewPayoutInvoiceCommandHandler : IRequestHandler<ReviewPa
                     foreach (var group in entries.GroupBy(e => e.ProjectId))
                     {
                         var hours = group.Sum(e => e.Hours);
-                        _expenses.Add(new ProjectExpenseDto(
+                        _expenses.Add(_tenant.OrganizationId, new ProjectExpenseDto(
                             Id:                    Guid.NewGuid(),
                             ProjectId:             group.Key,
                             Date:                  DateTime.UtcNow.ToString("yyyy-MM-dd"),
@@ -140,7 +140,7 @@ public sealed class ReviewPayoutInvoiceCommandHandler : IRequestHandler<ReviewPa
                     // Sin horas aprobadas que respalden el monto (ej. cuenta de cobro autoservicio
                     // sin time entries) — no hay a qué proyecto imputarlo con certeza, queda como
                     // gasto de empresa para no perder el registro del pago real.
-                    _expenses.Add(new ProjectExpenseDto(
+                    _expenses.Add(_tenant.OrganizationId, new ProjectExpenseDto(
                         Id:                    Guid.NewGuid(),
                         ProjectId:             null,
                         Date:                  DateTime.UtcNow.ToString("yyyy-MM-dd"),
@@ -161,7 +161,7 @@ public sealed class ReviewPayoutInvoiceCommandHandler : IRequestHandler<ReviewPa
                 // fixed_contractor (u otro tipo): no existe ningún otro lugar donde su costo se
                 // impute a un proyecto, así que el gasto creado aquí es la única fuente de
                 // atribución que tendrán — request.ProjectId decide a cuál (o null = empresa).
-                _expenses.Add(new ProjectExpenseDto(
+                _expenses.Add(_tenant.OrganizationId, new ProjectExpenseDto(
                     Id:                    Guid.NewGuid(),
                     ProjectId:             request.ProjectId,
                     Date:                  DateTime.UtcNow.ToString("yyyy-MM-dd"),

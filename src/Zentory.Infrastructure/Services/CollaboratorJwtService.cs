@@ -30,7 +30,8 @@ public sealed class CollaboratorJwtService : ICollaboratorJwtService
         IReadOnlyList<Guid> collaboratorIds,
         Guid                activeCollaboratorId,
         Guid                activeOrganizationId,
-        string              activeOrganizationName)
+        string              activeOrganizationName,
+        string              authMethod)
     {
         // collaborator_ids como string separado por comas en vez de un claim JSON array —
         // evita la complejidad de configurar deserialización de claims tipo array en
@@ -43,6 +44,7 @@ public sealed class CollaboratorJwtService : ICollaboratorJwtService
             new Claim("active_collaborator_id", activeCollaboratorId.ToString()),
             new Claim("active_org_id", activeOrganizationId.ToString()),
             new Claim("active_org_name", activeOrganizationName),
+            new Claim("auth_method", authMethod),
             new Claim("token_type", "collaborator_session"),
         };
 

@@ -10,5 +10,6 @@ public interface ICollaboratorJwtService
         IReadOnlyList<Guid> collaboratorIds,
         Guid                activeCollaboratorId,
         Guid                activeOrganizationId,
-        string              activeOrganizationName);
+        string              activeOrganizationName,
+        string              authMethod);  // CollaboratorAuthMethod — sin valor por defecto: cada emisor elige explícitamente
 }

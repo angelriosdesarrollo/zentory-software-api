@@ -11,4 +11,5 @@ public interface ICollaboratorPortalContext
     Guid                 ActiveCollaboratorId  { get; }
     Guid                 ActiveOrganizationId  { get; }
     string               ActiveOrganizationName { get; }
+    string?              AuthMethod            { get; }  // CollaboratorAuthMethod; null en sesiones emitidas antes del claim
 }

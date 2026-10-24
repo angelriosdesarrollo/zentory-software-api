@@ -124,7 +124,7 @@ public sealed class GetProfitabilityStatsQueryHandler
             // Solo los gastos generados por cuentas de cobro aprobadas (Source ==
             // "payout_invoice") cuentan como "costo de equipo" — un gasto manual de licencias
             // o viáticos no es costo de horas y no debería mezclarse aquí.
-            var realizedPayoutCost = _expenses.GetByProject(p.Id)
+            var realizedPayoutCost = _expenses.GetByProject(oid, p.Id)
                 .Where(e => e.Status == "aprobado" && e.Source == "payout_invoice")
                 .Sum(e => e.Amount);
             var costHours = estimatedCost + realizedPayoutCost;
