@@ -7,9 +7,9 @@
   <ItemGroup>
     <PackageReference Include="Anthropic" Version="12.35.1" />
     <PackageReference Include="BCrypt.Net-Next" Version="4.0.3" />
-    <PackageReference Include="Hangfire.AspNetCore" Version="1.8.*" />
-    <PackageReference Include="Hangfire.InMemory" Version="1.0.*" />
-    <PackageReference Include="Hangfire.PostgreSql" Version="1.20.*" />
+    <PackageReference Include="Hangfire.AspNetCore" Version="1.8.25" />
+    <PackageReference Include="Hangfire.InMemory" Version="1.0.0" />
+    <PackageReference Include="Hangfire.PostgreSql" Version="1.20.13" />
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="8.0.11" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.11">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
@@ -17,12 +17,12 @@
     </PackageReference>
     <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="8.0.11" />
     <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="8.0.11" />
-    <PackageReference Include="Microsoft.Extensions.Http" Version="8.0.*" />
-    <PackageReference Include="Resend" Version="0.4.*" />
+    <PackageReference Include="Microsoft.Extensions.Http" Version="8.0.1" />
+    <PackageReference Include="Resend" Version="0.4.0" />
     <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="7.5.2" />
-    <PackageReference Include="AWSSDK.S3" Version="3.7.*" />
-    <PackageReference Include="QuestPDF" Version="2024.10.*" />
-    <PackageReference Include="Google.Apis.Auth" Version="1.68.*" />
+    <PackageReference Include="AWSSDK.S3" Version="3.7.511.8" />
+    <PackageReference Include="QuestPDF" Version="2024.10.4" />
+    <PackageReference Include="Google.Apis.Auth" Version="1.68.0" />
   </ItemGroup>
 
   <PropertyGroup>
