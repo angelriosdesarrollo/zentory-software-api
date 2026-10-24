@@ -6,8 +6,13 @@ QuestPDF.Settings.License = QuestPDF.Infrastructure.LicenseType.Community;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// appsettings.Local.json: machine-level overrides, gitignored — loaded last so it wins
-builder.Configuration.AddJsonFile("appsettings.Local.json", optional: true, reloadOnChange: true);
+// appsettings.Local.json: machine-level overrides, gitignored — loaded last so it wins.
+// No se carga en Testing: ganaría sobre la configuración del host de pruebas (claves JWT, base).
+if (!builder.Environment.IsEnvironment(AppEnvironments.Testing))
+    builder.Configuration.AddJsonFile("appsettings.Local.json", optional: true, reloadOnChange: true);
+
+// Fail-fast antes de registrar la infraestructura: InMemory solo en Development o Testing.
+builder.EnsureSafeDatabaseConfiguration();
 
 // ── Layers ─────────────────────────────────────────────────────────────────
 builder.Services.AddApplication();
@@ -36,3 +41,6 @@ app.UseAppMiddlewarePipeline();
 app.ScheduleRecurringJobs();
 
 app.Run();
+
+// Punto de entrada visible para WebApplicationFactory<Program> en los tests de integración.
+public partial class Program;

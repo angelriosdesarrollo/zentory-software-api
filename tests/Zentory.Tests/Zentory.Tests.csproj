@@ -7,10 +7,16 @@
 
     <IsPackable>false</IsPackable>
     <IsTestProject>true</IsTestProject>
+
+    <!-- Zentory.API compila contra EF Core 8.0.32 (Design fijado, PrivateAssets=all) y los tests usan 8.0.11
+         vía Infrastructure: diferencia aceptada en la spec de PLAN-0001 (C-1, riesgo R-2). MSB3277 queda como
+         mensaje (visible con -v n) en vez de advertencia; quitar al alinear EF Core en un solo parche. -->
+    <MSBuildWarningsAsMessages>$(MSBuildWarningsAsMessages);MSB3277</MSBuildWarningsAsMessages>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="coverlet.collector" Version="6.0.0" />
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" Version="8.0.11" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.8.0" />
     <PackageReference Include="xunit" Version="2.5.3" />
     <PackageReference Include="xunit.runner.visualstudio" Version="2.5.3" />
@@ -21,6 +27,13 @@
   </ItemGroup>
 
   <ItemGroup>
+    <!-- Clausura de runtime de Zentory.API en la rama base (PLAN-0001, CA-34) -->
+    <None Include="Unit\Build\Fixtures\*.json" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Host real para los tests de integración con WebApplicationFactory (ADR-0001) -->
+    <ProjectReference Include="..\..\src\Zentory.API\Zentory.API.csproj" />
     <ProjectReference Include="..\..\src\Zentory.Application\Zentory.Application.csproj" />
     <ProjectReference Include="..\..\src\Zentory.Domain\Zentory.Domain.csproj" />
     <!-- EF InMemory y CollaboratorJwtService real para los tests de handlers (ADR estrategia-tests-backend) -->

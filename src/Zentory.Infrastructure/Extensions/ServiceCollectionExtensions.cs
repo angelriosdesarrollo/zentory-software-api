@@ -23,12 +23,13 @@ public static class ServiceCollectionExtensions
     {
         services.AddScoped<AuditInterceptor>();
 
-        var useInMemory = string.Equals(configuration["Database:UseInMemory"], "true", StringComparison.OrdinalIgnoreCase);
+        var useInMemory = DatabaseSettings.UseInMemory(configuration);
 
         if (useInMemory)
         {
+            var inMemoryName = DatabaseSettings.InMemoryName(configuration);
             services.AddDbContext<ZentoryDbContext>((sp, options) =>
-                options.UseInMemoryDatabase("ZentoryDev")
+                options.UseInMemoryDatabase(inMemoryName)
                        .AddInterceptors(sp.GetRequiredService<AuditInterceptor>()));
         }
         else
@@ -114,7 +115,11 @@ public static class ServiceCollectionExtensions
             else
                 config.UsePostgreSqlStorage(o => o.UseNpgsqlConnection(configuration.GetConnectionString("DefaultConnection")));
         });
-        services.AddHangfireServer();
+
+        // El storage se registra siempre (lo usan el dashboard y RecurringJob); el servidor que ejecuta los jobs
+        // se apaga con Hangfire:ServerEnabled=false (host de tests, modo seed).
+        if (HangfireSettings.IsServerEnabled(configuration))
+            services.AddHangfireServer();
 
         return services;
     }
