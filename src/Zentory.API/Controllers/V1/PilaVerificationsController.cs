@@ -3,11 +3,15 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Zentory.Application.PilaVerifications.Commands;
 using Zentory.Application.PilaVerifications.Queries;
+using Zentory.API.Extensions;
 
 namespace Zentory.API.Controllers.V1;
 
 [ApiController]
-[Authorize(Policy = "EmpresaStudio")]
+// PLAN-0018 RF-82 b (D-41): PILA del equipo solo para owner y admin, en todas las acciones (también lectura y URL de
+// descarga). La PILA personal (/me/ss-calculations) sigue abierta a cualquier miembro (RF-82 c).
+[Authorize(Policy = PolicyNames.EmpresaStudio)]
+[Authorize(Policy = PolicyNames.RequireFinancialAccess)]
 [Route("api/v1/team/pila-verifications")]
 public sealed class PilaVerificationsController : ControllerBase
 {

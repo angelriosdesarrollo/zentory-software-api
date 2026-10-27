@@ -139,4 +139,8 @@ public sealed class FakeUnitOfWork : IUnitOfWork
         SaveCalls++;
         return _db is null ? 0 : await _db.SaveChangesAsync(ct);
     }
+
+    // Sin transacción, como InMemory: la operación corre tal cual.
+    public Task ExecuteInTransactionAsync(Func<CancellationToken, Task> operation, CancellationToken ct = default)
+        => operation(ct);
 }

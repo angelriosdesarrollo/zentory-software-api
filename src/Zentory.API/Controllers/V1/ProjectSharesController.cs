@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Zentory.Application.ProjectShares.Commands;
 using Zentory.Application.ProjectShares.Queries;
+using Zentory.API.Authorization;
 
 namespace Zentory.API.Controllers.V1;
 
@@ -16,6 +17,7 @@ public sealed class ProjectSharesController : ControllerBase
     public ProjectSharesController(IMediator mediator) => _mediator = mediator;
 
     /// <summary>GET /api/v1/projects/{projectId}/share — lista de links generados para el proyecto</summary>
+    [AnyOrgMember]
     [HttpGet]
     public async Task<IActionResult> List(Guid projectId, CancellationToken ct = default)
     {
@@ -24,6 +26,7 @@ public sealed class ProjectSharesController : ControllerBase
     }
 
     /// <summary>POST /api/v1/projects/{projectId}/share — generar nuevo link público</summary>
+    [AnyOrgMember]
     [HttpPost]
     public async Task<IActionResult> Create(
         Guid projectId,
@@ -41,6 +44,7 @@ public sealed class ProjectSharesController : ControllerBase
     }
 
     /// <summary>DELETE /api/v1/projects/{projectId}/share/{shareId} — revocar link</summary>
+    [AnyOrgMember]
     [HttpDelete("{shareId:guid}")]
     public async Task<IActionResult> Revoke(Guid projectId, Guid shareId, CancellationToken ct = default)
     {

@@ -42,17 +42,17 @@ public sealed class AuditInterceptor : SaveChangesInterceptor
         _tenant = tenant;
     }
 
-    public override ValueTask<InterceptionResult<int>> SavingChangesAsync(
+    public override async ValueTask<InterceptionResult<int>> SavingChangesAsync(
         DbContextEventData eventData,
         InterceptionResult<int> result,
         CancellationToken cancellationToken = default)
     {
         if (eventData.Context is null)
-            return base.SavingChangesAsync(eventData, result, cancellationToken);
+            return await base.SavingChangesAsync(eventData, result, cancellationToken);
 
         try
         {
-            var auditEntries = BuildAuditEntries(eventData.Context);
+            var auditEntries = await BuildAuditEntriesAsync(eventData.Context, cancellationToken);
             if (auditEntries.Count > 0)
                 eventData.Context.Set<AuditLog>().AddRange(auditEntries);
         }
@@ -61,20 +61,21 @@ public sealed class AuditInterceptor : SaveChangesInterceptor
             // The interceptor must never break the main save operation.
         }
 
-        return base.SavingChangesAsync(eventData, result, cancellationToken);
+        return await base.SavingChangesAsync(eventData, result, cancellationToken);
     }
 
-    private List<AuditLog> BuildAuditEntries(DbContext context)
+    private async Task<List<AuditLog>> BuildAuditEntriesAsync(DbContext context, CancellationToken ct)
     {
         var entries = new List<AuditLog>();
 
-        // AuditLog is only for Empresa accounts; skip Freelance and unauthenticated contexts (seeder).
-        if (!_tenant.IsAuthenticated ||
-            !string.Equals(_tenant.LegalType, "empresa", StringComparison.OrdinalIgnoreCase))
+        // Unauthenticated contexts (seeder, purge) are not audited.
+        if (!_tenant.IsAuthenticated)
             return entries;
 
         Guid? orgId  = TryGetOrganizationId();
         Guid? userId = TryGetUserId();
+        var claimIsCompany = IsCompany(TryGetClaimLegalType());
+        var legalTypeByOrg = new Dictionary<Guid, bool>();
 
         foreach (var entry in context.ChangeTracker.Entries())
         {
@@ -106,8 +107,19 @@ public sealed class AuditInterceptor : SaveChangesInterceptor
                 ? SerializeProperties(entry.Properties, useOriginalValue: false)
                 : null;
 
-            // Resolve org from entity when tenant context is not authenticated (background jobs, seeder).
-            Guid? resolvedOrgId = orgId ?? TryResolveOrgFromEntity(entry);
+            // PLAN-0018 REV-0005 H-2: the audited entity's own organization wins over the active one in the token.
+            // The plan writes OrganizationMember rows in ANOTHER organization (ownership transfer, invitation
+            // acceptance, organization creation); those rows belong to that tenant's log, and "company only" is
+            // decided with that organization's LegalType, not with the claim.
+            var entityOrgId = TryResolveOrgFromEntity(entry);
+            Guid? resolvedOrgId = entityOrgId ?? orgId;
+
+            bool isCompany;
+            if (entityOrgId is null || entityOrgId == orgId)
+                isCompany = claimIsCompany;
+            else
+                isCompany = await IsCompanyOrganizationAsync(context, entityOrgId.Value, legalTypeByOrg, ct);
+            if (!isCompany) continue;
 
             try
             {
@@ -179,6 +191,37 @@ public sealed class AuditInterceptor : SaveChangesInterceptor
     {
         try { return _tenant.IsAuthenticated ? _tenant.OrganizationId : null; }
         catch { return null; }
+    }
+
+    private string? TryGetClaimLegalType()
+    {
+        try { return _tenant.LegalType; }
+        catch { return null; }
+    }
+
+    private static bool IsCompany(string? legalType) =>
+        string.Equals(legalType, Zentory.Domain.Constants.LegalType.Empresa, StringComparison.OrdinalIgnoreCase);
+
+    // LegalType of the audited entity's organization: the tracked entity when the unit of work already has it,
+    // otherwise one read by key (Organization has no tenant filter, only the soft-delete one; the organization may be
+    // another than the token's).
+    private static async Task<bool> IsCompanyOrganizationAsync(
+        DbContext context, Guid organizationId, Dictionary<Guid, bool> cache, CancellationToken ct)
+    {
+        if (cache.TryGetValue(organizationId, out var cached)) return cached;
+
+        string? legalType = context.ChangeTracker.Entries<Organization>()
+            .Where(e => e.Entity.OrganizationId == organizationId)
+            .Select(e => e.Entity.LegalType)
+            .FirstOrDefault();
+
+        legalType ??= await context.Set<Organization>()
+            .AsNoTracking()
+            .Where(o => o.OrganizationId == organizationId)
+            .Select(o => o.LegalType)
+            .FirstOrDefaultAsync(ct);
+
+        return cache[organizationId] = IsCompany(legalType);
     }
 
     private Guid? TryGetUserId()

@@ -11,6 +11,10 @@ public static class RequestContextExtensions
         services.AddMemoryCache();
 
         services.AddHttpContextAccessor();
+        // Una sola instancia por petición: el middleware la puebla por el tipo concreto y el resto la lee por la
+        // interfaz (PLAN-0018 RF-14).
+        services.AddScoped<MembershipContext>();
+        services.AddScoped<IMembershipContext>(sp => sp.GetRequiredService<MembershipContext>());
         services.AddScoped<ITenantContext, TenantContext>();
         services.AddScoped<ICollaboratorPortalContext, CollaboratorPortalContext>();
 

@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Zentory.Application.Clients.Commands;
 using Zentory.Application.Clients.Queries;
+using Zentory.API.Authorization;
 
 namespace Zentory.API.Controllers.V1;
 
@@ -16,6 +17,7 @@ public sealed class ClientsController : ControllerBase
     public ClientsController(IMediator mediator) => _mediator = mediator;
 
     /// <summary>GET /api/v1/clients — lista con búsqueda opcional</summary>
+    [AnyOrgMember]
     [HttpGet]
     public async Task<IActionResult> List([FromQuery] string? search = null, CancellationToken ct = default)
     {
@@ -24,6 +26,7 @@ public sealed class ClientsController : ControllerBase
     }
 
     /// <summary>GET /api/v1/clients/{id} — obtener cliente por id</summary>
+    [AnyOrgMember]
     [HttpGet("{id:guid}")]
     public async Task<IActionResult> GetById(Guid id, CancellationToken ct = default)
     {
@@ -32,6 +35,7 @@ public sealed class ClientsController : ControllerBase
     }
 
     /// <summary>POST /api/v1/clients — crear cliente</summary>
+    [AnyOrgMember]
     [HttpPost]
     public async Task<IActionResult> Create([FromBody] CreateClientCommand command, CancellationToken ct = default)
     {
@@ -40,6 +44,7 @@ public sealed class ClientsController : ControllerBase
     }
 
     /// <summary>PATCH /api/v1/clients/{id} — actualizar cliente parcialmente</summary>
+    [AnyOrgMember]
     [HttpPatch("{id:guid}")]
     public async Task<IActionResult> Update(Guid id, [FromBody] UpdateClientCommand command, CancellationToken ct = default)
     {
@@ -50,6 +55,7 @@ public sealed class ClientsController : ControllerBase
     }
 
     /// <summary>DELETE /api/v1/clients/{id} — soft delete</summary>
+    [AnyOrgMember]
     [HttpDelete("{id:guid}")]
     public async Task<IActionResult> Delete(Guid id, CancellationToken ct = default)
     {

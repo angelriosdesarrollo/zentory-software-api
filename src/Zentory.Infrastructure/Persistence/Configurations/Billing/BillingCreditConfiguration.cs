@@ -11,7 +11,7 @@ public class BillingCreditConfiguration : IEntityTypeConfiguration<BillingCredit
         builder.ToTable("credits", "billing");
         builder.HasKey(c => c.Id);
         builder.Property(c => c.Id).HasColumnName("id");
-        builder.Property(c => c.OrganizationId).HasColumnName("organization_id").IsRequired();
+        builder.Property(c => c.OrganizationId).HasColumnName("organization_id").IsRequired(false);
         builder.Property(c => c.Amount).HasColumnName("amount").HasColumnType("decimal(10,2)").IsRequired();
         builder.Property(c => c.Currency).HasColumnName("currency").HasMaxLength(3).IsRequired();
         builder.Property(c => c.Type).HasColumnName("type").HasMaxLength(30).IsRequired();

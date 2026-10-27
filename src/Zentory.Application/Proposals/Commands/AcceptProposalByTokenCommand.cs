@@ -11,16 +11,18 @@ public sealed class AcceptProposalByTokenCommandHandler : IRequestHandler<Accept
 {
     private readonly IProposalRepository _proposals;
     private readonly IUnitOfWork         _uow;
+    private readonly IZentoryDbContext   _db;
 
-    public AcceptProposalByTokenCommandHandler(IProposalRepository proposals, IUnitOfWork uow)
+    public AcceptProposalByTokenCommandHandler(IProposalRepository proposals, IUnitOfWork uow, IZentoryDbContext db)
     {
         _proposals = proposals;
         _uow       = uow;
+        _db        = db;
     }
 
     public async Task Handle(AcceptProposalByTokenCommand request, CancellationToken cancellationToken)
     {
-        var proposal = await _proposals.GetByPublicTokenAsync(request.PublicToken, cancellationToken);
+        var proposal = await _proposals.FindLiveByPublicTokenAsync(_db, request.PublicToken, cancellationToken);
 
         if (proposal is null)
             throw new NotFoundException("Proposal", request.PublicToken);

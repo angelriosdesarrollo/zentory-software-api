@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Zentory.Application.SsCalculations.Commands;
 using Zentory.Application.SsCalculations.Queries;
+using Zentory.API.Authorization;
 
 namespace Zentory.API.Controllers.V1;
 
@@ -19,6 +20,7 @@ public sealed class SsCalculationsController : ControllerBase
     public SsCalculationsController(IMediator mediator) => _mediator = mediator;
 
     /// <summary>GET /api/v1/me/ss-calculations — historial de cálculos propios</summary>
+    [AnyOrgMember]
     [HttpGet]
     public async Task<IActionResult> GetHistory(CancellationToken ct = default)
     {
@@ -27,6 +29,7 @@ public sealed class SsCalculationsController : ControllerBase
     }
 
     /// <summary>POST /api/v1/me/ss-calculations — guarda/actualiza el cálculo de un período</summary>
+    [AnyOrgMember]
     [HttpPost]
     public async Task<IActionResult> Log([FromBody] LogSsCalculationCommand command, CancellationToken ct = default)
     {
@@ -35,6 +38,7 @@ public sealed class SsCalculationsController : ControllerBase
     }
 
     /// <summary>POST /api/v1/me/ss-calculations/upload-url — URL prefirmada para subir el comprobante</summary>
+    [AnyOrgMember]
     [HttpPost("upload-url")]
     public async Task<IActionResult> GetUploadUrl(
         [FromBody] GetSsCalculationUploadUrlCommand command, CancellationToken ct = default)
@@ -44,6 +48,7 @@ public sealed class SsCalculationsController : ControllerBase
     }
 
     /// <summary>PATCH /api/v1/me/ss-calculations/{id}/mark-filed — marca el período como radicado</summary>
+    [AnyOrgMember]
     [HttpPatch("{id:guid}/mark-filed")]
     public async Task<IActionResult> MarkFiled(
         Guid id, [FromBody] MarkSsCalculationFiledCommand command, CancellationToken ct = default)
@@ -53,6 +58,7 @@ public sealed class SsCalculationsController : ControllerBase
     }
 
     /// <summary>GET /api/v1/me/ss-calculations/{id}/download-url</summary>
+    [AnyOrgMember]
     [HttpGet("{id:guid}/download-url")]
     public async Task<IActionResult> GetDownloadUrl(Guid id, CancellationToken ct = default)
     {

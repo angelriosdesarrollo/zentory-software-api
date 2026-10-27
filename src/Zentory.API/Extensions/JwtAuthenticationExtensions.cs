@@ -8,10 +8,12 @@ public static class JwtAuthenticationExtensions
 {
     public static IServiceCollection AddJwtAuthentication(this IServiceCollection services, IConfiguration configuration)
     {
-        var jwtKey = configuration["Jwt:Key"]
-            ?? throw new InvalidOperationException("Jwt:Key is required");
-        var collaboratorJwtKey = configuration["Jwt:CollaboratorKey"]
-            ?? throw new InvalidOperationException("Jwt:CollaboratorKey is required");
+        // Fail-fast antes de registrar los esquemas (PLAN-0018 RF-31): claves de 32 bytes o más y distintas, y la
+        // expiración del access token en 1..15 minutos.
+        JwtSettingsValidation.Validate(configuration);
+
+        var jwtKey             = configuration[JwtSettingsValidation.KeySetting]!;
+        var collaboratorJwtKey = configuration[JwtSettingsValidation.CollaboratorKeySetting]!;
 
         services
             .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
@@ -30,12 +32,15 @@ public static class JwtAuthenticationExtensions
         return services;
     }
 
+    // ClockSkew explícito en cero en ambos esquemas (RF-31, SR-2.12): el valor por defecto de JwtBearer (5 min) dejaría
+    // un access token de 15 min vivo hasta 20.
     private static TokenValidationParameters BuildValidationParameters(IConfiguration configuration, string signingKey) => new()
     {
         ValidateIssuer = true,
         ValidateAudience = true,
         ValidateLifetime = true,
         ValidateIssuerSigningKey = true,
+        ClockSkew = TimeSpan.Zero,
         ValidIssuer = configuration["Jwt:Issuer"],
         ValidAudience = configuration["Jwt:Audience"],
         IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(signingKey))

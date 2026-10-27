@@ -42,8 +42,6 @@ public sealed class CreateProjectCommandValidator : AbstractValidator<CreateProj
 
 public sealed class CreateProjectCommandHandler : IRequestHandler<CreateProjectCommand, Guid>
 {
-    private const int FreeProjectLimit = 3;
-
     private readonly IProjectRepository  _projects;
     private readonly IClientRepository   _clients;
     private readonly IUnitOfWork         _uow;
@@ -69,16 +67,8 @@ public sealed class CreateProjectCommandHandler : IRequestHandler<CreateProjectC
 
     public async Task<Guid> Handle(CreateProjectCommand request, CancellationToken cancellationToken)
     {
-        if (_tenant.Plan == Plan.Free)
-        {
-            var count = await _projects.CountAsync(_tenant.OrganizationId, cancellationToken);
-            if (count >= FreeProjectLimit)
-                throw new DomainValidationException([
-                    new DomainValidationError(
-                        "plan",
-                        $"El plan Free permite máximo {FreeProjectLimit} proyectos. Actualiza a Pro para proyectos ilimitados.")
-                ]);
-        }
+        // Sin límite de proyectos en ningún plan (FEATURE_PERMISSIONS §3; PLAN-0018 RF-41, CA-46): max_projects es null
+        // en todos los planes del seed de referencia, así que no se cuenta.
 
         var client = await _clients.GetByIdAsync(request.ClientId, cancellationToken);
         if (client is null || client.OrganizationId != _tenant.OrganizationId)

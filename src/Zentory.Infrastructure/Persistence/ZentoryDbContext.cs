@@ -17,6 +17,15 @@ public class ZentoryDbContext : DbContext, IZentoryDbContext
     public ZentoryDbContext(DbContextOptions<ZentoryDbContext> options)
         : base(options) { }
 
+    // PLAN-0018 RF-11 (ADR-0008 §1; SR-0018.6). Sin HttpContext (Hangfire, seed, CLI, fábrica de diseño) no hay
+    // principal autenticado y el filtro de tenant queda apagado. Con un principal autenticado de cualquier esquema
+    // (usuario o colaborador) se filtra por su organización activa, y si no trae un active_org_id válido el filtro
+    // compara contra Guid.Empty: falla cerrado, sin filas.
+    private bool TenantFilterActive => _tenant?.IsAuthenticated == true;
+
+    private Guid TenantOrganizationId
+        => TenantFilterActive && _tenant!.HasActiveOrganization ? _tenant.OrganizationId : Guid.Empty;
+
     // ── Auth / Identity ──────────────────────────────────────────────────────────
     public DbSet<Organization>               Organizations               { get; set; } = default!;
     public DbSet<User>                       Users                       { get; set; } = default!;
@@ -26,6 +35,8 @@ public class ZentoryDbContext : DbContext, IZentoryDbContext
     public DbSet<PasswordResetToken>         PasswordResetTokens         { get; set; } = default!;
     public DbSet<EmailVerificationToken>     EmailVerificationTokens     { get; set; } = default!;
     public DbSet<CollaboratorAccessToken>    CollaboratorAccessTokens    { get; set; } = default!;
+    public DbSet<OrganizationInvitation>     OrganizationInvitations     { get; set; } = default!;
+    public DbSet<OrganizationOwnershipTransfer> OrganizationOwnershipTransfers { get; set; } = default!;
 
     // ── Tenant configuration ─────────────────────────────────────────────────────
     public DbSet<OrganizationSettings>       OrganizationSettings        { get; set; } = default!;
@@ -83,6 +94,13 @@ public class ZentoryDbContext : DbContext, IZentoryDbContext
     public DbSet<SystemEvent>                SystemEvents                { get; set; } = default!;
     public DbSet<Notification>               Notifications               { get; set; } = default!;
 
+    // ── Legal archive (PLAN-0018 RF-79): sin tenant ni filtro global; solo lo usa la purga ──────────────────────
+    public DbSet<LegalDocumentArchive>       LegalDocumentArchives       { get; set; } = default!;
+
+    // ── Marca de base local (PLAN-0018 RF-63 h, M3a): tabla sin tenant ni filtro global (ADR-0008); la escriben db init
+    // y el arranque en Development, nunca una migración ─────────────────────────────────────────────────────────────
+    public DbSet<DatabaseMarker>             DatabaseMarkers             { get; set; } = default!;
+
     // ── Master / reference data ──────────────────────────────────────────────────
     public DbSet<Country>                    Countries                   { get; set; } = default!;
     public DbSet<Currency>                   Currencies                  { get; set; } = default!;
@@ -127,72 +145,89 @@ public class ZentoryDbContext : DbContext, IZentoryDbContext
     {
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(ZentoryDbContext).Assembly);
 
-        bool tenantActive = _tenant != null && _tenant.IsAuthenticated;
+        // Los filtros leen TenantFilterActive y TenantOrganizationId del contexto que ejecuta la consulta, no una
+        // variable local: EF cachea el modelo por tipo, así que una local quedaba fijada por el primer contexto del
+        // proceso (H-08). Sobre miembros de la instancia, EF los parametriza por consulta (ADR-0008 §1).
+        // ── Organization: borrado lógico, sin tenant (PLAN-0018 RF-65; ADR purga §1). Falla cerrado: toda lectura deja de
+        // ver la organización eliminada sin tocar cada handler. Las que necesitan verla están en la lista blanca de
+        // IgnoreQueryFilters (ADR-0008 §3).
+        modelBuilder.Entity<Organization>().HasQueryFilter(o => o.DeletedAt == null);
 
         // ── Client / Project: legacy IsDeleted pattern (preserved from InitialCreate migration)
         modelBuilder.Entity<Client>().HasQueryFilter(c =>
             !c.IsDeleted &&
-            (!tenantActive || c.OrganizationId == _tenant!.OrganizationId));
+            (!TenantFilterActive || c.OrganizationId == TenantOrganizationId));
 
         modelBuilder.Entity<Project>().HasQueryFilter(p =>
             !p.IsDeleted &&
-            (!tenantActive || p.OrganizationId == _tenant!.OrganizationId));
+            (!TenantFilterActive || p.OrganizationId == TenantOrganizationId));
 
         // ── DeletedAt pattern: all new tenant entities
         modelBuilder.Entity<Collaborator>().HasQueryFilter(c =>
             c.DeletedAt == null &&
-            (!tenantActive || c.OrganizationId == _tenant!.OrganizationId));
+            (!TenantFilterActive || c.OrganizationId == TenantOrganizationId));
 
         modelBuilder.Entity<CollaboratorPayoutInvoice>().HasQueryFilter(p =>
             p.DeletedAt == null &&
-            (!tenantActive || p.OrganizationId == _tenant!.OrganizationId));
+            (!TenantFilterActive || p.OrganizationId == TenantOrganizationId));
 
         modelBuilder.Entity<Invoice>().HasQueryFilter(i =>
             i.DeletedAt == null &&
-            (!tenantActive || i.OrganizationId == _tenant!.OrganizationId));
+            (!TenantFilterActive || i.OrganizationId == TenantOrganizationId));
 
         modelBuilder.Entity<Proposal>().HasQueryFilter(p =>
             p.DeletedAt == null &&
-            (!tenantActive || p.OrganizationId == _tenant!.OrganizationId));
+            (!TenantFilterActive || p.OrganizationId == TenantOrganizationId));
 
         modelBuilder.Entity<TimeEntry>().HasQueryFilter(t =>
             t.DeletedAt == null &&
-            (!tenantActive || t.OrganizationId == _tenant!.OrganizationId));
+            (!TenantFilterActive || t.OrganizationId == TenantOrganizationId));
 
         modelBuilder.Entity<ProjectTask>().HasQueryFilter(t =>
             t.DeletedAt == null &&
-            (!tenantActive || t.OrganizationId == _tenant!.OrganizationId));
+            (!TenantFilterActive || t.OrganizationId == TenantOrganizationId));
 
         modelBuilder.Entity<ProjectShare>().HasQueryFilter(s =>
             s.DeletedAt == null &&
-            (!tenantActive || s.OrganizationId == _tenant!.OrganizationId));
+            (!TenantFilterActive || s.OrganizationId == TenantOrganizationId));
 
         modelBuilder.Entity<CashFlowEntry>().HasQueryFilter(c =>
             c.DeletedAt == null &&
-            (!tenantActive || c.OrganizationId == _tenant!.OrganizationId));
+            (!TenantFilterActive || c.OrganizationId == TenantOrganizationId));
 
         modelBuilder.Entity<OrganizationMember>().HasQueryFilter(m =>
             m.DeletedAt == null &&
-            (!tenantActive || m.OrganizationId == _tenant!.OrganizationId));
+            (!TenantFilterActive || m.OrganizationId == TenantOrganizationId));
+
+        // Invitaciones (PLAN-0018 RF-49 b, M4): la aceptación las busca por hash sin tenant, en la lista blanca de
+        // IgnoreQueryFilters (ADR-0008 §3; T29b).
+        modelBuilder.Entity<OrganizationInvitation>().HasQueryFilter(i =>
+            i.DeletedAt == null &&
+            (!TenantFilterActive || i.OrganizationId == TenantOrganizationId));
+
+        // Propuestas de transferencia (PLAN-0018 RF-64, M4c): sin borrado lógico, el estado las resuelve. La lectura del
+        // destino por to_user_id (RF-83 i, T30c) va en la lista blanca de IgnoreQueryFilters.
+        modelBuilder.Entity<OrganizationOwnershipTransfer>().HasQueryFilter(t =>
+            !TenantFilterActive || t.OrganizationId == TenantOrganizationId);
 
         modelBuilder.Entity<OrganizationBankAccount>().HasQueryFilter(b =>
             b.DeletedAt == null &&
-            (!tenantActive || b.OrganizationId == _tenant!.OrganizationId));
+            (!TenantFilterActive || b.OrganizationId == TenantOrganizationId));
 
         modelBuilder.Entity<OrganizationIntegration>().HasQueryFilter(oi =>
-            (!tenantActive || oi.OrganizationId == _tenant!.OrganizationId));
+            (!TenantFilterActive || oi.OrganizationId == TenantOrganizationId));
 
         modelBuilder.Entity<ServiceCatalog>().HasQueryFilter(s =>
             s.DeletedAt == null &&
-            (!tenantActive || s.OrganizationId == _tenant!.OrganizationId));
+            (!TenantFilterActive || s.OrganizationId == TenantOrganizationId));
 
         modelBuilder.Entity<ProposalTemplate>().HasQueryFilter(t =>
             t.DeletedAt == null &&
-            (!tenantActive || t.OrganizationId == _tenant!.OrganizationId));
+            (!TenantFilterActive || t.OrganizationId == TenantOrganizationId));
 
         modelBuilder.Entity<ClientContact>().HasQueryFilter(c =>
             c.DeletedAt == null &&
-            (!tenantActive || c.OrganizationId == _tenant!.OrganizationId));
+            (!TenantFilterActive || c.OrganizationId == TenantOrganizationId));
 
         base.OnModelCreating(modelBuilder);
     }

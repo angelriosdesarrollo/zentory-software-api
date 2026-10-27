@@ -11,7 +11,7 @@ public class BillingPaymentConfiguration : IEntityTypeConfiguration<BillingPayme
         builder.ToTable("payments", "billing");
         builder.HasKey(p => p.Id);
         builder.Property(p => p.Id).HasColumnName("id");
-        builder.Property(p => p.OrganizationId).HasColumnName("organization_id").IsRequired();
+        builder.Property(p => p.OrganizationId).HasColumnName("organization_id").IsRequired(false);
         builder.Property(p => p.InvoiceId).HasColumnName("invoice_id");
         builder.Property(p => p.PaymentMethodId).HasColumnName("payment_method_id");
         builder.Property(p => p.GatewayTransactionId).HasColumnName("gateway_transaction_id").HasMaxLength(100);

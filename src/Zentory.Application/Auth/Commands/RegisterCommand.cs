@@ -1,16 +1,21 @@
 using FluentValidation;
 using MediatR;
-using Microsoft.EntityFrameworkCore;
 using Zentory.Application.Auth.DTOs;
+using Zentory.Application.Auth.Services;
 using Zentory.Application.Common.Interfaces;
+using Zentory.Application.Common.Security;
 using Zentory.Application.Exceptions;
 using Zentory.Domain.Entities;
-using Zentory.Domain.Entities.Billing;
+using Zentory.Domain.Common;
 using Zentory.Domain.Repositories;
-using PlanConstants = Zentory.Domain.Constants.Plan;
+using OrgRole       = Zentory.Domain.Constants.OrgRole;
 
 namespace Zentory.Application.Auth.Commands;
 
+// POST /auth/register (PLAN-0018 RF-20, RF-22, RF-25, RF-27; D-11, D-14, D-16). El email se normaliza y uno repetido con
+// otras mayúsculas responde 409 EMAIL_ALREADY_EXISTS. La cuenta nace sin verificar (EmailVerifiedAt null) y con su primer
+// EmailVerificationToken, que se guarda con el usuario; el correo sale por IAuthEmailQueue después de guardar, con la URL
+// de App:BaseUrl. Inicia la sesión del usuario (RF-90 b).
 public record RegisterCommand(
     string  Email,
     string  Password,
@@ -24,35 +29,39 @@ public record RegisterCommand(
 
 public sealed class RegisterCommandHandler : IRequestHandler<RegisterCommand, AuthTokenDto>
 {
-    private const int AccessTokenExpiresInSeconds = 15 * 60; // 15 minutes
-    private static readonly TimeSpan RefreshTokenLifetime = TimeSpan.FromDays(7);
-
     private readonly IUserRepository         _users;
     private readonly IOrganizationRepository _organizations;
-    private readonly IRefreshTokenRepository _refreshTokens;
-    private readonly IJwtService             _jwt;
     private readonly IUnitOfWork             _uow;
     private readonly IZentoryDbContext       _db;
+    private readonly IAuthSessionIssuer      _sessions;
+    private readonly IAuthEmailQueue         _emails;
+    private readonly IApplicationSettings    _settings;
+    private readonly TimeProvider            _time;
 
     public RegisterCommandHandler(
         IUserRepository         users,
         IOrganizationRepository organizations,
-        IRefreshTokenRepository refreshTokens,
-        IJwtService             jwt,
         IUnitOfWork             uow,
-        IZentoryDbContext       db)
+        IZentoryDbContext       db,
+        IAuthSessionIssuer      sessions,
+        IAuthEmailQueue         emails,
+        IApplicationSettings    settings,
+        TimeProvider            time)
     {
         _users         = users;
         _organizations = organizations;
-        _refreshTokens = refreshTokens;
-        _jwt           = jwt;
         _uow           = uow;
         _db            = db;
+        _sessions      = sessions;
+        _emails        = emails;
+        _settings      = settings;
+        _time          = time;
     }
 
     public async Task<AuthTokenDto> Handle(RegisterCommand request, CancellationToken cancellationToken)
     {
-        var existing = await _users.GetByEmailAsync(request.Email, cancellationToken);
+        // Email normalizado al buscar; User.Create lo guarda igual (RF-27).
+        var existing = await _users.GetByEmailAsync(EmailAddress.Normalize(request.Email), cancellationToken);
         if (existing is not null)
             throw new ConflictException("EMAIL_ALREADY_EXISTS", "El correo electrónico ya está registrado.");
 
@@ -66,7 +75,7 @@ public sealed class RegisterCommandHandler : IRequestHandler<RegisterCommand, Au
             request.Email,
             request.FirstName,
             request.LastName,
-            role: "owner",
+            role: OrgRole.Owner,
             passwordHash: passwordHash,
             termsAcceptedAt: termsAcceptedAt,
             termsAcceptedVersion: termsAcceptedVersion);
@@ -74,56 +83,42 @@ public sealed class RegisterCommandHandler : IRequestHandler<RegisterCommand, Au
         await _users.AddAsync(user, cancellationToken);
 
         org.SetOwner(user.UserId);
-        _db.OrganizationMembers.Add(OrganizationMember.Create(org.OrganizationId, user.UserId, "owner"));
+        _db.OrganizationMembers.Add(OrganizationMember.Create(org.OrganizationId, user.UserId, OrgRole.Owner));
 
-        // New owners start on the Free plan. The subscription belongs to the user (not the
-        // org) and will apply to every additional org this user goes on to own.
-        var freePlan = await _db.BillingPlans.FirstOrDefaultAsync(p => p.Name == PlanConstants.Free, cancellationToken)
-            ?? throw new InvalidOperationException("Free billing plan is not seeded.");
+        // Sin suscripción ni cliente de cobro (PLAN-0018 DEC-0101, CA-44, RF-73): el owner nuevo es free porque no tiene
+        // suscripción vigente. El plan solo lo escribe seed assign-plan.
 
-        var customer = BillingCustomer.Create(
-            org.OrganizationId, gatewayCustomerId: $"local_{user.UserId}", user.Email, org.Name);
-        _db.BillingCustomers.Add(customer);
+        // Primer token de verificación, para el email ya normalizado del usuario (RF-20). Es el primero: no hay
+        // anteriores que invalidar. Solo se guarda su hash.
+        var issued = OneTimeToken.Issue();
+        var verification = EmailVerificationToken.Issue(
+            user.UserId, user.Email, issued.Hash, _time.GetUtcNow().UtcDateTime);
+        _db.EmailVerificationTokens.Add(verification);
 
-        var subscription = Subscription.Create(user.UserId, customer.Id, freePlan.Id);
-        _db.Subscriptions.Add(subscription);
-
-        var accessToken  = _jwt.GenerateAccessToken(user, org, activeOrgRole: "owner", plan: PlanConstants.Free);
-        var refreshToken = _jwt.GenerateRefreshToken();
-
-        var rt = RefreshToken.Create(user.UserId, refreshToken, DateTime.UtcNow.Add(RefreshTokenLifetime));
-        await _refreshTokens.AddAsync(rt, cancellationToken);
-
+        // La sesión se emite sobre lo ya guardado: IAuthSessionIssuer lee las membresías de la base (PLAN-0018 D-16).
         await _uow.SaveChangesAsync(cancellationToken);
 
-        var memberships = new List<OrgMembershipDto>
-        {
-            new(org.OrganizationId.ToString(), org.Name, org.LegalType, PlanConstants.Free, "owner",
-                DateTime.UtcNow.ToString("O"))
-        };
+        // Se encola después de guardar: un registro que falla no envía un enlace que no sirve.
+        EmailVerificationEmail.Enqueue(_emails, _settings, user, issued.RawToken, verification.ExpiresAt);
 
-        return new AuthTokenDto(
-            accessToken,
-            refreshToken,
-            AccessTokenExpiresInSeconds,
-            new UserProfileDto(
-                user.UserId, user.FirstName, user.LastName, user.Email,
-                PlanConstants.Free, org.LegalType, user.Role,
-                ActiveOrgId:          org.OrganizationId.ToString(),
-                ActiveOrgName:        org.Name,
-                ActiveOrgRole:        "owner",
-                TermsAcceptedAt:      user.TermsAcceptedAt,
-                TermsAcceptedVersion: user.TermsAcceptedVersion),
-            memberships);
+        return await _sessions.StartSessionAsync(user, org.OrganizationId, cancellationToken);
     }
 }
 
 public sealed class RegisterCommandValidator : AbstractValidator<RegisterCommand>
 {
+    // Una sola casilla cubre Términos y Política de Privacidad (LegalDocuments). La reutiliza la cuenta nueva de
+    // POST /auth/invitations/accept (DEC-0110).
+    public const string TermsRequiredMessage =
+        "Debes aceptar los Términos y Condiciones y la Política de Privacidad para crear una cuenta.";
+
     public RegisterCommandValidator()
     {
+        // PasswordPolicy (PLAN-0018 RF-26; SR-0018.14): con el tope de 72 bytes, BCrypt no trunca la contraseña.
+        RuleFor(x => x.Password).ApplyPasswordPolicy();
+
         RuleFor(x => x.AcceptedTerms)
             .Equal(true)
-            .WithMessage("Debes aceptar los Términos y Condiciones y la Política de Privacidad para crear una cuenta.");
+            .WithMessage(TermsRequiredMessage);
     }
 }

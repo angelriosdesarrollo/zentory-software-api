@@ -17,6 +17,9 @@ public static class ServiceCollectionExtensions
         services.AddTransient(typeof(IPipelineBehavior<,>), typeof(LoggingBehavior<,>));
         services.AddTransient(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
 
+        // Emisión única de sesión para login, Google, registro y refresh (PLAN-0018 D-16).
+        services.AddScoped<Auth.Services.IAuthSessionIssuer, Auth.Services.AuthSessionIssuer>();
+
         // Provisional singleton stores — replace each with a real EF repository when the domain entity exists.
         services.AddSingleton<Projects.ProjectExpenseStore>();
 

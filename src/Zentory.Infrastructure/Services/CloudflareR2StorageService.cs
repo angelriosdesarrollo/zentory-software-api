@@ -85,4 +85,36 @@ public sealed class CloudflareR2StorageService : IStorageService
 
     public Task DeleteAsync(string key, CancellationToken ct = default)
         => _s3.DeleteObjectAsync(_bucketName, key, ct);
+
+    // ListObjectsV2 devuelve como mucho 1000 claves por página; se recorren todas con el token de continuación.
+    public async Task<IReadOnlyList<string>> ListKeysAsync(string prefix, CancellationToken ct = default)
+    {
+        var keys = new List<string>();
+        var request = new ListObjectsV2Request { BucketName = _bucketName, Prefix = prefix };
+        ListObjectsV2Response response;
+        do
+        {
+            response = await _s3.ListObjectsV2Async(request, ct);
+            if (response.S3Objects is not null)
+                keys.AddRange(response.S3Objects.Select(o => o.Key).Where(k => k.StartsWith(prefix, StringComparison.Ordinal)));
+            if (response.IsTruncated != true)
+                break;
+            // Una página truncada sin token repetiría la misma página para siempre: mejor fallar (la purga se reintenta).
+            if (string.IsNullOrEmpty(response.NextContinuationToken))
+                throw new InvalidOperationException("R2 devolvió una página truncada sin token de continuación.");
+            request.ContinuationToken = response.NextContinuationToken;
+        } while (true);
+
+        keys.Sort(StringComparer.Ordinal);
+        return keys;
+    }
+
+    public Task CopyAsync(string sourceKey, string destinationKey, CancellationToken ct = default)
+        => _s3.CopyObjectAsync(new CopyObjectRequest
+        {
+            SourceBucket      = _bucketName,
+            SourceKey         = sourceKey,
+            DestinationBucket = _bucketName,
+            DestinationKey    = destinationKey,
+        }, ct);
 }

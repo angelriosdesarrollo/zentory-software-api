@@ -21,11 +21,11 @@ namespace Zentory.Tests.Integration.Auth;
 public sealed class HostAuthenticationTests(ZentoryApiFactory factory) : IClassFixture<ZentoryApiFactory>
 {
     private const string ProfileEndpoint = "/api/v1/organization/profile";
-    private const string OwnerRole       = "owner";
+    private const string OwnerRole       = OrgRole.Owner;
 
-    // Clave ajena del CA-28: misma forma y longitud que las de prueba (>= 32 bytes) pero distinta de Jwt:Key, así el
-    // 401 solo puede venir de la firma.
-    private const string ForeignKey = "test-foreign-access-signing-key-2d7e9a4c1b6f3058";
+    // Clave ajena del CA-28 (de TestJwtSettings): misma forma y longitud que las de prueba (>= 32 bytes) pero distinta
+    // de Jwt:Key, así el 401 solo puede venir de la firma.
+    private const string ForeignKey = TestJwtSettings.ForeignKey;
 
     [Fact]
     public async Task PLAN0001_CA16_OrganizationProfile_SinToken_Devuelve401()
@@ -53,7 +53,8 @@ public sealed class HostAuthenticationTests(ZentoryApiFactory factory) : IClassF
     {
         Assert.True(Encoding.UTF8.GetByteCount(TestJwtSettings.Key) >= 32);
         var (user, organization) = await SeedOwnerAsync();
-        var token = SignOutsideHost(user, organization, TestJwtSettings.Key);
+        var sessionId = await AuthSessionApi.StartSessionAsync(factory.Services, user);
+        var token = SignOutsideHost(user, organization, sessionId, TestJwtSettings.Key);
 
         var response = await GetProfileAsync(token);
 
@@ -67,7 +68,8 @@ public sealed class HostAuthenticationTests(ZentoryApiFactory factory) : IClassF
         Assert.NotEqual(TestJwtSettings.Key, ForeignKey);
         Assert.NotEqual(TestJwtSettings.CollaboratorKey, ForeignKey);
         var (user, organization) = await SeedOwnerAsync();
-        var token = SignOutsideHost(user, organization, ForeignKey);
+        var sessionId = await AuthSessionApi.StartSessionAsync(factory.Services, user);
+        var token = SignOutsideHost(user, organization, sessionId, ForeignKey);
 
         var response = await GetProfileAsync(token);
 
@@ -130,13 +132,14 @@ public sealed class HostAuthenticationTests(ZentoryApiFactory factory) : IClassF
     }
 
     // Réplica fuera del host de lo que firma JwtService (mismos claims, issuer, audience y algoritmo): lo único que
-    // varía entre los dos tests del CA-28 es la clave.
-    private static string SignOutsideHost(User user, Organization organization, string signingKey)
+    // varía entre los dos tests del CA-28 es la clave. Lleva el sid de la sesión vigente del usuario (PLAN-0018 RF-90 d).
+    private static string SignOutsideHost(User user, Organization organization, Guid sessionId, string signingKey)
     {
         var claims = new[]
         {
             new Claim(JwtRegisteredClaimNames.Sub,   user.UserId.ToString()),
             new Claim(JwtRegisteredClaimNames.Email, user.Email),
+            new Claim(JwtRegisteredClaimNames.Sid,   sessionId.ToString("D")),
             new Claim("active_org_id",   organization.OrganizationId.ToString()),
             new Claim("active_org_role", OwnerRole),
             new Claim("plan",            Plan.Free),

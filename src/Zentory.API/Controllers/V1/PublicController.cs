@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Zentory.Application.Master.Queries;
 using Zentory.Application.Plans.Queries;
 using Zentory.Application.ProjectShares.Queries;
+using Zentory.API.Authorization;
 
 namespace Zentory.API.Controllers.V1;
 
@@ -11,6 +12,7 @@ namespace Zentory.API.Controllers.V1;
 /// categorías de gastos. Los datos provienen de las tablas master del sistema.
 /// </summary>
 [ApiController]
+[SkipMembershipValidation] // lista cerrada de PLAN-0018 RF-14 (SkipMembershipCatalogTests)
 [Route("api/v1/public")]
 public sealed class PublicController : ControllerBase
 {

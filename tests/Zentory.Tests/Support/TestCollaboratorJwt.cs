@@ -5,18 +5,15 @@ using Zentory.Infrastructure.Services;
 namespace Zentory.Tests.Support;
 
 // CollaboratorJwtService real con configuración en memoria, para que los tests lean los
-// claims que de verdad se emiten y no los de un doble.
+// claims que de verdad se emiten y no los de un doble. Claves, issuer y audience salen de TestJwtSettings, la única
+// fuente de configuración JWT de la suite (PLAN-0018 RF-19).
 public static class TestCollaboratorJwt
 {
     public static CollaboratorJwtService CreateService()
     {
         var configuration = new ConfigurationBuilder()
-            .AddInMemoryCollection(new Dictionary<string, string?>
-            {
-                ["Jwt:CollaboratorKey"] = "test-collaborator-signing-key-0123456789abcdef",
-                ["Jwt:Issuer"]          = "zentory-tests",
-                ["Jwt:Audience"]        = "zentory-tests",
-            })
+            .AddInMemoryCollection(TestJwtSettings.AsSettings().Select(
+                setting => new KeyValuePair<string, string?>(setting.Key, setting.Value)))
             .Build();
         return new CollaboratorJwtService(configuration);
     }

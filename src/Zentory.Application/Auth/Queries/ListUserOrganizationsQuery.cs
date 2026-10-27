@@ -1,49 +1,30 @@
 using MediatR;
-using Microsoft.EntityFrameworkCore;
 using Zentory.Application.Auth.DTOs;
+using Zentory.Application.Auth.Services;
 using Zentory.Application.Common.Interfaces;
 
 namespace Zentory.Application.Auth.Queries;
 
 public record ListUserOrganizationsQuery : IRequest<IReadOnlyList<OrgMembershipDto>>;
 
+// Lista todas las organizaciones del usuario, no solo la activa: pasa por IUserMembershipReader porque el filtro de
+// tenant de OrganizationMember solo deja ver la organización del token (PLAN-0018 RF-12).
 public sealed class ListUserOrganizationsQueryHandler
     : IRequestHandler<ListUserOrganizationsQuery, IReadOnlyList<OrgMembershipDto>>
 {
-    private readonly IZentoryDbContext      _db;
-    private readonly ITenantContext         _tenant;
-    private readonly IPlanResolutionService _plans;
+    private readonly IUserMembershipReader _memberships;
+    private readonly ITenantContext        _tenant;
 
-    public ListUserOrganizationsQueryHandler(
-        IZentoryDbContext db, ITenantContext tenant, IPlanResolutionService plans)
+    public ListUserOrganizationsQueryHandler(IUserMembershipReader memberships, ITenantContext tenant)
     {
-        _db     = db;
-        _tenant = tenant;
-        _plans  = plans;
+        _memberships = memberships;
+        _tenant      = tenant;
     }
 
     public async Task<IReadOnlyList<OrgMembershipDto>> Handle(
         ListUserOrganizationsQuery request, CancellationToken ct)
     {
-        var rows = await _db.OrganizationMembers
-            .Where(m => m.UserId == _tenant.UserId && m.DeletedAt == null)
-            .Join(_db.Organizations,
-                m => m.OrganizationId,
-                o => o.OrganizationId,
-                (m, o) => new { o.OrganizationId, o.Name, o.LegalType, o.OwnerId, m.Role, m.JoinedAt })
-            .ToListAsync(ct);
-
-        var plansByOwner = await _plans.ResolveForOwnersAsync(
-            rows.Where(r => r.OwnerId.HasValue).Select(r => r.OwnerId!.Value), ct);
-
-        return rows
-            .Select(r => new OrgMembershipDto(
-                r.OrganizationId.ToString(),
-                r.Name,
-                r.LegalType,
-                r.OwnerId.HasValue ? plansByOwner.GetValueOrDefault(r.OwnerId.Value, Zentory.Domain.Constants.Plan.Free) : Zentory.Domain.Constants.Plan.Free,
-                r.Role,
-                r.JoinedAt.ToString("O")))
-            .ToList();
+        var memberships = await _memberships.ListActiveAsync(_tenant.UserId, ct);
+        return memberships.Select(m => m.ToDto()).ToList();
     }
 }

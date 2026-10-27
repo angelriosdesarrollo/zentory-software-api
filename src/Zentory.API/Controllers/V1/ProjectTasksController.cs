@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Zentory.Application.ProjectTasks.Commands;
 using Zentory.Application.ProjectTasks.Queries;
+using Zentory.API.Authorization;
 
 namespace Zentory.API.Controllers.V1;
 
@@ -16,6 +17,7 @@ public sealed class ProjectTasksController : ControllerBase
     public ProjectTasksController(IMediator mediator) => _mediator = mediator;
 
     /// <summary>GET /api/v1/projects/{projectId}/tasks</summary>
+    [AnyOrgMember]
     [HttpGet]
     public async Task<IActionResult> List(Guid projectId, CancellationToken ct = default)
     {
@@ -24,6 +26,7 @@ public sealed class ProjectTasksController : ControllerBase
     }
 
     /// <summary>POST /api/v1/projects/{projectId}/tasks</summary>
+    [AnyOrgMember]
     [HttpPost]
     public async Task<IActionResult> Create(
         Guid projectId,
@@ -35,6 +38,7 @@ public sealed class ProjectTasksController : ControllerBase
     }
 
     /// <summary>PATCH /api/v1/projects/{projectId}/tasks/{taskId}</summary>
+    [AnyOrgMember]
     [HttpPatch("{taskId:guid}")]
     public async Task<IActionResult> Update(
         Guid projectId,
@@ -47,6 +51,7 @@ public sealed class ProjectTasksController : ControllerBase
     }
 
     /// <summary>PATCH /api/v1/projects/{projectId}/tasks/{taskId}/move</summary>
+    [AnyOrgMember]
     [HttpPatch("{taskId:guid}/move")]
     public async Task<IActionResult> Move(
         Guid projectId,
@@ -59,6 +64,7 @@ public sealed class ProjectTasksController : ControllerBase
     }
 
     /// <summary>PATCH /api/v1/projects/{projectId}/tasks/{taskId}/gantt</summary>
+    [AnyOrgMember]
     [HttpPatch("{taskId:guid}/gantt")]
     public async Task<IActionResult> UpdateGantt(
         Guid projectId,
@@ -77,6 +83,7 @@ public sealed class ProjectTasksController : ControllerBase
     }
 
     /// <summary>DELETE /api/v1/projects/{projectId}/tasks/{taskId}</summary>
+    [AnyOrgMember]
     [HttpDelete("{taskId:guid}")]
     public async Task<IActionResult> Delete(Guid projectId, Guid taskId, CancellationToken ct = default)
     {
