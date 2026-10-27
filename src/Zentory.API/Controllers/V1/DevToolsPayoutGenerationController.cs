@@ -3,6 +3,7 @@ using Zentory.Application.Common;
 using Zentory.Application.Common.Interfaces;
 using Zentory.Domain.Entities;
 using Zentory.Domain.Repositories;
+using Zentory.API.Authorization;
 
 namespace Zentory.API.Controllers.V1;
 
@@ -12,6 +13,7 @@ namespace Zentory.API.Controllers.V1;
 // ServiceCollectionExtensions), así que funciona sin credenciales reales — pero si algún
 // día ese fallback se retira, este sería el único endpoint que rompe.
 [ApiController]
+[SkipMembershipValidation] // lista cerrada de PLAN-0018 RF-14 (SkipMembershipCatalogTests)
 [Route("api/v1/public/dev")]
 public sealed class DevToolsPayoutGenerationController : ControllerBase
 {

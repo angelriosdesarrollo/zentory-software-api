@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Zentory.Application.Projects.Commands;
 using Zentory.Application.Projects.Queries;
+using Zentory.API.Authorization;
 
 namespace Zentory.API.Controllers.V1;
 
@@ -16,6 +17,7 @@ public sealed class ProjectExpensesController : ControllerBase
     public ProjectExpensesController(IMediator mediator) => _mediator = mediator;
 
     /// <summary>GET /api/v1/projects/{projectId}/expenses</summary>
+    [AnyOrgMember]
     [HttpGet]
     public async Task<IActionResult> List(Guid projectId, CancellationToken ct = default)
     {
@@ -24,6 +26,7 @@ public sealed class ProjectExpensesController : ControllerBase
     }
 
     /// <summary>POST /api/v1/projects/{projectId}/expenses</summary>
+    [AnyOrgMember]
     [HttpPost]
     public async Task<IActionResult> Create(
         Guid projectId,

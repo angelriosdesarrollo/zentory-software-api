@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Zentory.Application.Proposals.Commands;
 using Zentory.Application.Proposals.Queries;
+using Zentory.API.Authorization;
 
 namespace Zentory.API.Controllers.V1;
 
@@ -16,6 +17,7 @@ public sealed class ProposalsController : ControllerBase
     public ProposalsController(IMediator mediator) => _mediator = mediator;
 
     /// <summary>GET /api/v1/proposals</summary>
+    [AnyOrgMember]
     [HttpGet]
     public async Task<IActionResult> List(
         [FromQuery] string? status   = null,
@@ -28,6 +30,7 @@ public sealed class ProposalsController : ControllerBase
     }
 
     /// <summary>GET /api/v1/proposals/{id}</summary>
+    [AnyOrgMember]
     [HttpGet("{id:guid}")]
     public async Task<IActionResult> GetById(Guid id, CancellationToken ct = default)
     {
@@ -36,6 +39,7 @@ public sealed class ProposalsController : ControllerBase
     }
 
     /// <summary>POST /api/v1/proposals — crear propuesta</summary>
+    [AnyOrgMember]
     [HttpPost]
     public async Task<IActionResult> Create([FromBody] CreateProposalCommand command, CancellationToken ct = default)
     {
@@ -44,6 +48,7 @@ public sealed class ProposalsController : ControllerBase
     }
 
     /// <summary>PATCH /api/v1/proposals/{id} — actualizar contenido</summary>
+    [AnyOrgMember]
     [HttpPatch("{id:guid}")]
     public async Task<IActionResult> Update(Guid id, [FromBody] UpdateProposalCommand command, CancellationToken ct = default)
     {
@@ -52,6 +57,7 @@ public sealed class ProposalsController : ControllerBase
     }
 
     /// <summary>PUT /api/v1/proposals/{id}/sections — reemplaza todas las secciones</summary>
+    [AnyOrgMember]
     [HttpPut("{id:guid}/sections")]
     public async Task<IActionResult> SaveSections(Guid id, [FromBody] SaveProposalSectionsCommand command, CancellationToken ct = default)
     {
@@ -60,6 +66,7 @@ public sealed class ProposalsController : ControllerBase
     }
 
     /// <summary>PUT /api/v1/proposals/{id}/items — reemplaza todos los ítems de precio</summary>
+    [AnyOrgMember]
     [HttpPut("{id:guid}/items")]
     public async Task<IActionResult> SaveItems(Guid id, [FromBody] SaveProposalItemsCommand command, CancellationToken ct = default)
     {
@@ -70,6 +77,7 @@ public sealed class ProposalsController : ControllerBase
     public record EnrichSectionBody(string Content);
 
     /// <summary>POST /api/v1/proposals/{id}/sections/{sectionType}/enrich — mejora el texto de una sección con IA (no la guarda)</summary>
+    [AnyOrgMember]
     [HttpPost("{id:guid}/sections/{sectionType}/enrich")]
     public async Task<IActionResult> EnrichSection(
         Guid id, string sectionType, [FromBody] EnrichSectionBody body, CancellationToken ct = default)
@@ -81,6 +89,7 @@ public sealed class ProposalsController : ControllerBase
     public record SendProposalBody(string? EmailTo, string? Message);
 
     /// <summary>POST /api/v1/proposals/{id}/send — marcar como enviada y enviar email opcional</summary>
+    [AnyOrgMember]
     [HttpPost("{id:guid}/send")]
     public async Task<IActionResult> Send(Guid id, [FromBody] SendProposalBody? body = null, CancellationToken ct = default)
     {
@@ -89,6 +98,7 @@ public sealed class ProposalsController : ControllerBase
     }
 
     /// <summary>PATCH /api/v1/proposals/{id}/status — cambiar estado (override administrativo)</summary>
+    [AnyOrgMember]
     [HttpPatch("{id:guid}/status")]
     public async Task<IActionResult> ChangeStatus(Guid id, [FromBody] ChangeProposalStatusCommand command, CancellationToken ct = default)
     {
@@ -97,6 +107,7 @@ public sealed class ProposalsController : ControllerBase
     }
 
     /// <summary>POST /api/v1/proposals/{id}/convert-to-project — convertir propuesta aceptada en proyecto</summary>
+    [AnyOrgMember]
     [HttpPost("{id:guid}/convert-to-project")]
     public async Task<IActionResult> ConvertToProject(Guid id, [FromBody] ConvertProposalToProjectCommand command, CancellationToken ct = default)
     {
@@ -105,6 +116,7 @@ public sealed class ProposalsController : ControllerBase
     }
 
     /// <summary>DELETE /api/v1/proposals/{id} — soft delete</summary>
+    [AnyOrgMember]
     [HttpDelete("{id:guid}")]
     public async Task<IActionResult> Delete(Guid id, CancellationToken ct = default)
     {

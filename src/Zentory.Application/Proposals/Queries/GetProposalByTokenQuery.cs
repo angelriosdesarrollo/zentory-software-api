@@ -27,7 +27,7 @@ public sealed class GetProposalByTokenQueryHandler : IRequestHandler<GetProposal
 
     public async Task<PublicProposalDto> Handle(GetProposalByTokenQuery request, CancellationToken cancellationToken)
     {
-        var proposal = await _proposals.GetByPublicTokenAsync(request.PublicToken, cancellationToken);
+        var proposal = await _proposals.FindLiveByPublicTokenAsync(_db, request.PublicToken, cancellationToken);
 
         if (proposal is null)
             throw new NotFoundException("Proposal", request.PublicToken);

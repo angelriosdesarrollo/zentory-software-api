@@ -17,6 +17,8 @@ public interface IZentoryDbContext
     DbSet<PasswordResetToken>          PasswordResetTokens         { get; }
     DbSet<EmailVerificationToken>      EmailVerificationTokens     { get; }
     DbSet<CollaboratorAccessToken>     CollaboratorAccessTokens    { get; }
+    DbSet<OrganizationInvitation>      OrganizationInvitations     { get; }
+    DbSet<OrganizationOwnershipTransfer> OrganizationOwnershipTransfers { get; }
 
     // ── Tenant configuration ─────────────────────────────────────────────────────
     DbSet<OrganizationSettings>        OrganizationSettings        { get; }

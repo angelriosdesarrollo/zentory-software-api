@@ -2,6 +2,7 @@ using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using Zentory.Application.CollaboratorPortal.Commands;
+using Zentory.API.Authorization;
 
 namespace Zentory.API.Controllers.V1;
 
@@ -9,6 +10,7 @@ namespace Zentory.API.Controllers.V1;
 // propio; Camino A: canje de un token de solicitud puntual ya existente).
 [ApiController]
 [EnableRateLimiting("CollaboratorPortalAuthPolicy")]
+[SkipMembershipValidation] // lista cerrada de PLAN-0018 RF-14 (SkipMembershipCatalogTests)
 [Route("api/v1/public/collaborator-portal")]
 public sealed class CollaboratorPortalAuthController : ControllerBase
 {

@@ -1,3 +1,4 @@
+using Zentory.Domain.Constants;
 using Zentory.Domain.Entities.Common;
 
 namespace Zentory.Domain.Entities;
@@ -6,8 +7,8 @@ public class OrganizationMember : BaseEntity
 {
     public Guid     OrganizationId { get; private set; }
     public Guid     UserId         { get; private set; }
-    public string   Role           { get; private set; } = "member";
-    // 'owner' | 'admin' | 'member'
+    public string   Role           { get; private set; } = OrgRole.Member;
+    // Un valor de OrgRole
     public Guid?    InvitedBy      { get; private set; }
     public DateTime JoinedAt       { get; private set; } = DateTime.UtcNow;
     public DateTime? DeletedAt     { get; private set; }
@@ -17,7 +18,7 @@ public class OrganizationMember : BaseEntity
     public static OrganizationMember Create(
         Guid    organizationId,
         Guid    userId,
-        string  role      = "member",
+        string  role      = OrgRole.Member,
         Guid?   invitedBy = null)
     {
         return new OrganizationMember

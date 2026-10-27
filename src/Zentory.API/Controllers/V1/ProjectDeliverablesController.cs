@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Zentory.Application.Projects.Commands;
 using Zentory.Application.Projects.Queries;
+using Zentory.API.Authorization;
 
 namespace Zentory.API.Controllers.V1;
 
@@ -16,6 +17,7 @@ public sealed class ProjectDeliverablesController : ControllerBase
     public ProjectDeliverablesController(IMediator mediator) => _mediator = mediator;
 
     /// <summary>GET /api/v1/projects/{projectId}/deliverables</summary>
+    [AnyOrgMember]
     [HttpGet]
     public async Task<IActionResult> List(Guid projectId, CancellationToken ct = default)
     {
@@ -24,6 +26,7 @@ public sealed class ProjectDeliverablesController : ControllerBase
     }
 
     /// <summary>POST /api/v1/projects/{projectId}/deliverables — crear entregable</summary>
+    [AnyOrgMember]
     [HttpPost]
     public async Task<IActionResult> Create(
         Guid projectId, [FromBody] CreateProjectDeliverableCommand command, CancellationToken ct = default)
@@ -33,6 +36,7 @@ public sealed class ProjectDeliverablesController : ControllerBase
     }
 
     /// <summary>PATCH /api/v1/projects/{projectId}/deliverables/{deliverableId}/status — enviar a revisión/aprobar/rechazar</summary>
+    [AnyOrgMember]
     [HttpPatch("{deliverableId:guid}/status")]
     public async Task<IActionResult> ChangeStatus(
         Guid projectId, Guid deliverableId, [FromBody] ChangeProjectDeliverableStatusCommand command,

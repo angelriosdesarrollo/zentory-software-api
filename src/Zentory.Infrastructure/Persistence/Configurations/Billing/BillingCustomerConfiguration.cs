@@ -11,7 +11,7 @@ public class BillingCustomerConfiguration : IEntityTypeConfiguration<BillingCust
         builder.ToTable("customers", "billing");
         builder.HasKey(c => c.Id);
         builder.Property(c => c.Id).HasColumnName("id");
-        builder.Property(c => c.OrganizationId).HasColumnName("organization_id").IsRequired();
+        builder.Property(c => c.OrganizationId).HasColumnName("organization_id").IsRequired(false);
         builder.Property(c => c.PaymentGateway).HasColumnName("payment_gateway").HasMaxLength(30).IsRequired();
         builder.Property(c => c.GatewayCustomerId).HasColumnName("gateway_customer_id").HasMaxLength(100).IsRequired();
         builder.Property(c => c.Email).HasColumnName("email").HasMaxLength(255).IsRequired();

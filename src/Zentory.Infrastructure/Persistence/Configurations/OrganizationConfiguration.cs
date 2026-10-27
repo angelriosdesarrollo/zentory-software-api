@@ -19,5 +19,14 @@ public class OrganizationConfiguration : IEntityTypeConfiguration<Organization>
             .HasDefaultValue("CO");
         builder.Property(o => o.OwnerId).HasColumnName("owner_id");
         builder.Property(o => o.IsActive).HasColumnName("is_active").HasDefaultValue(true);
+
+        // Borrado lógico y purga (PLAN-0018 RF-65, RF-78; M0c). El filtro global DeletedAt == null vive en
+        // ZentoryDbContext junto a los demás filtros.
+        builder.Property(o => o.DeletedAt).HasColumnName("deleted_at");
+        builder.Property(o => o.DeletedBy).HasColumnName("deleted_by");
+        builder.Property(o => o.PurgeStartedAt).HasColumnName("purge_started_at");
+        builder.Property(o => o.ConcurrencyStamp).HasColumnName("concurrency_stamp").IsConcurrencyToken();
+
+        builder.HasIndex(o => o.DeletedAt).HasDatabaseName("ix_organizations_deleted_at");
     }
 }

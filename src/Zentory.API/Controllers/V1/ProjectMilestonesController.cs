@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Zentory.Application.Projects.Commands;
 using Zentory.Application.Projects.Queries;
+using Zentory.API.Authorization;
 
 namespace Zentory.API.Controllers.V1;
 
@@ -16,6 +17,7 @@ public sealed class ProjectMilestonesController : ControllerBase
     public ProjectMilestonesController(IMediator mediator) => _mediator = mediator;
 
     /// <summary>GET /api/v1/projects/{projectId}/milestones</summary>
+    [AnyOrgMember]
     [HttpGet]
     public async Task<IActionResult> List(Guid projectId, CancellationToken ct = default)
     {
@@ -24,6 +26,7 @@ public sealed class ProjectMilestonesController : ControllerBase
     }
 
     /// <summary>POST /api/v1/projects/{projectId}/milestones — crear hito</summary>
+    [AnyOrgMember]
     [HttpPost]
     public async Task<IActionResult> Create(
         Guid projectId, [FromBody] CreateProjectMilestoneCommand command, CancellationToken ct = default)
@@ -33,6 +36,7 @@ public sealed class ProjectMilestonesController : ControllerBase
     }
 
     /// <summary>PATCH /api/v1/projects/{projectId}/milestones/{milestoneId}/status — iniciar/completar/reabrir</summary>
+    [AnyOrgMember]
     [HttpPatch("{milestoneId:guid}/status")]
     public async Task<IActionResult> ChangeStatus(
         Guid projectId, Guid milestoneId, [FromBody] ChangeProjectMilestoneStatusCommand command,

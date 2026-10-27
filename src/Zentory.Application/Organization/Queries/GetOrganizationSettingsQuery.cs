@@ -2,6 +2,7 @@ using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Zentory.Application.Common.Interfaces;
 using Zentory.Application.Organization.DTOs;
+using Zentory.Domain.Constants;
 
 namespace Zentory.Application.Organization.Queries;
 

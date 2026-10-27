@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Zentory.Application.Invoices.Commands;
 using Zentory.Application.Invoices.Queries;
+using Zentory.API.Authorization;
 
 namespace Zentory.API.Controllers.V1;
 
@@ -16,6 +17,7 @@ public sealed class InvoicesController : ControllerBase
     public InvoicesController(IMediator mediator) => _mediator = mediator;
 
     /// <summary>GET /api/v1/invoices</summary>
+    [AnyOrgMember]
     [HttpGet]
     public async Task<IActionResult> List(
         [FromQuery] string? status   = null,
@@ -27,6 +29,7 @@ public sealed class InvoicesController : ControllerBase
     }
 
     /// <summary>GET /api/v1/invoices/{id}</summary>
+    [AnyOrgMember]
     [HttpGet("{id:guid}")]
     public async Task<IActionResult> GetById(Guid id, CancellationToken ct = default)
     {
@@ -35,6 +38,7 @@ public sealed class InvoicesController : ControllerBase
     }
 
     /// <summary>POST /api/v1/invoices — crear factura con ítems</summary>
+    [AnyOrgMember]
     [HttpPost]
     public async Task<IActionResult> Create([FromBody] CreateInvoiceCommand command, CancellationToken ct = default)
     {
@@ -43,6 +47,7 @@ public sealed class InvoicesController : ControllerBase
     }
 
     /// <summary>POST /api/v1/invoices/{id}/send — marcar como enviada</summary>
+    [AnyOrgMember]
     [HttpPost("{id:guid}/send")]
     public async Task<IActionResult> Send(Guid id, CancellationToken ct = default)
     {
@@ -51,6 +56,7 @@ public sealed class InvoicesController : ControllerBase
     }
 
     /// <summary>POST /api/v1/invoices/{id}/payments — registrar pago</summary>
+    [AnyOrgMember]
     [HttpPost("{id:guid}/payments")]
     public async Task<IActionResult> RecordPayment(Guid id, [FromBody] RecordPaymentCommand command, CancellationToken ct = default)
     {
@@ -59,6 +65,7 @@ public sealed class InvoicesController : ControllerBase
     }
 
     /// <summary>DELETE /api/v1/invoices/{id} — soft delete</summary>
+    [AnyOrgMember]
     [HttpDelete("{id:guid}")]
     public async Task<IActionResult> Delete(Guid id, CancellationToken ct = default)
     {

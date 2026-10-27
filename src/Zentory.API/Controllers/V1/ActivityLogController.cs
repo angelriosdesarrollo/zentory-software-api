@@ -2,12 +2,14 @@ using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Zentory.Application.ActivityLogs.Queries;
+using Zentory.API.Extensions;
 
 namespace Zentory.API.Controllers.V1;
 
 [ApiController]
-[Authorize]
+[Authorize(Policy = PolicyNames.RequireOrgAdmin)]
 [Route("api/v1/activity-log")]
+// PLAN-0018 RF-82 a (D-41): la auditoría de la organización es de owner y admin; member → 403 ACCESS_DENIED.
 public sealed class ActivityLogController : ControllerBase
 {
     private readonly IMediator _mediator;

@@ -2,10 +2,12 @@ using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using Zentory.Application.Proposals.Commands;
 using Zentory.Application.Proposals.Queries;
+using Zentory.API.Authorization;
 
 namespace Zentory.API.Controllers.V1;
 
 [ApiController]
+[SkipMembershipValidation] // lista cerrada de PLAN-0018 RF-14 (SkipMembershipCatalogTests)
 [Route("api/v1/public/proposals")]
 public sealed class PublicProposalsController : ControllerBase
 {

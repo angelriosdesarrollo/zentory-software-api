@@ -11,7 +11,7 @@ public class BillingInvoiceConfiguration : IEntityTypeConfiguration<BillingInvoi
         builder.ToTable("invoices", "billing");
         builder.HasKey(i => i.Id);
         builder.Property(i => i.Id).HasColumnName("id");
-        builder.Property(i => i.OrganizationId).HasColumnName("organization_id").IsRequired();
+        builder.Property(i => i.OrganizationId).HasColumnName("organization_id").IsRequired(false);
         builder.Property(i => i.CustomerId).HasColumnName("customer_id").IsRequired();
         builder.Property(i => i.SubscriptionId).HasColumnName("subscription_id");
         builder.Property(i => i.GatewayInvoiceId).HasColumnName("gateway_invoice_id").HasMaxLength(100);

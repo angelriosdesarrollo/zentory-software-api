@@ -12,7 +12,7 @@ public class CouponRedemptionConfiguration : IEntityTypeConfiguration<CouponRede
         builder.HasKey(r => r.Id);
         builder.Property(r => r.Id).HasColumnName("id");
         builder.Property(r => r.CouponId).HasColumnName("coupon_id").IsRequired();
-        builder.Property(r => r.OrganizationId).HasColumnName("organization_id").IsRequired();
+        builder.Property(r => r.OrganizationId).HasColumnName("organization_id").IsRequired(false);
         builder.Property(r => r.SubscriptionId).HasColumnName("subscription_id");
         builder.Property(r => r.DiscountAmount).HasColumnName("discount_amount").HasColumnType("decimal(10,2)");
         builder.Property(r => r.RedeemedAt).HasColumnName("redeemed_at");

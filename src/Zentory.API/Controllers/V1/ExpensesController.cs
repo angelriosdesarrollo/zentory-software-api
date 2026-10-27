@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Zentory.Application.Projects.Commands;
 using Zentory.Application.Projects.Queries;
+using Zentory.API.Authorization;
 
 namespace Zentory.API.Controllers.V1;
 
@@ -19,6 +20,7 @@ public sealed class ExpensesController : ControllerBase
     public ExpensesController(IMediator mediator) => _mediator = mediator;
 
     /// <summary>GET /api/v1/expenses — todos los gastos (cualquier proyecto + de empresa), para /finances</summary>
+    [AnyOrgMember]
     [HttpGet]
     public async Task<IActionResult> List(CancellationToken ct = default)
     {
@@ -31,6 +33,7 @@ public sealed class ExpensesController : ControllerBase
     /// para poder elegir "gasto de empresa" (ProjectId = null) o cualquier proyecto desde el
     /// modal de registro manual, no solo el proyecto que estaba abierto.
     /// </summary>
+    [AnyOrgMember]
     [HttpPost]
     public async Task<IActionResult> Create([FromBody] CreateGlobalExpenseRequest body, CancellationToken ct = default)
     {
@@ -58,6 +61,7 @@ public sealed class ExpensesController : ControllerBase
         bool    Billable);
 
     /// <summary>PATCH /api/v1/expenses/{id}</summary>
+    [AnyOrgMember]
     [HttpPatch("{id:guid}")]
     public async Task<IActionResult> Update(
         Guid id, [FromBody] UpdateExpenseRequest body, CancellationToken ct = default)

@@ -72,7 +72,8 @@ public sealed class ExchangeCollaboratorTokenCommandHandler
                 if (!Guid.TryParse(request.Token, out var token))
                     throw new NotFoundException("PilaVerification", request.Token);
                 var row = await _pilaVerifications.GetByTokenAsync(token, cancellationToken);
-                if (row is null) throw new NotFoundException("PilaVerification", request.Token);
+                if (row is null || !await IsLiveOrganizationAsync(row.OrganizationId, cancellationToken))
+                    throw new NotFoundException("PilaVerification", request.Token);
                 if (!row.IsTokenValid())
                     throw new ConflictException("TOKEN_EXPIRED", "El enlace ha expirado. Pide que te reenvíen la solicitud.");
 
@@ -84,7 +85,8 @@ public sealed class ExchangeCollaboratorTokenCommandHandler
                 if (!Guid.TryParse(request.Token, out var token))
                     throw new NotFoundException("CollaboratorPayoutInvoice", request.Token);
                 var row = await _payoutInvoices.GetByTokenAsync(token, cancellationToken);
-                if (row is null) throw new NotFoundException("CollaboratorPayoutInvoice", request.Token);
+                if (row is null || !await IsLiveOrganizationAsync(row.OrganizationId, cancellationToken))
+                    throw new NotFoundException("CollaboratorPayoutInvoice", request.Token);
                 if (!row.IsTokenValid())
                     throw new ConflictException("TOKEN_EXPIRED", "El enlace ha expirado. Pide que te reenvíen la solicitud.");
 
@@ -105,16 +107,19 @@ public sealed class ExchangeCollaboratorTokenCommandHandler
             .FirstOrDefaultAsync(t => t.TokenHash == hash, cancellationToken);
         if (accessToken is null)
             throw new NotFoundException("CollaboratorAccessToken", rawToken);
+
+        // ListByEmailAsync ya excluye las organizaciones eliminadas (PLAN-0018 RF-65 d). Se lee antes de la vigencia y de
+        // consumir el enlace: sin membresías vigentes responde como un token inexistente, sin efecto (RF-17 rev. 4).
+        var email = accessToken.Email;
+        var memberships = await _collaborators.ListByEmailAsync(email, cancellationToken);
+        if (memberships.Count == 0)
+            throw new NotFoundException("CollaboratorAccessToken", rawToken);
+
         if (!accessToken.IsValid())
             throw new ConflictException("TOKEN_EXPIRED", "El enlace ha expirado o ya fue usado. Pide uno nuevo.");
 
         accessToken.MarkUsed();
         await _uow.SaveChangesAsync(cancellationToken);
-        var email = accessToken.Email;
-
-        var memberships = await _collaborators.ListByEmailAsync(email, cancellationToken);
-        if (memberships.Count == 0)
-            throw new NotFoundException("Collaborator", email);
 
         // Arbitraria: el frontend pide elegir si hay más de una membresía.
         var activeCollaborator = memberships[0];
@@ -122,6 +127,13 @@ public sealed class ExchangeCollaboratorTokenCommandHandler
         return await BuildSessionAsync(
             email, memberships, activeCollaborator, CollaboratorAuthMethod.MagicLink, highlight: null, cancellationToken);
     }
+
+    // Un token de solicitud (PILA o cuenta de cobro) de una organización eliminada responde como un token inexistente, y
+    // antes de mirar su vigencia: ni sesión ni un TOKEN_EXPIRED que delate que existe (PLAN-0018 RF-17 rev. 4; SR-0018.26 c;
+    // D-31). El repositorio ya no ve las eliminadas (filtro global); DeletedAt se comprueba igual, para que la regla no
+    // dependa de cómo lea el repositorio.
+    private async Task<bool> IsLiveOrganizationAsync(Guid organizationId, CancellationToken cancellationToken)
+        => await _organizations.GetByIdAsync(organizationId, cancellationToken) is { DeletedAt: null };
 
     // Sin ListByEmailAsync a propósito: el email del colaborador lo edita la empresa, así que
     // buscar por email permitiría que un token de la org A abra sesión en colaboradores de B.

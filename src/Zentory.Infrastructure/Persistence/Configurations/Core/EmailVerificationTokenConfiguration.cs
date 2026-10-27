@@ -15,7 +15,9 @@ public class EmailVerificationTokenConfiguration : IEntityTypeConfiguration<Emai
         builder.Property(t => t.Email).HasColumnName("email").HasMaxLength(255).IsRequired();
         builder.Property(t => t.TokenHash).HasColumnName("token_hash").HasMaxLength(64).IsRequired();
         builder.Property(t => t.ExpiresAt).HasColumnName("expires_at").IsRequired();
-        builder.Property(t => t.UsedAt).HasColumnName("used_at");
+        // Token de concurrencia (PLAN-0018 RF-22 c, D-11): el canje es UPDATE ... WHERE used_at IS NULL, así que de dos
+        // canjes del mismo token solo uno afecta la fila. No cambia la columna: no requiere migración.
+        builder.Property(t => t.UsedAt).HasColumnName("used_at").IsConcurrencyToken();
         builder.Property(t => t.CreatedAt).HasColumnName("created_at");
         builder.Property(t => t.UpdatedAt).HasColumnName("updated_at");
         builder.HasIndex(t => t.TokenHash).IsUnique().HasDatabaseName("ix_email_verification_tokens_hash");

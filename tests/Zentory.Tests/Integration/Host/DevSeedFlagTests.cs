@@ -33,7 +33,7 @@ public sealed class DevSeedFlagTests
             [DatabaseSettings.UseInMemoryKey]        = "true",
             [DatabaseSettings.InMemoryNameKey]       = $"zentory-devseed-off-{Guid.NewGuid():N}",
             [HangfireSettings.ServerEnabledKey]      = "false",
-            ["DevSeed:Enabled"]                      = "false",
+            [DevSeedSettings.EnabledKey]             = "false",
             [TestJwtSettings.KeySetting]             = TestJwtSettings.Key,
             [TestJwtSettings.CollaboratorKeySetting] = TestJwtSettings.CollaboratorKey,
         });
@@ -48,12 +48,12 @@ public sealed class DevSeedFlagTests
     {
         await using var baseFactory = new ZentoryApiFactory();
         await using var factory = baseFactory.WithWebHostBuilder(b => b
-            .UseSetting("DevSeed:Enabled", "true")
+            .UseSetting(DevSeedSettings.EnabledKey, "true")
             .UseSetting(DatabaseSettings.InMemoryNameKey, $"zentory-devseed-on-{Guid.NewGuid():N}"));
         using var client = factory.CreateClient();
 
         Assert.Equal(AppEnvironments.Testing, factory.Services.GetRequiredService<IWebHostEnvironment>().EnvironmentName);
-        Assert.Equal("true", factory.Services.GetRequiredService<IConfiguration>()["DevSeed:Enabled"]);
+        Assert.Equal("true", factory.Services.GetRequiredService<IConfiguration>()[DevSeedSettings.EnabledKey]);
         await AssertDatabaseIsEmptyAsync(factory.Services);
     }
 

@@ -71,7 +71,7 @@ public sealed class StartupGuardTests
             [DatabaseSettings.UseInMemoryKey]        = useInMemory,
             [DatabaseSettings.InMemoryNameKey]       = $"zentory-guard-{Guid.NewGuid():N}",
             [HangfireSettings.ServerEnabledKey]      = "false",
-            ["DevSeed:Enabled"]                      = "false",
+            [DevSeedSettings.EnabledKey]             = "false",
             [TestJwtSettings.KeySetting]             = TestJwtSettings.Key,
             [TestJwtSettings.CollaboratorKeySetting] = TestJwtSettings.CollaboratorKey,
         });

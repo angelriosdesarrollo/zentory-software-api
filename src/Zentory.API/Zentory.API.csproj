@@ -19,6 +19,8 @@
     <TargetFramework>net8.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
+    <!-- PLAN-0018 RF-55: user-secrets de Development, fuera de todo repo. Los valores los fija el humano. -->
+    <UserSecretsId>934d7cbb-e282-40f4-b506-6e8406b00f8e</UserSecretsId>
   </PropertyGroup>
 
 </Project>

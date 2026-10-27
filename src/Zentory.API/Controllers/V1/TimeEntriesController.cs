@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Zentory.Application.TimeEntries.Commands;
 using Zentory.Application.TimeEntries.Queries;
+using Zentory.API.Authorization;
 
 namespace Zentory.API.Controllers.V1;
 
@@ -16,6 +17,7 @@ public sealed class TimeEntriesController : ControllerBase
     public TimeEntriesController(IMediator mediator) => _mediator = mediator;
 
     /// <summary>GET /api/v1/time-entries</summary>
+    [AnyOrgMember]
     [HttpGet]
     public async Task<IActionResult> List(
         [FromQuery] DateTime? from           = null,
@@ -30,6 +32,7 @@ public sealed class TimeEntriesController : ControllerBase
     }
 
     /// <summary>GET /api/v1/time-entries/{id}</summary>
+    [AnyOrgMember]
     [HttpGet("{id:guid}")]
     public async Task<IActionResult> GetById(Guid id, CancellationToken ct = default)
     {
@@ -38,6 +41,7 @@ public sealed class TimeEntriesController : ControllerBase
     }
 
     /// <summary>GET /api/v1/time-entries/anomalies — entradas atípicas para revisión antes de aprobar</summary>
+    [AnyOrgMember]
     [HttpGet("anomalies")]
     public async Task<IActionResult> Anomalies(
         [FromQuery] Guid?     projectId = null,
@@ -50,6 +54,7 @@ public sealed class TimeEntriesController : ControllerBase
     }
 
     /// <summary>POST /api/v1/time-entries — registrar horas</summary>
+    [AnyOrgMember]
     [HttpPost]
     public async Task<IActionResult> Create([FromBody] CreateTimeEntryCommand command, CancellationToken ct = default)
     {
@@ -58,6 +63,7 @@ public sealed class TimeEntriesController : ControllerBase
     }
 
     /// <summary>PATCH /api/v1/time-entries/{id}</summary>
+    [AnyOrgMember]
     [HttpPatch("{id:guid}")]
     public async Task<IActionResult> Update(Guid id, [FromBody] UpdateTimeEntryCommand command, CancellationToken ct = default)
     {
@@ -66,6 +72,7 @@ public sealed class TimeEntriesController : ControllerBase
     }
 
     /// <summary>POST /api/v1/time-entries/{id}/approve — aprobar entrada pendiente</summary>
+    [AnyOrgMember]
     [HttpPost("{id:guid}/approve")]
     public async Task<IActionResult> Approve(Guid id, CancellationToken ct = default)
     {
@@ -74,6 +81,7 @@ public sealed class TimeEntriesController : ControllerBase
     }
 
     /// <summary>DELETE /api/v1/time-entries/{id} — soft delete</summary>
+    [AnyOrgMember]
     [HttpDelete("{id:guid}")]
     public async Task<IActionResult> Delete(Guid id, CancellationToken ct = default)
     {

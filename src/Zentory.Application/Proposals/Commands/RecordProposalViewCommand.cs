@@ -22,6 +22,7 @@ public sealed class RecordProposalViewCommandHandler : IRequestHandler<RecordPro
     private readonly IEmailService       _email;
     private readonly IActivityLogService _activityLog;
     private readonly IApplicationSettings _settings;
+    private readonly IZentoryDbContext    _db;
 
     public RecordProposalViewCommandHandler(
         IProposalRepository  proposals,
@@ -30,7 +31,8 @@ public sealed class RecordProposalViewCommandHandler : IRequestHandler<RecordPro
         IUnitOfWork          uow,
         IEmailService        email,
         IActivityLogService  activityLog,
-        IApplicationSettings settings)
+        IApplicationSettings settings,
+        IZentoryDbContext    db)
     {
         _proposals   = proposals;
         _clients     = clients;
@@ -39,6 +41,7 @@ public sealed class RecordProposalViewCommandHandler : IRequestHandler<RecordPro
         _email       = email;
         _activityLog = activityLog;
         _settings    = settings;
+        _db          = db;
     }
 
     private static string ClientInitials(string? clientName)
@@ -52,7 +55,7 @@ public sealed class RecordProposalViewCommandHandler : IRequestHandler<RecordPro
 
     public async Task Handle(RecordProposalViewCommand request, CancellationToken cancellationToken)
     {
-        var proposal = await _proposals.GetByPublicTokenAsync(request.PublicToken, cancellationToken);
+        var proposal = await _proposals.FindLiveByPublicTokenAsync(_db, request.PublicToken, cancellationToken);
         if (proposal is null) return;
 
         var viewNumber  = proposal.ViewCount + 1;

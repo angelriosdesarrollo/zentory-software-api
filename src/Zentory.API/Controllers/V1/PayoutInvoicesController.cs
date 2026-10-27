@@ -3,11 +3,16 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Zentory.Application.PayoutInvoices.Commands;
 using Zentory.Application.PayoutInvoices.Queries;
+using Zentory.API.Extensions;
 
 namespace Zentory.API.Controllers.V1;
 
 [ApiController]
-[Authorize(Policy = "EmpresaStudio")]
+// PLAN-0018 RF-86 b (D-41): cuentas de cobro solo para owner y admin, en todas las acciones (también generate, send,
+// download-url, request-manual-upload, suggested-amount, review y project-breakdown). Las dos policies se combinan en una
+// sola evaluación: con la precedencia de RF-58 un member de empresa + pro recibe PLAN_REQUIRED (gana el plan).
+[Authorize(Policy = PolicyNames.EmpresaStudio)]
+[Authorize(Policy = PolicyNames.RequireFinancialAccess)]
 [Route("api/v1/team/payout-invoices")]
 public sealed class PayoutInvoicesController : ControllerBase
 {

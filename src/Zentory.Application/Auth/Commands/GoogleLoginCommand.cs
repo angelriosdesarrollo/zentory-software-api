@@ -1,63 +1,75 @@
 using MediatR;
-using Microsoft.EntityFrameworkCore;
 using Zentory.Application.Auth.DTOs;
+using Zentory.Application.Auth.Services;
 using Zentory.Application.Common.Interfaces;
+using Zentory.Application.Exceptions;
+using Zentory.Domain.Constants;
 using Zentory.Domain.Entities;
-using Zentory.Domain.Entities.Billing;
+using Zentory.Domain.Common;
 using Zentory.Domain.Repositories;
 using LegalTypeConstants = Zentory.Domain.Constants.LegalType;
-using PlanConstants      = Zentory.Domain.Constants.Plan;
 
 namespace Zentory.Application.Auth.Commands;
 
 public record GoogleLoginCommand(string IdToken) : IRequest<AuthTokenDto>;
 
+// 409 de la vinculación (PLAN-0018 RF-28 d, SR-0018.15): la cuenta con ese email ya está vinculada a otra identidad de
+// Google. El cuerpo es fijo: no repite el email ni ningún GoogleId.
+public static class GoogleLoginErrors
+{
+    public const string AccountConflictCode    = "GOOGLE_ACCOUNT_CONFLICT";
+    public const string AccountConflictMessage = "Esta cuenta ya está vinculada a otra cuenta de Google.";
+}
+
 public sealed class GoogleLoginCommandHandler : IRequestHandler<GoogleLoginCommand, AuthTokenDto>
 {
-    private const int AccessTokenExpiresInSeconds = 15 * 60; // 15 minutes
-    private static readonly TimeSpan RefreshTokenLifetime = TimeSpan.FromDays(7);
-
     private readonly IUserRepository         _users;
     private readonly IOrganizationRepository _organizations;
-    private readonly IRefreshTokenRepository _refreshTokens;
-    private readonly IJwtService             _jwt;
     private readonly IGoogleTokenValidator   _google;
     private readonly IUnitOfWork             _uow;
     private readonly IZentoryDbContext       _db;
-    private readonly IPlanResolutionService  _plans;
+    private readonly IAuthSessionIssuer      _sessions;
+    private readonly IRefreshTokenRepository _refreshTokens;
 
     public GoogleLoginCommandHandler(
         IUserRepository         users,
         IOrganizationRepository organizations,
-        IRefreshTokenRepository refreshTokens,
-        IJwtService             jwt,
         IGoogleTokenValidator   google,
         IUnitOfWork             uow,
         IZentoryDbContext       db,
-        IPlanResolutionService  plans)
+        IAuthSessionIssuer      sessions,
+        IRefreshTokenRepository refreshTokens)
     {
         _users         = users;
         _organizations = organizations;
-        _refreshTokens = refreshTokens;
-        _jwt           = jwt;
         _google        = google;
         _uow           = uow;
         _db            = db;
-        _plans         = plans;
+        _sessions      = sessions;
+        _refreshTokens = refreshTokens;
     }
 
     public async Task<AuthTokenDto> Handle(GoogleLoginCommand request, CancellationToken cancellationToken)
     {
         var googleUser = await _google.ValidateAsync(request.IdToken, cancellationToken);
 
+        // RF-28 a: sin email_verified de Google no se busca, ni se crea, ni se vincula nada. 403 y no 401, porque el
+        // cliente trata todo 401 como sesión caducada.
+        if (!googleUser.EmailVerified)
+            throw new ForbiddenException(ForbiddenReason.EmailNotVerified);
+
         var user = await _users.GetByGoogleIdAsync(googleUser.Subject, cancellationToken);
+
+        // Cuenta ya vinculada (p. ej. creada con Google antes de T18, sin EmailVerifiedAt): Google acaba de verificar el
+        // correo, así que queda verificada. No toca la contraseña ni las sesiones; lo guarda la emisión de la sesión.
+        user?.MarkEmailVerified();
 
         if (user is null)
         {
-            var existingByEmail = await _users.GetByEmailAsync(googleUser.Email, cancellationToken);
+            var existingByEmail = await _users.GetByEmailAsync(EmailAddress.Normalize(googleUser.Email), cancellationToken);
             if (existingByEmail is not null)
             {
-                existingByEmail.LinkGoogleAccount(googleUser.Subject);
+                await LinkGoogleAsync(existingByEmail, googleUser.Subject, cancellationToken);
                 user = existingByEmail;
             }
         }
@@ -68,42 +80,38 @@ public sealed class GoogleLoginCommandHandler : IRequestHandler<GoogleLoginComma
         return await CreateUserAndOrgAsync(googleUser, cancellationToken);
     }
 
+    // Vincula Google a la cuenta encontrada por email (RF-28 b-d). Una cuenta ya vinculada a otro GoogleId responde 409
+    // sin cambios (SR-0018.15). Si el email no estaba verificado, quien tenga la contraseña no demostró ser el dueño del
+    // correo: se anula, se revocan todas sus sesiones y el email queda verificado por Google. Si ya estaba verificado, la
+    // contraseña se conserva. Los cambios los guarda la emisión de la sesión, junto con el refresh token nuevo.
+    private async Task LinkGoogleAsync(User user, string googleId, CancellationToken ct)
+    {
+        if (user.GoogleId is not null)
+            throw new ConflictException(GoogleLoginErrors.AccountConflictCode, GoogleLoginErrors.AccountConflictMessage);
+
+        if (!user.IsEmailVerified)
+        {
+            user.ClearPassword();
+            user.MarkEmailVerified();
+            await _refreshTokens.RevokeAllForUserAsync(user.UserId, ct);
+        }
+
+        user.LinkGoogleAccount(googleId);
+    }
+
+    // Igual que login: entra a la última organización usada si la membresía sigue vigente (PLAN-0018 RF-70). Sin
+    // membresías vigentes: sesión sin organización si tiene organizaciones restaurables (RF-85); si no, el mismo 422
+    // genérico de login (RF-61, SR-0018.18), nunca 500. La vinculación de Google pendiente no se guarda.
     private async Task<AuthTokenDto> BuildExistingUserResponseAsync(User user, CancellationToken ct)
     {
-        var activeMembership = await _db.OrganizationMembers
-            .Where(m => m.UserId == user.UserId && m.DeletedAt == null)
-            .OrderBy(m => m.Role == "owner" ? 0 : 1)
-            .ThenBy(m => m.JoinedAt)
-            .FirstOrDefaultAsync(ct);
-
-        if (activeMembership is null)
-            throw new InvalidOperationException($"User {user.UserId} has no organization membership.");
-
-        var org = await _organizations.GetByIdAsync(activeMembership.OrganizationId, ct)
-            ?? throw new InvalidOperationException($"Organization {activeMembership.OrganizationId} referenced by membership not found.");
-
-        var memberships = await BuildMembershipsAsync(user.UserId, ct);
-        var activePlan  = await _plans.ResolveForOwnerAsync(org.OwnerId, ct);
-
-        var accessToken  = _jwt.GenerateAccessToken(user, org, activeMembership.Role, activePlan);
-        var refreshToken = _jwt.GenerateRefreshToken();
-
-        var rt = RefreshToken.Create(user.UserId, refreshToken, DateTime.UtcNow.Add(RefreshTokenLifetime));
-        await _refreshTokens.AddAsync(rt, ct);
-        await _uow.SaveChangesAsync(ct);
-
-        return new AuthTokenDto(
-            accessToken,
-            refreshToken,
-            AccessTokenExpiresInSeconds,
-            new UserProfileDto(
-                user.UserId, user.FirstName, user.LastName, user.Email,
-                activePlan, org.LegalType, user.Role,
-                ActiveOrgId:   org.OrganizationId.ToString(),
-                ActiveOrgName: org.Name,
-                ActiveOrgRole: activeMembership.Role),
-            memberships,
-            IsNewUser: false);
+        try
+        {
+            return await _sessions.StartSessionAsync(user, user.LastActiveOrganizationId, ct);
+        }
+        catch (NoActiveMembershipException)
+        {
+            throw AuthCredentialErrors.InvalidCredentials();
+        }
     }
 
     // Reached for a first-time Google sign-in with no prior account. Mirrors
@@ -118,72 +126,22 @@ public sealed class GoogleLoginCommandHandler : IRequestHandler<GoogleLoginComma
             googleUser.Email,
             googleUser.FirstName,
             googleUser.LastName,
-            role: "owner",
+            role: OrgRole.Owner,
             googleId: googleUser.Subject);
+        // Google ya verificó el email (RF-28 a se comprobó antes de llegar aquí).
+        user.MarkEmailVerified();
         await _users.AddAsync(user, ct);
 
         org.SetOwner(user.UserId);
-        _db.OrganizationMembers.Add(OrganizationMember.Create(org.OrganizationId, user.UserId, "owner"));
+        _db.OrganizationMembers.Add(OrganizationMember.Create(org.OrganizationId, user.UserId, OrgRole.Owner));
 
-        var freePlan = await _db.BillingPlans.FirstOrDefaultAsync(p => p.Name == PlanConstants.Free, ct)
-            ?? throw new InvalidOperationException("Free billing plan is not seeded.");
+        // Sin suscripción ni cliente de cobro (PLAN-0018 DEC-0101, CA-44, RF-73): el owner nuevo es free porque no tiene
+        // suscripción vigente. El plan solo lo escribe seed assign-plan.
 
-        var customer = BillingCustomer.Create(
-            org.OrganizationId, gatewayCustomerId: $"local_{user.UserId}", user.Email, org.Name);
-        _db.BillingCustomers.Add(customer);
-
-        var subscription = Subscription.Create(user.UserId, customer.Id, freePlan.Id);
-        _db.Subscriptions.Add(subscription);
-
-        var accessToken  = _jwt.GenerateAccessToken(user, org, activeOrgRole: "owner", plan: PlanConstants.Free);
-        var refreshToken = _jwt.GenerateRefreshToken();
-
-        var rt = RefreshToken.Create(user.UserId, refreshToken, DateTime.UtcNow.Add(RefreshTokenLifetime));
-        await _refreshTokens.AddAsync(rt, ct);
-
+        // La sesión se emite sobre lo ya guardado: IAuthSessionIssuer lee las membresías de la base.
         await _uow.SaveChangesAsync(ct);
 
-        var memberships = new List<OrgMembershipDto>
-        {
-            new(org.OrganizationId.ToString(), org.Name, org.LegalType, PlanConstants.Free, "owner",
-                DateTime.UtcNow.ToString("O"))
-        };
-
-        return new AuthTokenDto(
-            accessToken,
-            refreshToken,
-            AccessTokenExpiresInSeconds,
-            new UserProfileDto(
-                user.UserId, user.FirstName, user.LastName, user.Email,
-                PlanConstants.Free, org.LegalType, user.Role,
-                ActiveOrgId:   org.OrganizationId.ToString(),
-                ActiveOrgName: org.Name,
-                ActiveOrgRole: "owner"),
-            memberships,
-            IsNewUser: true);
-    }
-
-    private async Task<IReadOnlyList<OrgMembershipDto>> BuildMembershipsAsync(Guid userId, CancellationToken ct)
-    {
-        var rows = await _db.OrganizationMembers
-            .Where(m => m.UserId == userId && m.DeletedAt == null)
-            .Join(_db.Organizations,
-                m => m.OrganizationId,
-                o => o.OrganizationId,
-                (m, o) => new { o.OrganizationId, o.Name, o.LegalType, o.OwnerId, m.Role, m.JoinedAt })
-            .ToListAsync(ct);
-
-        var plansByOwner = await _plans.ResolveForOwnersAsync(
-            rows.Where(r => r.OwnerId.HasValue).Select(r => r.OwnerId!.Value), ct);
-
-        return rows
-            .Select(r => new OrgMembershipDto(
-                r.OrganizationId.ToString(),
-                r.Name,
-                r.LegalType,
-                r.OwnerId.HasValue ? plansByOwner.GetValueOrDefault(r.OwnerId.Value, PlanConstants.Free) : PlanConstants.Free,
-                r.Role,
-                r.JoinedAt.ToString("O")))
-            .ToList();
+        var session = await _sessions.StartSessionAsync(user, org.OrganizationId, ct);
+        return session with { IsNewUser = true };
     }
 }

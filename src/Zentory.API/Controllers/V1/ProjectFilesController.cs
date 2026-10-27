@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Zentory.Application.Projects.Commands;
 using Zentory.Application.Projects.Queries;
+using Zentory.API.Authorization;
 
 namespace Zentory.API.Controllers.V1;
 
@@ -16,6 +17,7 @@ public sealed class ProjectFilesController : ControllerBase
     public ProjectFilesController(IMediator mediator) => _mediator = mediator;
 
     /// <summary>GET /api/v1/projects/{projectId}/files</summary>
+    [AnyOrgMember]
     [HttpGet]
     public async Task<IActionResult> List(Guid projectId, CancellationToken ct = default)
     {
@@ -24,6 +26,7 @@ public sealed class ProjectFilesController : ControllerBase
     }
 
     /// <summary>POST /api/v1/projects/{projectId}/files/upload-url — pide URL pre-firmada antes de subir</summary>
+    [AnyOrgMember]
     [HttpPost("upload-url")]
     public async Task<IActionResult> GetUploadUrl(
         Guid projectId, [FromBody] GetProjectFileUploadUrlCommand command, CancellationToken ct = default)
@@ -33,6 +36,7 @@ public sealed class ProjectFilesController : ControllerBase
     }
 
     /// <summary>POST /api/v1/projects/{projectId}/files — registra el archivo tras subirlo al UploadUrl</summary>
+    [AnyOrgMember]
     [HttpPost]
     public async Task<IActionResult> Create(
         Guid projectId, [FromBody] CreateProjectFileCommand command, CancellationToken ct = default)
@@ -42,6 +46,7 @@ public sealed class ProjectFilesController : ControllerBase
     }
 
     /// <summary>GET /api/v1/projects/{projectId}/files/{fileId}/download-url</summary>
+    [AnyOrgMember]
     [HttpGet("{fileId:guid}/download-url")]
     public async Task<IActionResult> GetDownloadUrl(Guid projectId, Guid fileId, CancellationToken ct = default)
     {

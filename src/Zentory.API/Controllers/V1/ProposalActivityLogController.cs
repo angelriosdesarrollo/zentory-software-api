@@ -2,6 +2,7 @@ using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Zentory.Application.Proposals.Queries;
+using Zentory.API.Authorization;
 
 namespace Zentory.API.Controllers.V1;
 
@@ -15,6 +16,7 @@ public sealed class ProposalActivityLogController : ControllerBase
     public ProposalActivityLogController(IMediator mediator) => _mediator = mediator;
 
     /// <summary>GET /api/v1/proposals/{proposalId}/activity-log</summary>
+    [AnyOrgMember]
     [HttpGet]
     public async Task<IActionResult> List(Guid proposalId, CancellationToken ct = default)
     {

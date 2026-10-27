@@ -5,6 +5,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Zentory.API.Extensions;
 using Zentory.Infrastructure.Extensions;
 using Zentory.Tests.Support;
 
@@ -18,8 +19,6 @@ namespace Zentory.Tests.Integration.Host;
 [Collection(NonParallelCollection.Name)]
 public sealed class HangfireFlagTests
 {
-    private const string MonthlyPilaAutoRequestJobId = "monthly-pila-auto-request";
-
     [Fact]
     public async Task PLAN0001_CA19_Hangfire_ServerDisabled_NoRegistraServidor()
     {
@@ -34,7 +33,7 @@ public sealed class HangfireFlagTests
         // El storage del contenedor, no JobStorage.Current (R-6).
         var jobStorage = factory.Services.GetRequiredService<JobStorage>();
         using var connection = jobStorage.GetConnection();
-        Assert.DoesNotContain(connection.GetRecurringJobs(), job => job.Id == MonthlyPilaAutoRequestJobId);
+        Assert.DoesNotContain(connection.GetRecurringJobs(), job => job.Id == RecurringJobIds.MonthlyPilaAutoRequest);
     }
 
     [Fact]
@@ -71,7 +70,7 @@ public sealed class HangfireFlagTests
             [DatabaseSettings.UseInMemoryKey]        = "true",
             [DatabaseSettings.InMemoryNameKey]       = $"zentory-hangfire-dev-{Guid.NewGuid():N}",
             [HangfireSettings.ServerEnabledKey]      = "false",
-            ["DevSeed:Enabled"]                      = "false",
+            [DevSeedSettings.EnabledKey]             = "false",
             [TestJwtSettings.KeySetting]             = TestJwtSettings.Key,
             [TestJwtSettings.CollaboratorKeySetting] = TestJwtSettings.CollaboratorKey,
         });
@@ -84,7 +83,7 @@ public sealed class HangfireFlagTests
             .Where(e => e.Level == LogLevel.Warning
                      && e.Message.Contains(HangfireSettings.ServerEnabledKey, StringComparison.Ordinal)
                      && e.Message.Contains("disabled", StringComparison.OrdinalIgnoreCase)
-                     && e.Message.Contains(MonthlyPilaAutoRequestJobId, StringComparison.Ordinal))
+                     && e.Message.Contains(RecurringJobIds.MonthlyPilaAutoRequest, StringComparison.Ordinal))
             .ToList();
         Assert.True(warnings.Count == 1,
             $"Se esperaba un Warning del servidor de jobs apagado; logs Warning+: " +

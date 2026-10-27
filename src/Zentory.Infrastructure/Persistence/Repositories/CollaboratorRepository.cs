@@ -36,12 +36,19 @@ public sealed class CollaboratorRepository : ICollaboratorRepository
         return await query.OrderBy(c => c.Name).ToListAsync(ct);
     }
 
+    // Entrada de la lista blanca de IgnoreQueryFilters (PLAN-0018 RF-12, ADR-0008 §3): el portal lista las
+    // colaboraciones del email en todas las organizaciones (canje del magic link, cambio de organización y solicitud de
+    // enlace), mientras que la sesión del colaborador solo ve su organización activa por el filtro de tenant. Como
+    // IgnoreQueryFilters quita también el borrado lógico, el predicado lo repite: email normalizado, activo y no borrado,
+    // y la organización no eliminada (PLAN-0018 RF-65 d, D-31): el portal deja de ofrecerla en el canje y en el cambio.
     public async Task<IReadOnlyList<Collaborator>> ListByEmailAsync(string email, CancellationToken ct = default)
     {
         var normalized = email.Trim().ToLower();
         return await _db.Collaborators
+            .IgnoreQueryFilters()
             .Where(c => c.Email != null && c.Email.ToLower() == normalized
-                && c.Status == "active" && c.DeletedAt == null)
+                && c.Status == "active" && c.DeletedAt == null
+                && !_db.Organizations.Any(o => o.OrganizationId == c.OrganizationId && o.DeletedAt != null))
             .ToListAsync(ct);
     }
 

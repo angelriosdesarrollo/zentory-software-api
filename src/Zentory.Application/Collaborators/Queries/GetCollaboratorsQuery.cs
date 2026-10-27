@@ -1,6 +1,7 @@
 using MediatR;
 using Zentory.Application.Collaborators.DTOs;
 using Zentory.Application.Common.Interfaces;
+using Zentory.Application.Common.Security;
 using Zentory.Domain.Repositories;
 
 namespace Zentory.Application.Collaborators.Queries;
@@ -14,11 +15,16 @@ public sealed class GetCollaboratorsQueryHandler
 {
     private readonly ICollaboratorRepository _collaborators;
     private readonly ITenantContext          _tenant;
+    private readonly IFinancialVisibility    _visibility;
 
-    public GetCollaboratorsQueryHandler(ICollaboratorRepository collaborators, ITenantContext tenant)
+    public GetCollaboratorsQueryHandler(
+        ICollaboratorRepository collaborators,
+        ITenantContext          tenant,
+        IFinancialVisibility    visibility)
     {
         _collaborators = collaborators;
         _tenant        = tenant;
+        _visibility    = visibility;
     }
 
     public async Task<IReadOnlyList<CollaboratorSummaryDto>> Handle(
@@ -38,8 +44,9 @@ public sealed class GetCollaboratorsQueryHandler
             c.Status,
             c.Role,
             c.Email,
-            c.HourlyRate,
-            c.MonthlyRate,
+            // RF-86 d: member no recibe tarifas (D-29).
+            _visibility.Amount(c.HourlyRate),
+            _visibility.Amount(c.MonthlyRate),
             c.Currency,
             c.PilaStatus)).ToList();
     }

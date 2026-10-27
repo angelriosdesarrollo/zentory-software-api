@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Zentory.Application.Projects.Commands;
 using Zentory.Application.Projects.Queries;
+using Zentory.API.Authorization;
 
 namespace Zentory.API.Controllers.V1;
 
@@ -16,6 +17,7 @@ public sealed class ProjectsController : ControllerBase
     public ProjectsController(IMediator mediator) => _mediator = mediator;
 
     /// <summary>GET /api/v1/projects — lista con filtros opcionales</summary>
+    [AnyOrgMember]
     [HttpGet]
     public async Task<IActionResult> List(
         [FromQuery] string? search   = null,
@@ -28,6 +30,7 @@ public sealed class ProjectsController : ControllerBase
     }
 
     /// <summary>GET /api/v1/projects/{id}</summary>
+    [AnyOrgMember]
     [HttpGet("{id:guid}")]
     public async Task<IActionResult> GetById(Guid id, CancellationToken ct = default)
     {
@@ -36,6 +39,7 @@ public sealed class ProjectsController : ControllerBase
     }
 
     /// <summary>POST /api/v1/projects — crear proyecto</summary>
+    [AnyOrgMember]
     [HttpPost]
     public async Task<IActionResult> Create([FromBody] CreateProjectCommand command, CancellationToken ct = default)
     {
@@ -44,6 +48,7 @@ public sealed class ProjectsController : ControllerBase
     }
 
     /// <summary>PATCH /api/v1/projects/{id} — actualizar proyecto</summary>
+    [AnyOrgMember]
     [HttpPatch("{id:guid}")]
     public async Task<IActionResult> Update(Guid id, [FromBody] UpdateProjectCommand command, CancellationToken ct = default)
     {
@@ -52,6 +57,7 @@ public sealed class ProjectsController : ControllerBase
     }
 
     /// <summary>PATCH /api/v1/projects/{id}/status — cambiar estado</summary>
+    [AnyOrgMember]
     [HttpPatch("{id:guid}/status")]
     public async Task<IActionResult> ChangeStatus(Guid id, [FromBody] ChangeProjectStatusCommand command, CancellationToken ct = default)
     {
@@ -60,6 +66,7 @@ public sealed class ProjectsController : ControllerBase
     }
 
     /// <summary>DELETE /api/v1/projects/{id} — soft delete</summary>
+    [AnyOrgMember]
     [HttpDelete("{id:guid}")]
     public async Task<IActionResult> Delete(Guid id, CancellationToken ct = default)
     {

@@ -73,4 +73,29 @@ public sealed class LocalDiskStorageService : IStorageService
         if (File.Exists(path)) File.Delete(path);
         return Task.CompletedTask;
     }
+
+    // Recorre solo la carpeta del último "/" del prefijo y filtra por el prefijo completo (ordinal, como R2).
+    public Task<IReadOnlyList<string>> ListKeysAsync(string prefix, CancellationToken ct = default)
+    {
+        var slash     = prefix.LastIndexOf('/');
+        var directory = slash < 0 ? _rootPath : LocalDevStoragePaths.ResolveSafePath(_rootPath, prefix[..slash]);
+        if (!Directory.Exists(directory))
+            return Task.FromResult<IReadOnlyList<string>>([]);
+
+        var keys = Directory.EnumerateFiles(directory, "*", SearchOption.AllDirectories)
+            .Select(path => Path.GetRelativePath(_rootPath, path).Replace(Path.DirectorySeparatorChar, '/'))
+            .Where(key => key.StartsWith(prefix, StringComparison.Ordinal))
+            .OrderBy(key => key, StringComparer.Ordinal)
+            .ToList();
+        return Task.FromResult<IReadOnlyList<string>>(keys);
+    }
+
+    public Task CopyAsync(string sourceKey, string destinationKey, CancellationToken ct = default)
+    {
+        var source      = LocalDevStoragePaths.ResolveSafePath(_rootPath, sourceKey);
+        var destination = LocalDevStoragePaths.ResolveSafePath(_rootPath, destinationKey);
+        Directory.CreateDirectory(Path.GetDirectoryName(destination)!);
+        File.Copy(source, destination, overwrite: true);
+        return Task.CompletedTask;
+    }
 }

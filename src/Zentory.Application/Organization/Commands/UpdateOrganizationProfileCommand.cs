@@ -44,13 +44,16 @@ public sealed class UpdateOrganizationProfileCommandHandler
     private readonly IUnitOfWork            _uow;
     private readonly ITenantContext         _tenant;
     private readonly IPlanResolutionService _plans;
+    private readonly IActivityLogService    _activityLog;
 
     public UpdateOrganizationProfileCommandHandler(
         IZentoryDbContext      db,
         IUnitOfWork            uow,
         ITenantContext         tenant,
-        IPlanResolutionService plans)
+        IPlanResolutionService plans,
+        IActivityLogService    activityLog)
     {
+        _activityLog = activityLog;
         _db     = db;
         _uow    = uow;
         _plans  = plans;
@@ -92,12 +95,24 @@ public sealed class UpdateOrganizationProfileCommandHandler
 
         var existingDict = existing.ToDictionary(s => s.Key);
 
+        // PATCH parcial (REV-0005 H-7): solo cambian las propiedades presentes en el cuerpo. El cliente tipa el cuerpo como
+        // Partial<OrganizationProfile> y el onboarding manda solo { workType }; asignar también las ausentes borraba el
+        // resto del perfil. Un campo se vacía con "" (el cuerpo se deserializa a un record y null no se distingue de ausente).
         foreach (var (key, value) in profileFields)
         {
-            if (existingDict.TryGetValue(key, out var row))
+            if (value is null) continue;
+
+            var previous = existingDict.TryGetValue(key, out var row) ? row.Value : null;
+
+            if (row is not null)
                 row.Update(value);
             else
                 _db.OrganizationSettings.Add(OrganizationSettings.Set(orgId, key, value));
+
+            // RF-89, SR-0018.45: NIT, razón social y datos bancarios dejan ActivityLog con el valor anterior y el nuevo,
+            // también por esta ruta (la que usa la interfaz).
+            if (OrganizationSettingsAudit.IsAuditedChange(key, previous, value))
+                await OrganizationSettingsAudit.LogChangeAsync(_activityLog, orgId, key, previous, value, cancellationToken);
         }
 
         await _uow.SaveChangesAsync(cancellationToken);

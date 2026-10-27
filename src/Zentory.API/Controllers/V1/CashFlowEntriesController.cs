@@ -3,11 +3,18 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Zentory.Application.CashFlow.Commands;
 using Zentory.Application.CashFlow.Queries;
+using Zentory.API.Extensions;
 
 namespace Zentory.API.Controllers.V1;
 
 [ApiController]
-[Authorize(Policy = "EmpresaOnly")]
+// Registro y listado de transacciones: toda empresa, cualquier plan (FEATURE_PERMISSIONS §2.6, §4; DEC-0104). Solo la
+// vista de flujo de caja (gráfico, proyección, YTD) es studio.
+// PLAN-0018 RF-86 a (D-41): solo owner y admin (RequireFinancialAccess de clase): member → 403 ACCESS_DENIED en todas las
+// acciones, también en lectura. Las dos policies se combinan en una sola evaluación, así que la precedencia de RF-58
+// (tipo → plan → rol) la aplica ZentoryAuthorizationResultHandler: un freelance recibe ACCESS_DENIED por el tipo.
+[Authorize(Policy = PolicyNames.EmpresaOnly)]
+[Authorize(Policy = PolicyNames.RequireFinancialAccess)]
 [Route("api/v1/cash-flow-entries")]
 public sealed class CashFlowEntriesController : ControllerBase
 {

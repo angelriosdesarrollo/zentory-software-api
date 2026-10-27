@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using Zentory.Application.Common.Interfaces;
 using Zentory.Domain.Entities;
 using Zentory.Domain.Repositories;
+using Zentory.API.Authorization;
 
 namespace Zentory.API.Controllers.V1;
 
@@ -20,6 +21,7 @@ namespace Zentory.API.Controllers.V1;
 // fallaría — incluidos los que no tocan storage para nada. El seed que sí necesita
 // generar un PDF real y subirlo a R2 vive aparte, en DevToolsPayoutGenerationController.
 [ApiController]
+[SkipMembershipValidation] // lista cerrada de PLAN-0018 RF-14 (SkipMembershipCatalogTests)
 [Route("api/v1/public/dev")]
 public sealed class DevToolsController : ControllerBase
 {

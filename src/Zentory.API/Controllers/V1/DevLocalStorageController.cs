@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Zentory.Infrastructure.Services;
+using Zentory.API.Authorization;
 
 namespace Zentory.API.Controllers.V1;
 
@@ -9,6 +10,7 @@ namespace Zentory.API.Controllers.V1;
 // así que fuera de Development esto simplemente no se usa (pero igual devuelve 404
 // fuera de Development, por si acaso).
 [ApiController]
+[SkipMembershipValidation] // lista cerrada de PLAN-0018 RF-14 (SkipMembershipCatalogTests)
 [Route("api/v1/public/dev/local-storage")]
 public sealed class DevLocalStorageController : ControllerBase
 {
@@ -23,6 +25,7 @@ public sealed class DevLocalStorageController : ControllerBase
 
         var rootPath = LocalDevStoragePaths.RootPath(_env);
         var path     = LocalDevStoragePaths.ResolveSafePath(rootPath, key);
+        if (IsLegalArchive(rootPath, path)) return LegalArchiveNotFound();
         Directory.CreateDirectory(Path.GetDirectoryName(path)!);
 
         await using var file = System.IO.File.Create(path);
@@ -38,11 +41,32 @@ public sealed class DevLocalStorageController : ControllerBase
 
         var rootPath = LocalDevStoragePaths.RootPath(_env);
         var path     = LocalDevStoragePaths.ResolveSafePath(rootPath, key);
+        if (IsLegalArchive(rootPath, path)) return LegalArchiveNotFound();
         if (!System.IO.File.Exists(path)) return NotFound();
 
         var contentType = path.EndsWith(".pdf", StringComparison.OrdinalIgnoreCase)
             ? "application/pdf"
             : "application/octet-stream";
         return PhysicalFile(path, contentType);
+    }
+
+    // Carpeta de los PDF del archivo legal (claves legal-archive/{Guid}.pdf). El literal es a propósito: ningún
+    // controlador referencia el tipo del archivo legal (LegalArchivePolicyTests).
+    private const string LegalArchiveFolder = "legal-archive";
+
+    // El archivo legal no se sirve ni se recibe por aquí (PLAN-0018 RF-79 c, SR-0018.28): solo lo lee el operador. Se
+    // compara la ruta ya resuelta, así "x/../legal-archive/...", barras invertidas o mayúsculas tampoco pasan.
+    // 404 sin cuerpo: ni el archivo ni un ProblemDetails que confirme qué se pidió.
+    private IActionResult LegalArchiveNotFound()
+    {
+        Response.StatusCode = StatusCodes.Status404NotFound;
+        return new EmptyResult();
+    }
+
+    private static bool IsLegalArchive(string rootPath, string resolvedPath)
+    {
+        var archiveRoot = Path.GetFullPath(Path.Combine(rootPath, LegalArchiveFolder));
+        return string.Equals(resolvedPath, archiveRoot, StringComparison.OrdinalIgnoreCase)
+            || resolvedPath.StartsWith(archiveRoot + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase);
     }
 }

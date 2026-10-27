@@ -1,6 +1,7 @@
 using MediatR;
 using Zentory.Application.Collaborators.DTOs;
 using Zentory.Application.Common.Interfaces;
+using Zentory.Application.Common.Security;
 using Zentory.Application.Exceptions;
 using Zentory.Domain.Repositories;
 
@@ -12,11 +13,16 @@ public sealed class GetCollaboratorByIdQueryHandler : IRequestHandler<GetCollabo
 {
     private readonly ICollaboratorRepository _collaborators;
     private readonly ITenantContext          _tenant;
+    private readonly IFinancialVisibility    _visibility;
 
-    public GetCollaboratorByIdQueryHandler(ICollaboratorRepository collaborators, ITenantContext tenant)
+    public GetCollaboratorByIdQueryHandler(
+        ICollaboratorRepository collaborators,
+        ITenantContext          tenant,
+        IFinancialVisibility    visibility)
     {
         _collaborators = collaborators;
         _tenant        = tenant;
+        _visibility    = visibility;
     }
 
     public async Task<CollaboratorDto> Handle(GetCollaboratorByIdQuery request, CancellationToken cancellationToken)
@@ -34,8 +40,9 @@ public sealed class GetCollaboratorByIdQueryHandler : IRequestHandler<GetCollabo
             c.Email,
             c.Phone,
             c.IdNumber,
-            c.HourlyRate,
-            c.MonthlyRate,
+            // RF-86 d: member no recibe tarifas (D-29).
+            _visibility.Amount(c.HourlyRate),
+            _visibility.Amount(c.MonthlyRate),
             c.Currency,
             c.PilaStatus,
             c.PilaLastVerifiedPeriod,

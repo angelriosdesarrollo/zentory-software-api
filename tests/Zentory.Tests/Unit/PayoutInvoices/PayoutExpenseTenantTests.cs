@@ -262,5 +262,33 @@ public sealed class PayoutExpenseTenantTests : IDisposable
         public Task SendPayoutInvoiceRejectedEmailAsync(string toEmail, string collaboratorName, string companyName,
             string period, string notes, string portalUrl, CancellationToken ct = default)
             => throw new NotSupportedException();
+
+        public Task SendReauthenticationFailureWarningAsync(string toEmail, string recipientName,
+            DateTime occurredAtUtc, CancellationToken ct = default) => throw new NotSupportedException();
+
+        public Task SendOrganizationDeletedNoticeAsync(string toEmail, string recipientName, string organizationName,
+            CancellationToken ct = default) => throw new NotSupportedException();
+
+        public Task SendOrganizationDeletedOwnerNoticeAsync(string toEmail, string recipientName,
+            string organizationName, DateTime restoreDeadlineUtc, CancellationToken ct = default)
+            => throw new NotSupportedException();
+
+        public Task SendPasswordResetEmailAsync(string toEmail, string recipientName, string resetUrl,
+            DateTime expiresAtUtc, CancellationToken ct = default) => throw new NotSupportedException();
+
+        public Task SendEmailVerificationEmailAsync(string toEmail, string recipientName, string verifyUrl,
+            DateTime expiresAtUtc, CancellationToken ct = default) => throw new NotSupportedException();
+
+        public Task SendOrganizationInvitationEmailAsync(string toEmail, string? inviteeName, string inviterName,
+            string organizationName, string role, string acceptUrl, DateTime expiresAtUtc, CancellationToken ct = default)
+            => throw new NotSupportedException();
+
+        public Task SendOwnershipTransferProposedEmailAsync(string toEmail, string recipientName, string proposerName,
+            string organizationName, DateTime expiresAtUtc, CancellationToken ct = default)
+            => throw new NotSupportedException();
+
+        public Task SendOwnershipTransferProposedOwnerNoticeAsync(string toEmail, string recipientName, string targetName,
+            string organizationName, DateTime expiresAtUtc, CancellationToken ct = default)
+            => throw new NotSupportedException();
     }
 }
